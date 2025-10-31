@@ -1,0 +1,124 @@
+/* ============================================
+   ANIMATIONS & TRANSITIONS
+   ============================================ */
+
+/* Skeleton Loader Animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+/* Pulse Animation */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Spin Animation */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Card Entrance Animation */
+@keyframes cardEntrance {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Badge Bounce Animation */
+@keyframes badgeBounce {
+  0% { transform: translateY(-4px) scale(0.95); }
+  50% { transform: translateY(-2px) scale(1.05); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+/* Modal Appear Animation */
+@keyframes modalAppear {
+  to {
+    transform: scale(1);
+  }
+}
+
+/* Feedback Appear Animation */
+@keyframes feedbackAppear {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Feedback Exit Animation */
+@keyframes feedbackExit {
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+/* XP Counter Pulse */
+@keyframes xpCounterPulse {
+  0% {
+    transform: scale(1);
+    color: var(--color-success-600);
+  }
+  50% {
+    transform: scale(1.15);
+    color: var(--color-success-500);
+  }
+  100% {
+    transform: scale(1);
+    color: var(--color-success-600);
+  }
+}
+
+/* Subtask Complete Pulse */
+@keyframes subtaskCompletePulse {
+  0% {
+    background: var(--bg-secondary);
+  }
+  50% {
+    background: var(--status-success-bg);
+  }
+  100% {
+    background: var(--bg-secondary);
+  }
+}
+
+/* Icon Scale In */
+@keyframes iconScaleIn {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Fade In Slide */
+@keyframes fadeInSlide {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -1,0 +1,74 @@
+/* ============================================
+   NAVBAR STYLES
+   ============================================ */
+
+/* Base navbar container with transition support */
+.navbar-container {
+  transition: backdrop-filter 0.3s var(--ease-in-out), background-color 0.3s var(--ease-in-out);
+}
+
+.navbar-blur {
+  backdrop-filter: blur(16px) brightness(0.98);
+  -webkit-backdrop-filter: blur(16px) brightness(0.98);
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+/* Dark theme navbar blur */
+[data-theme="dark"] .navbar-blur {
+  background-color: rgba(21, 22, 24, 0.86);
+}
+
+/* System theme support */
+@media (prefers-color-scheme: dark) {
+  [data-theme="system"] .navbar-blur {
+    background-color: rgba(21, 22, 24, 0.86);
+  }
+}
+
+/* Hide the top spacer - not needed */
+.navbar-top-spacer {
+  display: none;
+}
+
+/* Main navbar - sticky with blur effect */
+.tokenx-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  width: 100vw;
+  height: 4rem;
+  background-color: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-default);
+  transition: backdrop-filter 0.3s ease,
+              background-color 0.3s ease,
+              box-shadow 0.3s ease;
+}
+
+/* Navbar content positioning */
+.tokenx-navbar .navbar-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* Blur effect ONLY in navbar area when scrolling */
+.tokenx-navbar.blur-active {
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  background-color: rgba(var(--bg-elevated-rgb, 255,255,255), 0.7);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05),
+              0 4px 12px rgba(0, 0, 0, 0.04);
+  border-bottom: 1px solid rgba(var(--border-default-rgb, 229,231,235), 0.4);
+}
+
+/* Dark mode blur */
+[data-theme="dark"] .tokenx-navbar.blur-active {
+  background-color: rgba(var(--bg-elevated-rgb, 19,24,37), 0.6);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2),
+              0 4px 12px rgba(0, 0, 0, 0.15);
+  border-bottom: 1px solid rgba(var(--border-default-rgb, 55,65,81), 0.4);
+}
+
+/* Prevent content from jumping when navbar becomes sticky */
+.tokenx-navbar + * {
+  scroll-margin-top: 4rem;
+}

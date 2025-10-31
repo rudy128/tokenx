@@ -587,106 +587,101 @@ export default function LeaderboardPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-primary)' }}>
       <NavBar />
-      
-      {/* Perfectly Centered Content Container */}
-      <div className="flex justify-center w-full pt-6">
-        <main className="max-w-4xl w-full flex flex-col items-center px-4 sm:px-6 md:px-8 gap-6">
-          
+      <div className="leaderboard-center-wrapper">
           {/* Integrated Header Card - Title, Description, Stats, and Filters */}
-          <section className="leaderboard-integrated-header w-full max-w-3xl">
-          <div className="leaderboard-header-content">
-            {/* Title and Description */}
-            <div className="leaderboard-title-section">
-              <h1 className="leaderboard-main-title">🏆 Leaderboard</h1>
-              <p className="leaderboard-main-subtitle">
-                Compete for the top spot and earn your place among the elite
-              </p>
-            </div>
-            
-            {/* Bottom Row: Stats (Left) + Filters (Right) */}
-            <div className="leaderboard-bottom-controls">
-              {/* Active Competitors Display - Left aligned */}
-              <div className="leaderboard-stats-pill">
-                <div 
-                  className="bg-warning/10 border border-warning/20 rounded-lg flex items-center w-fit competitors-card-enhanced"
-                  style={{ 
-                    padding: 'var(--space-3) var(--space-4)',
-                    gap: 'var(--space-2)',
-                    minHeight: '40px'
-                  }}
-                >
-                  <Users 
-                    className="h-4 w-4 flex-shrink-0" 
-                    style={{ 
-                      color: 'var(--color-warning-600)',
-                      filter: 'brightness(1.2) saturate(1.1)'
-                    }}
-                  />
-                  <span 
-                    className="font-semibold text-sm"
-                    style={{ 
-                      color: 'var(--color-warning-700)',
-                      whiteSpace: 'nowrap'
-                    }}
-                  >
-                    {totalUsers} Active Competitors
-                  </span>
-                </div>
+          <section className="leaderboard-integrated-header">
+            <div className="leaderboard-header-content">
+              {/* Title and Description */}
+              <div className="leaderboard-title-section">
+                <h1 className="leaderboard-main-title">🏆 Leaderboard</h1>
+                <p className="leaderboard-main-subtitle">
+                  Compete for the top spot and earn your place among the elite
+                </p>
               </div>
               
-              {/* Filter Chips - Right aligned */}
-              <div className="leaderboard-filters-section">
-                <FilterChips activeFilter={timeFilter} onFilterChange={handleFilterChange} />
+              {/* Bottom Row: Stats (Left) + Filters (Right) */}
+              <div className="leaderboard-bottom-controls">
+                {/* Active Competitors Display - Left aligned */}
+                <div className="leaderboard-stats-pill">
+                  <div 
+                    className="bg-warning/10 border border-warning/20 rounded-lg flex items-center w-fit competitors-card-enhanced"
+                    style={{ 
+                      padding: 'var(--space-3) var(--space-4)',
+                      gap: 'var(--space-2)',
+                      minHeight: '40px'
+                    }}
+                  >
+                    <Users 
+                      className="h-4 w-4 flex-shrink-0" 
+                      style={{ 
+                        color: 'var(--color-warning-600)',
+                        filter: 'brightness(1.2) saturate(1.1)'
+                      }}
+                    />
+                    <span 
+                      className="font-semibold text-sm"
+                      style={{ 
+                        color: 'var(--color-warning-700)',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      {totalUsers} Active Competitors
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Filter Chips - Right aligned */}
+                <div className="leaderboard-filters-section">
+                  <FilterChips activeFilter={timeFilter} onFilterChange={handleFilterChange} />
+                </div>
               </div>
             </div>
-          </div>
           </section>
 
           {/* Leaderboard Content Section */}
-          <section className="leaderboard-list-section w-full max-w-3xl">
-          <div 
-            className="leaderboard-list-container"
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 'var(--space-4)',
-              minWidth: '0',
-              maxWidth: '100%'
-            }}
-          >
-          {loading ? (
-            <>
-              {/* Loading Skeletons - All unified */}
-              {Array.from({ length: 10 }).map((_, index) => (
-                <LeaderboardSkeleton key={index} />
-              ))}
-            </>
-          ) : users.length === 0 ? (
-            /* Empty State - Consistent with platform empty states */
-            <div className="empty-tasks-card">
-              <Trophy className="h-16 w-16 opacity-50 text-muted-foreground" style={{ marginBottom: 'var(--space-4)' }} />
-              <span className="empty-title">No leaderboard data available</span>
-              <span className="empty-desc">
-                Complete tasks to see your ranking and compete with other ambassadors.
-              </span>
+          <section className="leaderboard-list-section">
+            <div 
+              className="leaderboard-list-container"
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 'var(--space-4)',
+                minWidth: '0',
+                maxWidth: '100%'
+              }}
+            >
+            {loading ? (
+              <>
+                {/* Loading Skeletons - All unified */}
+                {Array.from({ length: 10 }).map((_, index) => (
+                  <LeaderboardSkeleton key={index} />
+                ))}
+              </>
+            ) : users.length === 0 ? (
+              /* Empty State - Consistent with platform empty states */
+              <div className="empty-tasks-card">
+                <Trophy className="h-16 w-16 opacity-50 text-muted-foreground" style={{ marginBottom: 'var(--space-4)' }} />
+                <span className="empty-title">No leaderboard data available</span>
+                <span className="empty-desc">
+                  Complete tasks to see your ranking and compete with other ambassadors.
+                </span>
+              </div>
+            ) : (
+              <>
+                {/* All Leaderboard Rows - Compact and properly contained */}
+                {users.map((user) => (
+                  <LeaderboardRow
+                    key={user.id}
+                    user={user}
+                    isCurrentUser={session?.user?.email === user.email}
+                  />
+                ))}
+              </>
+            )}
             </div>
-          ) : (
-            <>
-              {/* All Leaderboard Rows - Compact and properly contained */}
-              {users.map((user) => (
-                <LeaderboardRow
-                  key={user.id}
-                  user={user}
-                  isCurrentUser={session?.user?.email === user.email}
-                />
-              ))}
-            </>
-          )}
-          </div>
-        </section>
-        </main>
+          </section>
       </div>
     </div>
   )

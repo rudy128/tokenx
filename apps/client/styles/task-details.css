@@ -1,0 +1,506 @@
+/* ============================================
+   TASK DETAILS PAGE
+   ============================================ */
+
+.task-details-page {
+  background: var(--bg-primary);
+  background-image: 
+    radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+.task-page-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-8);
+}
+
+.task-content-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  grid-template-areas:
+    "header banner"
+    "status status"
+    "tasks tasks"
+    "claim claim";
+  gap: var(--space-6);
+  align-items: start;
+}
+
+/* Header Section */
+.task-header-left {
+  grid-area: header;
+}
+
+.project-title {
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  margin-bottom: var(--space-3);
+  line-height: var(--line-height-tight);
+}
+
+.project-subtitle {
+  font-size: var(--font-size-lg);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-6);
+  line-height: var(--line-height-relaxed);
+}
+
+/* Banner Image */
+.banner-right {
+  grid-area: banner;
+}
+
+.banner-image-container {
+  width: 100%;
+  min-width: 240px;
+  max-width: 340px;
+  height: 200px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-subtle);
+  position: relative;
+}
+
+.banner-colorful-grid {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, 
+    var(--color-primary-500) 0%, 
+    var(--color-accent-500) 30%, 
+    var(--color-success-500) 60%, 
+    var(--color-warning-500) 90%
+  );
+  position: relative;
+}
+
+.banner-colorful-grid::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,0.12) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.12) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+.banner-colorful-grid::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(circle at 25% 25%, rgba(255,255,255,0.15) 0%, transparent 60%),
+    radial-gradient(circle at 75% 75%, rgba(255,255,255,0.1) 0%, transparent 60%);
+}
+
+.banner-title-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  padding: var(--space-4);
+}
+
+.banner-title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: #fff;
+  text-align: center;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  line-height: 1.2;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* Status Strip Row */
+.status-strip-row {
+  grid-area: status;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-full);
+  padding: var(--space-3) var(--space-6);
+  border: 1px solid var(--border-subtle);
+  margin: var(--space-4) 0;
+}
+
+.status-chip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--status-success-bg);
+  color: var(--status-success-text);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.status-chip.ongoing .status-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--color-success-500);
+  border-radius: 50%;
+}
+
+.status-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.status-time {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.status-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.status-avatars {
+  display: flex;
+  align-items: center;
+}
+
+.avatar-group {
+  display: flex;
+  align-items: center;
+  gap: -var(--space-2);
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--bg-elevated);
+  background: var(--color-primary-500);
+}
+
+.avatar-1 {
+  background: var(--color-primary-500);
+}
+
+.avatar-2 {
+  background: var(--color-accent-500);
+  margin-left: -8px;
+}
+
+.avatar-3 {
+  background: var(--color-success-500);
+  margin-left: -8px;
+}
+
+.avatar-count {
+  margin-left: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Tasks Section */
+.tasks-section {
+  grid-area: tasks;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-subtle);
+}
+
+.tasks-header {
+  margin-bottom: var(--space-6);
+}
+
+.tasks-title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.tasks-subtitle {
+  font-size: var(--font-size-base);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Subtasks List */
+.subtasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Unified Button Cards for Sub-tasks */
+.subtask-button-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+  padding: var(--space-6);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-md);
+  transition: all 0.3s var(--transition-base);
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  font-size: inherit;
+  touch-action: manipulation;
+}
+
+.subtask-button-card:hover {
+  background: var(--bg-elevated-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-xl);
+  border-color: var(--color-accent-300);
+}
+
+.subtask-button-card:focus {
+  outline: 2px solid var(--color-accent-500);
+  outline-offset: 2px;
+}
+
+.subtask-button-card:active {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Icon Wrapper */
+.subtask-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: var(--color-accent-100);
+  border-radius: var(--radius-lg);
+  flex-shrink: 0;
+  transition: all 0.3s var(--transition-base);
+}
+
+.subtask-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--color-accent-600);
+  transition: all 0.3s var(--transition-base);
+}
+
+/* Content Area */
+.subtask-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.subtask-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* XP Pill */
+.subtask-xp-pill {
+  background: var(--color-accent-500);
+  color: white;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
+}
+
+/* Claim Block Section */
+.claim-block-section {
+  grid-area: claim;
+  display: flex;
+  justify-content: center;
+  margin-top: var(--space-8);
+}
+
+.claim-now-card {
+  background: var(--color-accent-500);
+  color: var(--text-inverse);
+  border: none;
+  border-radius: var(--radius-xl);
+  padding: var(--space-6) var(--space-12);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+  transition: all 0.2s var(--transition-base);
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+  min-width: 300px;
+}
+
+.claim-now-card:hover {
+  background: var(--color-accent-600);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-xl);
+}
+
+.claim-now-card:active {
+  transform: translateY(-2px);
+}
+
+/* Mobile Responsive Layout */
+@media (max-width: 768px) {
+  .task-page-main {
+    padding: var(--space-4);
+  }
+
+  .task-content-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "header"
+      "banner"
+      "status"
+      "tasks"
+      "claim";
+    gap: var(--space-4);
+  }
+
+  .project-title {
+    font-size: var(--font-size-2xl);
+  }
+
+  .project-subtitle {
+    font-size: var(--font-size-base);
+    margin-bottom: var(--space-4);
+  }
+
+  .banner-image-container {
+    height: 150px;
+    min-width: 240px;
+    max-width: 300px;
+  }
+
+  .banner-title {
+    font-size: var(--font-size-lg);
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+
+  .status-strip-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+  }
+
+  .status-avatars {
+    align-self: flex-end;
+  }
+
+  .tasks-section {
+    padding: var(--space-4);
+  }
+
+  .tasks-title {
+    font-size: var(--font-size-xl);
+  }
+
+  .subtask-button-card {
+    padding: var(--space-5);
+  }
+
+  .subtask-icon-wrapper {
+    width: 44px;
+    height: 44px;
+  }
+
+  .subtask-icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .subtask-title {
+    font-size: var(--font-size-base);
+  }
+
+  .claim-now-card {
+    font-size: var(--font-size-xl);
+    padding: var(--space-5) var(--space-8);
+    min-width: 250px;
+  }
+}
+
+@media (max-width: 480px) {
+  .task-page-main {
+    padding: var(--space-3);
+  }
+
+  .project-title {
+    font-size: var(--font-size-xl);
+  }
+
+  .status-strip-row {
+    padding: var(--space-3);
+  }
+
+  .tasks-section {
+    padding: var(--space-3);
+  }
+
+  .subtask-button-card {
+    padding: var(--space-4);
+    gap: var(--space-3);
+  }
+
+  .subtask-icon-wrapper {
+    width: 40px;
+    height: 40px;
+  }
+
+  .subtask-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .subtask-title {
+    font-size: var(--font-size-base);
+  }
+
+  .subtask-xp-pill {
+    padding: var(--space-1) var(--space-3);
+    font-size: var(--font-size-xs);
+  }
+
+  .banner-image-container {
+    height: 100px;
+    min-width: 240px;
+    max-width: 280px;
+  }
+
+  .banner-title {
+    font-size: var(--font-size-base);
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+  }
+
+  .claim-now-card {
+    font-size: var(--font-size-lg);
+    padding: var(--space-4) var(--space-6);
+    min-width: 200px;
+  }
+}

@@ -1,0 +1,74 @@
+/* ============================================
+   SKELETON LOADER STYLES
+   ============================================ */
+
+/* Base Skeleton Styles */
+.skeleton-title {
+  background: linear-gradient(90deg, 
+    var(--bg-secondary) 25%, 
+    var(--bg-elevated) 50%, 
+    var(--bg-secondary) 75%
+  );
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite linear;
+  height: 40px;
+  width: 70%;
+  margin-bottom: var(--space-4);
+  border-radius: var(--radius-lg);
+}
+
+.skeleton-subtitle {
+  background: linear-gradient(90deg, 
+    var(--bg-secondary) 25%, 
+    var(--bg-elevated) 50%, 
+    var(--bg-secondary) 75%
+  );
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite linear;
+  height: 24px;
+  width: 85%;
+  border-radius: var(--radius-base);
+}
+
+.skeleton-banner {
+  background: linear-gradient(90deg, 
+    var(--bg-secondary) 25%, 
+    var(--bg-elevated) 50%, 
+    var(--bg-secondary) 75%
+  );
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite linear;
+  width: 100%;
+  height: 200px;
+  border-radius: var(--radius-lg);
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--bg-tertiary) 25%,
+    var(--bg-secondary) 50%,
+    var(--bg-tertiary) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.skeleton-text {
+  height: 16px;
+  border-radius: var(--radius-base);
+}
+
+.skeleton-text-multiline {
+  height: 48px;
+}
+
+.skeleton-text-small {
+  height: 12px;
+}
+
+.skeleton-badge {
+  height: 24px;
+  width: 80px;
+  border-radius: var(--radius-full);
+}

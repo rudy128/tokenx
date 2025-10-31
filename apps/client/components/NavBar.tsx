@@ -74,14 +74,14 @@ export function NavBar() {
             margin: '0 auto',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between',
+            justifyContent: 'flex-start',
             height: '4rem',
-            padding: '0 1.5rem',
+            padding: '0 1rem 0 0rem',
             minHeight: '4rem',
-            gap: '2rem'
+            gap: '4rem'
           }}
         >
-        {/* Logo - Left Side */}
+        {/* Logo - Far Left Side */}
         <Link 
           href="/dashboard" 
           style={{
@@ -89,7 +89,9 @@ export function NavBar() {
             alignItems: 'center',
             gap: '0.5rem',
             textDecoration: 'none',
-            flexShrink: 0
+            flexShrink: 0,
+            marginRight: 'auto',
+            marginLeft: '-1rem'
           }}
         >
           <div 
@@ -122,14 +124,12 @@ export function NavBar() {
           </span>
         </Link>
 
-        {/* Desktop Navigation - Center */}
+        {/* Desktop Navigation */}
         <div 
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '1.5rem',
-            flex: 1,
-            justifyContent: 'center'
+            gap: '1.5rem'
           }}
           className="hidden md:flex"
         >

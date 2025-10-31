@@ -1,0 +1,22 @@
+// Re-export Prisma client and types
+export { prisma, checkDatabaseConnection } from './prisma'
+export type { PrismaClient } from '@prisma/client'
+export { Role, TaskStatus, TaskCategory, Tier } from '@prisma/client'
+
+// Re-export other utilities
+export * from './auth'
+export * from './auth-helpers'
+export * from './cache'
+export * from './config'
+export * from './content-moderation'
+export * from './debug-logger'
+export * from './logger'
+export * from './rbac'
+export * from './security'
+export * from './store'
+export * from './task-submission'
+export * from './task-types'
+export * from './twitter-verification'
+export * from './utils'
+export * from './validations'
+export * from './wagmi'

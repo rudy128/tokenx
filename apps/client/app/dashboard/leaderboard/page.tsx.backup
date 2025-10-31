@@ -1,0 +1,573 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { useSession } from "next-auth/react"
+import { NavBar } from "@/components/NavBar"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Card, CardContent } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/loading-skeleton"
+import { useToast } from "@/components/ui/use-toast"
+import { Trophy, Medal, Award, Coins, Users, ChevronLeft, ChevronRight, Star } from "lucide-react"
+
+// Platform-only styling - no custom animations
+
+// Types
+interface LeaderboardUser {
+  id: string
+  name: string
+  email: string
+  image?: string
+  xp: number
+  tier: 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM'
+  rank: number
+}
+
+type TimeFilter = 'weekly' | 'monthly' | 'all-time'
+
+// Mock data - preserving existing business logic (removed isPersonalBest)
+const mockLeaderboardUsers: LeaderboardUser[] = [
+  { id: "1", name: "Alex Chen", email: "alex@tokenx.io", xp: 15420, tier: "PLATINUM", rank: 1 },
+  { id: "2", name: "Sarah Kim", email: "sarah@tokenx.io", xp: 14890, tier: "PLATINUM", rank: 2 },
+  { id: "3", name: "Marcus Johnson", email: "marcus@tokenx.io", xp: 13750, tier: "GOLD", rank: 3 },
+  { id: "4", name: "Elena Rodriguez", email: "elena@tokenx.io", xp: 12980, tier: "GOLD", rank: 4 },
+  { id: "5", name: "David Park", email: "david@tokenx.io", xp: 11650, tier: "GOLD", rank: 5 },
+  { id: "6", name: "Lisa Wang", email: "lisa@tokenx.io", xp: 10420, tier: "SILVER", rank: 6 },
+  { id: "7", name: "James Wilson", email: "james@tokenx.io", xp: 9850, tier: "SILVER", rank: 7 },
+  { id: "8", name: "Nina Patel", email: "nina@tokenx.io", xp: 8920, tier: "SILVER", rank: 8 },
+  { id: "9", name: "Ryan Miller", email: "ryan@tokenx.io", xp: 8150, tier: "BRONZE", rank: 9 },
+  { id: "10", name: "Emma Taylor", email: "emma@tokenx.io", xp: 7680, tier: "BRONZE", rank: 10 }
+]
+
+// Helper functions
+const formatXP = (xp: number): string => {
+  if (xp >= 1000) {
+    return `${(xp / 1000).toFixed(1)}K`
+  }
+  return xp.toString()
+}
+
+const getRankIcon = (rank: number) => {
+  switch (rank) {
+    case 1:
+      return <Trophy className="h-5 w-5" />
+    case 2:
+      return <Medal className="h-5 w-5" />
+    case 3:
+      return <Award className="h-5 w-5" />
+    default:
+      return <span className="font-black text-lg">{rank}</span>
+  }
+}
+
+// Filter Chips Component - Platform consistent styling
+const FilterChips = ({ activeFilter, onFilterChange }: { 
+  activeFilter: TimeFilter
+  onFilterChange: (filter: TimeFilter) => void 
+}) => {
+  const filters: { key: TimeFilter; label: string }[] = [
+    { key: 'weekly', label: 'Weekly' },
+    { key: 'monthly', label: 'Monthly' },
+    { key: 'all-time', label: 'All-Time' }
+  ]
+
+  return (
+    <div className="flex gap-3 mb-8">
+      {filters.map(({ key, label }) => (
+        <Button
+          key={key}
+          variant={activeFilter === key ? "default" : "outline"}
+          size="sm"
+          onClick={() => onFilterChange(key)}
+          className="font-medium transition-colors"
+          style={activeFilter === key 
+            ? {
+                backgroundColor: 'var(--color-primary-500)',
+                color: 'var(--text-inverse)',
+                borderColor: 'var(--color-primary-500)'
+              }
+            : {
+                color: 'var(--text-secondary)',
+                backgroundColor: 'var(--bg-secondary)',
+                borderColor: 'var(--border-default)'
+              }
+          }
+        >
+          {label}
+        </Button>
+      ))}
+    </div>
+  )
+}
+
+// Platform-consistent Leaderboard Card
+const LeaderboardCard = ({ user, isCurrentUser = false }: { 
+  user: LeaderboardUser
+  isCurrentUser?: boolean 
+}) => {
+  const getRankBadgeStyle = () => {
+    let backgroundColor = 'var(--color-gray-600)'
+    let color = 'var(--text-inverse)'
+    
+    if (user.rank === 1) {
+      backgroundColor = 'var(--color-warning-500)' // Platform gold
+    } else if (user.rank === 2) {
+      backgroundColor = 'var(--color-gray-400)' // Platform silver
+    } else if (user.rank === 3) {
+      backgroundColor = 'var(--color-warning-600)' // Platform bronze
+    }
+
+    return {
+      width: '48px',
+      height: '48px',
+      borderRadius: '50%',
+      backgroundColor,
+      color,
+      fontSize: 'var(--font-size-base)',
+      fontWeight: 'var(--font-weight-bold)'
+    }
+  }
+
+  return (
+    <Card 
+      className="transition-colors hover:bg-gray-50"
+      style={{
+        backgroundColor: isCurrentUser ? 'var(--status-info-bg)' : 'var(--bg-secondary)',
+        borderRadius: 'var(--radius-lg)',
+        border: isCurrentUser 
+          ? '1px solid var(--status-info-border)'
+          : '1px solid var(--border-subtle)',
+        marginBottom: 'var(--space-3)'
+      }}
+    >
+      <CardContent 
+        className="flex items-center gap-x-6 px-6 py-4"
+        style={{ minHeight: '72px' }}
+      >
+        {/* Rank badge */}
+        <div 
+          className="flex items-center justify-center flex-shrink-0"
+          style={getRankBadgeStyle()}
+        >
+          {getRankIcon(user.rank)}
+        </div>
+
+        {/* Avatar */}
+        <Avatar 
+          className="flex-shrink-0"
+          style={{
+            height: '48px',
+            width: '48px'
+          }}
+        >
+          <AvatarImage src={user.image} alt={user.name} />
+          <AvatarFallback 
+            style={{
+              backgroundColor: 'var(--color-primary-500)',
+              color: 'var(--text-inverse)',
+              fontSize: 'var(--font-size-base)',
+              fontWeight: 'var(--font-weight-medium)'
+            }}
+          >
+            {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+
+        {/* Main content area */}
+        <div className="flex flex-col min-w-0 flex-1">
+          <div className="flex items-center" style={{ gap: 'var(--space-2)' }}>
+            <span 
+              className="font-black truncate"
+              style={{ 
+                color: 'var(--text-primary)',
+                fontSize: user.rank <= 3 ? 'var(--font-size-xl)' : 'var(--font-size-lg)',
+                letterSpacing: 'var(--letter-spacing-tight)'
+              }}
+            >
+              {user.name}
+            </span>
+            {isCurrentUser && (
+              <Badge 
+                variant="outline" 
+                className="animate-pulse font-bold whitespace-nowrap"
+                style={{
+                  backgroundColor: 'var(--color-primary-500)',
+                  color: 'white',
+                  padding: 'var(--space-1) var(--space-3)',
+                  borderRadius: 'var(--radius-full)',
+                  fontSize: 'var(--font-size-xs)',
+                  border: 'none',
+                  boxShadow: '0 2px 8px var(--shadow-primary)'
+                }}
+              >
+                You
+              </Badge>
+            )}
+            {user.isPersonalBest && (
+              <Badge 
+                variant="outline" 
+                className="animate-bounce font-black whitespace-nowrap relative overflow-hidden"
+                style={{
+                  background: 'linear-gradient(135deg, #FF6B35 0%, #F7931E 50%, #FFD700 100%)',
+                  color: 'white',
+                  padding: 'var(--space-2) var(--space-4)',
+                  borderRadius: 'var(--radius-full)',
+                  fontSize: 'var(--font-size-sm)',
+                  border: '2px solid rgba(255,255,255,0.3)',
+                  boxShadow: '0 4px 16px rgba(255,107,53,0.4), 0 2px 8px rgba(0,0,0,0.2)',
+                  textShadow: '0 1px 3px rgba(0,0,0,0.3)'
+                }}
+              >
+                <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></span>
+                <span className="relative z-10 flex items-center gap-1">
+                  � PERSONAL BEST
+                </span>
+              </Badge>
+            )}
+          </div>
+          
+          {/* Enhanced tier badge chip */}
+          <div className="flex items-center mt-2" style={{ gap: 'var(--space-2)' }}>
+            <Badge 
+              variant="secondary" 
+              className="text-sm capitalize font-bold px-3 py-1 shadow-lg"
+              style={{
+                background: user.tier === 'PLATINUM' 
+                  ? 'linear-gradient(135deg, #E5E4E2 0%, #C0C0C0 50%, #708090 100%)'
+                  : user.tier === 'GOLD' 
+                  ? 'linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%)'
+                  : user.tier === 'SILVER'
+                  ? 'linear-gradient(135deg, #F8F8FF 0%, #C0C0C0 50%, #A8A8A8 100%)'
+                  : 'linear-gradient(135deg, #D2691E 0%, #CD7F32 50%, #8B4513 100%)',
+                color: user.tier === 'PLATINUM' ? '#2F2F2F' : 'white',
+                padding: 'var(--space-2) var(--space-4)',
+                borderRadius: 'var(--radius-full)',
+                border: `2px solid ${
+                  user.tier === 'PLATINUM' ? 'rgba(112,128,144,0.3)' :
+                  user.tier === 'GOLD' ? 'rgba(255,215,0,0.4)' :
+                  user.tier === 'SILVER' ? 'rgba(192,192,192,0.4)' :
+                  'rgba(205,127,50,0.4)'
+                }`,
+                textShadow: user.tier === 'PLATINUM' ? 'none' : '0 1px 3px rgba(0,0,0,0.4)',
+                boxShadow: `0 4px 12px ${
+                  user.tier === 'PLATINUM' ? 'rgba(112,128,144,0.3)' :
+                  user.tier === 'GOLD' ? 'rgba(255,165,0,0.4)' :
+                  user.tier === 'SILVER' ? 'rgba(192,192,192,0.4)' :
+                  'rgba(205,127,50,0.4)'
+                }`
+              }}
+            >
+              <Star className="h-4 w-4 mr-2" />
+              {user.tier}
+            </Badge>
+          </div>
+        </div>
+
+        {/* Enhanced XP pill button */}
+        <div className="flex-shrink-0">
+          <Button 
+            variant="secondary" 
+            size="lg"
+            className="font-black transition-all duration-300 hover:scale-110 active:scale-95 relative overflow-hidden group"
+            style={{
+              background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 30%, #FF8C00 70%, #FFD700 100%)',
+              color: '#1a1a1a',
+              padding: 'var(--space-4) var(--space-6)',
+              borderRadius: 'var(--radius-full)',
+              boxShadow: '0 6px 20px rgba(255,215,0,0.5), 0 3px 10px rgba(255,140,0,0.3), inset 0 1px 0 rgba(255,255,255,0.3)',
+              border: '3px solid rgba(255,255,255,0.4)',
+              fontSize: 'var(--font-size-lg)',
+              gap: 'var(--space-3)',
+              minWidth: 'auto',
+              whiteSpace: 'nowrap',
+              textShadow: '0 1px 3px rgba(0,0,0,0.2)',
+              fontWeight: '900'
+            }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 group-hover:animate-shimmer"></div>
+            <Coins className="h-5 w-5 flex-shrink-0 relative z-10" />
+            <span className="relative z-10 font-black">{formatXP(user.xp)} XP</span>
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+// Skeleton component - matches card structure
+const LeaderboardCardSkeleton = () => {
+  return (
+    <Card 
+      className="animate-pulse"
+      style={{
+        backgroundColor: 'var(--bg-elevated)',
+        borderRadius: 'var(--radius-2xl)',
+        boxShadow: 'var(--shadow-lg)',
+        marginBottom: 'var(--space-4)'
+      }}
+    >
+      <CardContent style={{ padding: 'var(--space-6)' }}>
+        <div className="flex items-center" style={{ gap: 'var(--space-4)' }}>
+          <Skeleton 
+            className="rounded-full flex-shrink-0"
+            style={{
+              height: '48px',
+              width: '48px',
+              backgroundColor: 'var(--color-gray-200)'
+            }}
+          />
+          <Skeleton 
+            className="rounded-full flex-shrink-0"
+            style={{
+              height: '48px',
+              width: '48px',
+              backgroundColor: 'var(--color-gray-200)'
+            }}
+          />
+          <div className="flex flex-col flex-1" style={{ gap: 'var(--space-2)' }}>
+            <Skeleton 
+              className="rounded"
+              style={{
+                height: '20px',
+                width: '120px',
+                backgroundColor: 'var(--color-gray-200)'
+              }}
+            />
+            <Skeleton 
+              className="rounded-full"
+              style={{
+                height: '16px',
+                width: '60px',
+                backgroundColor: 'var(--color-gray-300)'
+              }}
+            />
+          </div>
+          <Skeleton 
+            className="rounded-full flex-shrink-0"
+            style={{
+              height: '32px',
+              width: '80px',
+              backgroundColor: 'var(--color-warning-200)'
+            }}
+          />
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+// Enhanced Pagination Footer - Pixel-perfect platform themed
+const PaginationFooter = ({ currentPage, totalPages, onPageChange }: { 
+  currentPage: number
+  totalPages: number
+  onPageChange: (page: number) => void 
+}) => {
+  if (totalPages <= 1) return null
+
+  return (
+    <Card 
+      className="shadow-2xl"
+      style={{
+        backgroundColor: 'var(--bg-elevated-dark)',
+        borderRadius: 'var(--radius-2xl)',
+        border: '2px solid var(--border-subtle)',
+        boxShadow: '0 8px 32px var(--shadow-lg)',
+        padding: 'var(--space-6)'
+      }}
+    >
+      <CardContent className="p-0">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <span 
+              className="text-lg font-bold"
+              style={{ color: 'var(--text-primary)' }}
+            >
+              Page {currentPage} of {totalPages}
+            </span>
+            <Badge 
+              variant="secondary"
+              className="px-3 py-1"
+              style={{
+                backgroundColor: 'var(--color-primary-100)',
+                color: 'var(--color-primary-700)',
+                borderRadius: 'var(--radius-full)'
+              }}
+            >
+              {totalPages * 10} total entries
+            </Badge>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="lg"
+              disabled={currentPage === 1}
+              onClick={() => onPageChange(currentPage - 1)}
+              className="flex items-center gap-2 transition-all duration-300 hover:scale-105 font-bold"
+              style={{
+                color: currentPage === 1 ? 'var(--text-muted)' : 'var(--text-primary)',
+                borderRadius: 'var(--radius-xl)',
+                padding: 'var(--space-3) var(--space-5)',
+                border: '2px solid var(--border-subtle)',
+                backgroundColor: currentPage === 1 ? 'var(--bg-muted)' : 'var(--bg-elevated)',
+                boxShadow: currentPage === 1 ? 'none' : '0 4px 12px rgba(0,0,0,0.1)'
+              }}
+            >
+              <ChevronLeft className="h-5 w-5" />
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              disabled={currentPage === totalPages}
+              onClick={() => onPageChange(currentPage + 1)}
+              className="flex items-center gap-2 transition-all duration-300 hover:scale-105 font-bold"
+              style={{
+                color: currentPage === totalPages ? 'var(--text-muted)' : 'var(--text-primary)',
+                borderRadius: 'var(--radius-xl)',
+                padding: 'var(--space-3) var(--space-5)',
+                border: '2px solid var(--border-subtle)',
+                backgroundColor: currentPage === totalPages ? 'var(--bg-muted)' : 'var(--bg-elevated)',
+                boxShadow: currentPage === totalPages ? 'none' : '0 4px 12px rgba(0,0,0,0.1)'
+              }}
+            >
+              Next
+              <ChevronRight className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+export default function LeaderboardPage() {
+  const { data: session } = useSession()
+  const { toast } = useToast()
+  
+  const [users, setUsers] = useState<LeaderboardUser[]>([])
+  const [loading, setLoading] = useState(true)
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>('all-time')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages] = useState(1)
+  const [totalUsers, setTotalUsers] = useState(0)
+
+  useEffect(() => {
+    const fetchLeaderboard = async () => {
+      setLoading(true)
+      
+      await new Promise(resolve => setTimeout(resolve, 800))
+      
+      try {
+        setUsers(mockLeaderboardUsers)
+        setTotalUsers(mockLeaderboardUsers.length)
+      } catch (error) {
+        console.error('Failed to fetch leaderboard:', error)
+        toast({
+          title: "Error",
+          description: "Failed to load leaderboard data",
+          variant: "destructive",
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchLeaderboard()
+  }, [timeFilter, toast])
+
+  const handleFilterChange = (filter: TimeFilter) => {
+    setTimeFilter(filter)
+    setCurrentPage(1)
+  }
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  return (
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
+      <style>{shimmerStyle}</style>
+      <NavBar />
+      
+      <div className="container mx-auto px-6 py-10 max-w-4xl">
+        {/* Enhanced header with platform theming */}
+        <div className="mb-10">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h1 
+                className="font-black tracking-tight mb-2"
+                style={{ 
+                  color: 'var(--text-primary)',
+                  fontFamily: 'var(--font-family-heading, system-ui)',
+                  fontSize: 'var(--font-size-5xl, 3rem)',
+                  letterSpacing: 'var(--letter-spacing-tight, -0.025em)',
+                  textShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                }}
+              >
+                🏆 Leaderboard
+              </h1>
+              <p 
+                className="text-lg font-medium"
+                style={{ 
+                  color: 'var(--text-secondary)',
+                  fontFamily: 'var(--font-family-body, system-ui)'
+                }}
+              >
+                Compete for the top spot and earn your place among the elite
+              </p>
+            </div>
+            <Badge 
+              variant="secondary" 
+              className="flex items-center gap-3 px-6 py-3 text-base font-bold shadow-lg"
+              style={{
+                backgroundColor: 'var(--bg-elevated-dark)',
+                color: 'var(--text-primary)',
+                borderRadius: 'var(--radius-2xl)',
+                border: '2px solid var(--border-subtle)',
+                boxShadow: '0 4px 16px var(--shadow-md)'
+              }}
+            >
+              <Users className="h-5 w-5" />
+              {totalUsers} Active Competitors
+            </Badge>
+          </div>
+          
+          <FilterChips activeFilter={timeFilter} onFilterChange={handleFilterChange} />
+        </div>
+
+        {/* Content area */}
+        <div style={{ gap: 'var(--space-0)' }}>
+          {loading ? (
+            <>
+              {Array.from({ length: 5 }).map((_, index) => (
+                <LeaderboardCardSkeleton key={index} />
+              ))}
+            </>
+          ) : (
+            <>
+              {users.map((user) => (
+                <LeaderboardCard
+                  key={user.id}
+                  user={user}
+                  isCurrentUser={session?.user?.email === user.email}
+                />
+              ))}
+            </>
+          )}
+        </div>
+
+        {/* Pagination */}
+        {!loading && (
+          <div style={{ marginTop: 'var(--space-6)' }}>
+            <PaginationFooter
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}

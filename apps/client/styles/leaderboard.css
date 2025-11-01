@@ -1,0 +1,461 @@
+/* ============================================
+   LEADERBOARD PAGE - HORIZONTAL LAYOUT
+   ============================================ */
+
+/* Leaderboard Grid Container */
+.leaderboard-grid-enhanced {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+}
+
+/* Leaderboard Card - Horizontal Layout */
+.leaderboard-card-enhanced {
+  display: grid;
+  grid-template-columns: 80px 64px 1fr auto;
+  gap: 1.5rem;
+  align-items: center;
+  padding: 1.5rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: calc(var(--radius-lg) + 4px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.leaderboard-card-enhanced::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: transparent;
+  transition: background 0.3s ease;
+}
+
+.leaderboard-card-enhanced:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--border-strong);
+}
+
+.leaderboard-card-enhanced:hover::before {
+  background: linear-gradient(90deg, #FFD700 0%, #FFA500 100%);
+}
+
+.leaderboard-card-enhanced.current-user-card {
+  background: var(--bg-elevated);
+  border-color: var(--color-primary-400);
+  box-shadow: var(--shadow-md);
+}
+
+.leaderboard-card-enhanced.current-user-card::before {
+  background: linear-gradient(90deg, var(--color-primary-500) 0%, var(--color-primary-400) 100%);
+}
+
+/* Rank Badge Section - Bold Podium Chips */
+.rank-badge-enhanced {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.rank-badge-premium {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  font-weight: 700;
+  position: relative;
+  gap: 0.25rem;
+  transition: all 0.3s ease;
+}
+
+.rank-badge-premium.rank-1-premium {
+  background: linear-gradient(135deg, #FFD700 0%, #FFC300 100%);
+  color: #222;
+  box-shadow: 0 2px 10px rgba(255, 215, 0, 0.18);
+}
+
+.rank-badge-premium.rank-2-premium {
+  background: linear-gradient(135deg, #C0C0C0 0%, #A5A5A5 100%);
+  color: #222;
+  box-shadow: 0 2px 10px rgba(192, 192, 192, 0.18);
+}
+
+.rank-badge-premium.rank-3-premium {
+  background: linear-gradient(135deg, #CD7F32 0%, #B57325 100%);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(205, 127, 50, 0.18);
+}
+
+.rank-badge-premium.rank-other-premium {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 2px solid var(--border-default);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.rank-icon-wrapper {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rank-number-premium {
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Avatar Section - Platform-Themed with Proper Sizing */
+.avatar-section-enhanced {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.user-avatar-enhanced {
+  width: 52px;
+  height: 52px;
+  border: 2.5px solid var(--color-white);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-base);
+}
+
+/* Dark mode avatar border */
+[data-theme="dark"] .user-avatar-enhanced {
+  border-color: var(--border-strong);
+}
+
+.leaderboard-card-enhanced:hover .user-avatar-enhanced {
+  transform: scale(1.08);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-primary-300);
+}
+
+/* Vibrant gradient background for initials */
+.avatar-fallback-enhanced {
+  font-size: 1.25rem;
+  font-weight: var(--font-weight-bold);
+  background: linear-gradient(135deg, var(--color-primary-400) 0%, var(--color-accent-500) 100%);
+  color: var(--color-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* Top 3 users get special avatar treatment */
+.leaderboard-card-enhanced:nth-child(1) .avatar-fallback-enhanced {
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  color: #222;
+}
+
+.leaderboard-card-enhanced:nth-child(2) .avatar-fallback-enhanced {
+  background: linear-gradient(135deg, #C0C0C0 0%, #A5A5A5 100%);
+  color: #222;
+}
+
+.leaderboard-card-enhanced:nth-child(3) .avatar-fallback-enhanced {
+  background: linear-gradient(135deg, #CD7F32 0%, #B57325 100%);
+  color: #fff;
+}
+
+/* User Info Section */
+.user-info-enhanced {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.username-row-enhanced {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.username-enhanced {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.you-badge-enhanced {
+  background: var(--color-primary-500);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.5rem;
+  border-radius: calc(var(--radius-base) / 2);
+  white-space: nowrap;
+}
+
+/* Tier Badge - Platform-Standard Gradient Pills */
+.tier-badge-enhanced {
+  font-size: 0.75rem;
+  font-weight: 600;
+  width: fit-content;
+  padding: 0.3em 0.85em;
+  border-radius: 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  border: none;
+}
+
+.tier-badge-enhanced.tier-bronze {
+  background: linear-gradient(90deg, #CD7F32, #B57325);
+  color: #fff;
+}
+
+.tier-badge-enhanced.tier-silver {
+  background: linear-gradient(90deg, #C0C0C0, #A5A5A5);
+  color: #222;
+}
+
+.tier-badge-enhanced.tier-gold {
+  background: linear-gradient(90deg, #FFD700, #FFA500);
+  color: #222;
+}
+
+.tier-badge-enhanced.tier-platinum {
+  background: linear-gradient(90deg, #8FDAE4, #4F7FFF);
+  color: #fff;
+}
+
+.tier-icon-enhanced {
+  width: 12px;
+  height: 12px;
+}
+
+/* XP Section - Platform-Themed Success Pill */
+.xp-section-enhanced {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.xp-pill-enhanced {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--status-success-bg);
+  color: var(--color-success-700);
+  border: 1px solid var(--status-success-border);
+  border-radius: var(--radius-full);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-base);
+  box-shadow: var(--shadow-xs);
+  white-space: nowrap;
+  transition: all var(--transition-base);
+}
+
+.leaderboard-card-enhanced:hover .xp-pill-enhanced {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+  background: var(--color-success-100);
+  border-color: var(--color-success-400);
+}
+
+.xp-label-enhanced {
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  color: var(--color-success-600);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.xp-value-enhanced {
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-base);
+  color: var(--color-success-700);
+}
+
+/* Dark mode adjustments for XP pill */
+[data-theme="dark"] .xp-pill-enhanced {
+  background: rgba(43, 175, 102, 0.15);
+  color: var(--color-success-300);
+  border-color: var(--color-success-600);
+}
+
+[data-theme="dark"] .xp-label-enhanced {
+  color: var(--color-success-400);
+}
+
+[data-theme="dark"] .xp-value-enhanced {
+  color: var(--color-success-300);
+}
+
+[data-theme="dark"] .leaderboard-card-enhanced:hover .xp-pill-enhanced {
+  background: rgba(43, 175, 102, 0.25);
+  border-color: var(--color-success-500);
+}
+
+/* Loading Skeletons */
+.leaderboard-card-skeleton {
+  display: grid;
+  grid-template-columns: 80px 64px 1fr auto;
+  gap: 1.5rem;
+  align-items: center;
+  padding: 1.5rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: calc(var(--radius-lg) + 4px);
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.rank-skeleton {
+  width: 64px;
+  height: 64px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-base);
+  justify-self: center;
+}
+
+.avatar-skeleton-enhanced {
+  width: 52px;
+  height: 52px;
+  background: var(--bg-tertiary);
+  border-radius: 50%;
+  justify-self: center;
+}
+
+.user-info-skeleton-enhanced {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.username-skeleton-enhanced {
+  width: 140px;
+  height: 24px;
+  background: var(--bg-tertiary);
+  border-radius: calc(var(--radius-base) / 2);
+}
+
+.tier-skeleton-enhanced {
+  width: 80px;
+  height: 20px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-full);
+}
+
+.xp-skeleton-enhanced {
+  width: 100px;
+  height: 40px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-full);
+  justify-self: end;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .leaderboard-card-enhanced {
+    grid-template-columns: 60px 48px 1fr auto;
+    padding: 1rem;
+    gap: 1rem;
+  }
+  
+  .rank-badge-premium {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .user-avatar-enhanced {
+    width: 48px;
+    height: 48px;
+    border-width: 2px;
+  }
+  
+  .avatar-fallback-enhanced {
+    font-size: 1.125rem;
+  }
+  
+  .username-enhanced {
+    font-size: 1rem;
+  }
+  
+  .xp-pill-enhanced {
+    padding: 0.375rem 0.875rem;
+    font-size: var(--font-size-sm);
+    gap: 0.375rem;
+  }
+  
+  .xp-label-enhanced {
+    font-size: var(--font-size-xs);
+  }
+  
+  .xp-value-enhanced {
+    font-size: var(--font-size-sm);
+  }
+}
+
+@media (max-width: 480px) {
+  .leaderboard-card-enhanced {
+    grid-template-columns: 50px 40px 1fr auto;
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+  
+  .rank-badge-premium {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .rank-number-premium {
+    font-size: 0.875rem;
+  }
+  
+  .user-avatar-enhanced {
+    width: 40px;
+    height: 40px;
+    border-width: 2px;
+  }
+  
+  .avatar-fallback-enhanced {
+    font-size: 1rem;
+  }
+  
+  .username-enhanced {
+    font-size: 0.875rem;
+  }
+  
+  .xp-pill-enhanced {
+    padding: 0.25rem 0.625rem;
+    font-size: var(--font-size-xs);
+    gap: 0.25rem;
+  }
+  
+  .xp-label-enhanced {
+    font-size: 0.625rem;
+  }
+  
+  .xp-value-enhanced {
+    font-size: var(--font-size-xs);
+  }
+}

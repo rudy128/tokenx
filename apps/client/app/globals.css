@@ -33,6 +33,7 @@
 @import '../styles/task-details.css';
 @import '../styles/campaigns.css';
 @import '../styles/campaign-cards.css';
+@import '../styles/leaderboard.css';
 
 /* State Styles */
 @import '../styles/loading-states.css';
@@ -1982,11 +1983,11 @@ body {
 /* Tasks Section */
 .tasks-section {
   grid-area: tasks;
-  background: var(--bg-elevated);
-  border-radius: var(--radius-lg);
-  padding: var(--space-8);
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--border-subtle);
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+  border: none;
 }
 
 .tasks-header {
@@ -4164,7 +4165,7 @@ html, body {
 .campaign-card {
   background: var(--bg-elevated);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0; /* Rounded top corners, square bottom corners */
   overflow: hidden;
   box-shadow: var(--shadow-md);
   transition: all var(--transition-slow);
@@ -4728,18 +4729,18 @@ html, body {
 
 .campaign-card-footer {
   margin-top: auto;
-  padding-top: var(--space-5); /* Consistent spacing from progress to footer */
+  padding-top: var(--space-2); /* Minimal spacing for compact layout */
   align-self: stretch;
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-2);
 }
 
 .campaign-card-divider {
   height: 1px;
   background: var(--border-subtle);
   width: 100%;
-  margin: var(--space-4) 0 var(--space-2) 0;
+  margin: var(--space-2) 0 var(--space-2) 0;
 }
 
 .campaign-card-button {
@@ -6495,13 +6496,13 @@ html, body {
 .tasks-title {
   font-size: 1.875rem;
   font-weight: 700;
-  color: white;
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
 }
 
 .tasks-subtitle {
   font-size: 1.125rem;
-  color: rgb(156, 163, 175);
+  color: var(--text-secondary);
 }
 
 .campaign-tasks-grid {

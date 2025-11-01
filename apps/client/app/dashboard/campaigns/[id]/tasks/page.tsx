@@ -145,36 +145,73 @@ export default function CampaignTasksPage() {
     );
   };
 
-  // EXACT SAME TaskCard as daily tasks page
+  // EXACT SAME TaskCard as daily tasks page - campaign card structure
   const TaskCard = ({ task, onViewDetails, index }: { task: Task; onViewDetails: (task: Task) => void; index?: number }) => (
-    <div className="task-card" onClick={() => onViewDetails(task)}>
-      <div className="task-card-content">
-        <span className="task-title">{task.name}</span>
-        <span className="task-desc">{task.description}</span>
-        
-        <div className="task-meta-row">
-          <span className="badge badge-primary">CAMPAIGN</span>
-          <div className="task-xp-set">
-            <span className="task-xp-value">{task.xp}</span>
-            <span className="badge badge-success">XP</span>
+    <div className="campaign-card" onClick={() => onViewDetails(task)}>
+      {/* Banner Section - using exact same styling as modal banner */}
+      <div className="campaign-card-banner-container">
+        <div className="task-modal-banner">
+          <div className="task-modal-banner-fallback" style={{ backgroundColor: getTaskThemeColor(task, index) }}>
+            <div className="grid-bg"></div>
+            <div className="task-modal-banner-title">
+              {task.name}
+            </div>
           </div>
-          <span className="badge badge-secondary">{task.approvalWorkflow === 'auto' ? 'AUTO' : 'MANUAL'}</span>
         </div>
-        
-        <div className="task-program">
-          {campaign?.name || 'TokenX Ambassador Program'} · {task.taskType || 'CAMPAIGN_TASK'}
-        </div>
-        
-        <button 
-          className="btn-primary"
-          onClick={(e) => { e.stopPropagation(); onViewDetails(task); }}
-        >
-          View Details
-        </button>
       </div>
       
-      <div className="task-image-container">
-        <TaskImageFallback task={task} index={index} />
+      {/* Content Area - matching campaign card structure */}
+      <div className="campaign-card-content">
+        {/* Header */}
+        <div className="campaign-card-header">
+          <h3 className="campaign-card-title">
+            {task.name}
+          </h3>
+          <p className="campaign-card-description">
+            {task.description}
+          </p>
+        </div>
+        
+        {/* Stats - using same structure as campaign card */}
+        <div className="campaign-card-stats">
+          <div className="campaign-card-stat">
+            <div className="campaign-card-stat-icon-wrapper participants">
+              <Zap className="campaign-card-stat-icon" />
+            </div>
+            <div className="campaign-card-stat-content">
+              <div className="campaign-card-stat-value">{task.xp}</div>
+              <div className="campaign-card-stat-label">XP Reward</div>
+            </div>
+          </div>
+          <div className="campaign-card-stat">
+            <div className="campaign-card-stat-icon-wrapper tokens">
+              <Target className="campaign-card-stat-icon" />
+            </div>
+            <div className="campaign-card-stat-content">
+              <div className="campaign-card-stat-value">{task.approvalWorkflow === 'auto' ? 'AUTO' : 'MANUAL'}</div>
+              <div className="campaign-card-stat-label">Verification</div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Program info */}
+        <div className="campaign-card-dates">
+          <div className="campaign-card-date">
+            <span>{campaign?.name || 'TokenX Ambassador Program'} · {task.taskType || 'CAMPAIGN_TASK'}</span>
+          </div>
+        </div>
+        
+        {/* Footer with button */}
+        <div className="campaign-card-footer">
+          <div className="campaign-card-divider"></div>
+          <button 
+            onClick={(e) => { e.stopPropagation(); onViewDetails(task); }}
+            className="campaign-card-button joined"
+          >
+            <CheckCircle className="campaign-card-button-icon" />
+            View Details
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -314,22 +351,35 @@ export default function CampaignTasksPage() {
   // EXACT SAME Skeleton as daily tasks page
   function CampaignTaskSkeleton() {
     return (
-      <div className="task-card animate-pulse">
-        <div className="task-card-content">
-          {/* Title placeholder */}
-          <div 
-            className="h-6 rounded" 
-            style={{ 
-              backgroundColor: 'var(--bg-tertiary)', 
-              width: '70%'
-            }} 
-          />
-          
-          {/* Description placeholder */}
-          <div className="space-y-2">
+      <div className="campaign-card animate-pulse">
+        {/* Banner Section - exact same structure as TaskCard */}
+        <div className="campaign-card-banner-container">
+          <div className="task-modal-banner">
+            <div 
+              className="task-modal-banner-fallback" 
+              style={{ backgroundColor: 'var(--bg-tertiary)' }}
+            />
+          </div>
+        </div>
+        
+        {/* Content Area - exact same structure as TaskCard */}
+        <div className="campaign-card-content">
+          {/* Header */}
+          <div className="campaign-card-header">
+            <div 
+              className="h-6 rounded" 
+              style={{ 
+                backgroundColor: 'var(--bg-tertiary)', 
+                width: '70%',
+                marginBottom: 'var(--space-2)'
+              }} 
+            />
             <div 
               className="h-4 rounded" 
-              style={{ backgroundColor: 'var(--bg-tertiary)' }} 
+              style={{ 
+                backgroundColor: 'var(--bg-tertiary)',
+                marginBottom: 'var(--space-1)'
+              }} 
             />
             <div 
               className="h-4 rounded" 
@@ -339,63 +389,82 @@ export default function CampaignTasksPage() {
               }} 
             />
           </div>
-
-          {/* Meta row placeholder */}
-          <div className="task-meta-row">
-            <div 
-              className="badge" 
-              style={{ 
-                backgroundColor: 'var(--bg-tertiary)', 
-                width: '60px'
-              }} 
-            />
-            <div className="task-xp-set">
+          
+          {/* Stats - exact same structure as TaskCard */}
+          <div className="campaign-card-stats">
+            <div className="campaign-card-stat">
               <div 
-                style={{ 
-                  backgroundColor: 'var(--bg-tertiary)', 
-                  width: '30px',
-                  height: '1rem',
-                  borderRadius: 'var(--radius-sm)'
-                }} 
+                className="campaign-card-stat-icon-wrapper participants" 
+                style={{ backgroundColor: 'var(--bg-tertiary)' }}
               />
+              <div className="campaign-card-stat-content">
+                <div 
+                  className="h-5 rounded" 
+                  style={{ 
+                    backgroundColor: 'var(--bg-tertiary)', 
+                    width: '40px',
+                    marginBottom: 'var(--space-1)'
+                  }} 
+                />
+                <div 
+                  className="h-3 rounded" 
+                  style={{ 
+                    backgroundColor: 'var(--bg-tertiary)', 
+                    width: '60px'
+                  }} 
+                />
+              </div>
+            </div>
+            <div className="campaign-card-stat">
               <div 
-                className="badge" 
+                className="campaign-card-stat-icon-wrapper tokens" 
+                style={{ backgroundColor: 'var(--bg-tertiary)' }}
+              />
+              <div className="campaign-card-stat-content">
+                <div 
+                  className="h-5 rounded" 
+                  style={{ 
+                    backgroundColor: 'var(--bg-tertiary)', 
+                    width: '50px',
+                    marginBottom: 'var(--space-1)'
+                  }} 
+                />
+                <div 
+                  className="h-3 rounded" 
+                  style={{ 
+                    backgroundColor: 'var(--bg-tertiary)', 
+                    width: '55px'
+                  }} 
+                />
+              </div>
+            </div>
+          </div>
+          
+          {/* Program info - exact same structure as TaskCard */}
+          <div className="campaign-card-dates">
+            <div className="campaign-card-date">
+              <div 
+                className="h-4 rounded" 
                 style={{ 
                   backgroundColor: 'var(--bg-tertiary)', 
-                  width: '30px'
+                  width: '250px'
                 }} 
               />
             </div>
+          </div>
+          
+          {/* Footer - exact same structure as TaskCard */}
+          <div className="campaign-card-footer">
+            <div className="campaign-card-divider" />
             <div 
-              className="badge" 
+              className="h-10 rounded" 
               style={{ 
-                backgroundColor: 'var(--bg-tertiary)', 
-                width: '70px'
+                backgroundColor: 'var(--bg-tertiary)',
+                width: '100%'
               }} 
             />
           </div>
-
-          {/* Program placeholder */}
-          <div 
-            className="h-4 rounded" 
-            style={{ 
-              backgroundColor: 'var(--bg-tertiary)', 
-              width: '60%'
-            }} 
-          />
-
-          {/* Button placeholder */}
-          <div 
-            className="h-10 rounded" 
-            style={{ backgroundColor: 'var(--bg-tertiary)' }} 
-          />
         </div>
-        
-        {/* Image placeholder on the right */}
-        <div 
-          className="task-image-container" 
-          style={{ backgroundColor: 'var(--bg-tertiary)' }}
-        />
       </div>
     );
   }
@@ -559,6 +628,7 @@ export default function CampaignTasksPage() {
         <div className="page-container">
           {/* Campaign Tasks Section Title */}
           <div className="daily-tasks-header" style={{ marginTop: 'var(--space-8)' }}>
+            <div className="header-accent-bar"></div>
             <h2 className="daily-tasks-title" style={{ fontSize: 'var(--font-size-2xl)' }}>
               Campaign Tasks
             </h2>

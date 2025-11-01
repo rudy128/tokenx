@@ -163,13 +163,26 @@ function determineTaskIcon(taskType?: string, instructions?: string): 'twitter' 
   return 'document' // Default fallback
 }
 
+// X (Twitter) Logo Component
+function XLogo({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
+  )
+}
+
 // Icon mapping function
 function getSubtaskIcon(iconType: string, className: string = "") {
   const baseClass = `h-8 w-8 rounded-lg p-1.5 mr-4 ${className}`
   
   switch (iconType) {
     case 'twitter':
-      return <Twitter className={`${baseClass} text-[#1DA1F2] bg-[#1DA1F2]/20`} />
+      return (
+        <div className={`${baseClass} text-[#000000] dark:text-[#FFFFFF] bg-[#000000]/10 dark:bg-[#FFFFFF]/10`}>
+          <XLogo className="w-full h-full" />
+        </div>
+      )
     case 'discord':
       return <MessageSquare className={`${baseClass} text-[#5865F2] bg-[#5865F2]/20`} />
     case 'video':
@@ -180,7 +193,7 @@ function getSubtaskIcon(iconType: string, className: string = "") {
       return <Upload className={`${baseClass} text-[#82EC40] bg-[#82EC40]/20`} />
     case 'document':
     default:
-      return <FileText className={`${baseClass} text-[#8c6cfb] bg-[#222040]`} />
+      return <FileText className={`${baseClass} text-[#8c6cfb] bg-[#8c6cfb]/20`} />
   }
 }
 
@@ -424,38 +437,231 @@ export default function CampaignTaskDetailPage() {
         <main className="task-page-main">
           <div className="task-content-grid" role="status" aria-live="polite" aria-label="Loading campaign task details">
             
-            {/* Header Skeleton - Left */}
+            {/* Header Skeleton - Left - uses exact same classes */}
             <section className="task-header-left">
-              <div className="skeleton-title"></div>
-              <div className="skeleton-subtitle"></div>
+              <h1 className="project-title">
+                <div 
+                  style={{ 
+                    height: '1em',
+                    backgroundColor: 'var(--bg-tertiary)', 
+                    width: '70%',
+                    borderRadius: 'var(--radius-base)',
+                    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                  }} 
+                />
+              </h1>
+              <h4 className="project-subtitle">
+                <div 
+                  style={{ 
+                    height: '1em',
+                    backgroundColor: 'var(--bg-tertiary)',
+                    width: '90%',
+                    borderRadius: 'var(--radius-base)',
+                    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                  }} 
+                />
+              </h4>
             </section>
 
-            {/* Banner Skeleton - Right */}
+            {/* Banner Skeleton - Right - uses exact same classes */}
             <aside className="banner-right">
-              <div className="skeleton-banner"></div>
+              <div className="banner-image-container">
+                <div 
+                  style={{ 
+                    width: '100%',
+                    height: '100%',
+                    backgroundColor: 'var(--bg-tertiary)',
+                    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                  }}
+                />
+              </div>
             </aside>
 
-            {/* Status Strip Skeleton */}
+            {/* Status Strip Skeleton - matches status-strip-row */}
             <div className="status-strip-row">
-              <div className="skeleton-status-chip"></div>
-              <div className="skeleton-status-info"></div>
-              <div className="skeleton-avatars"></div>
+              <div 
+                style={{ 
+                  height: '2rem',
+                  width: '120px',
+                  backgroundColor: 'var(--bg-tertiary)',
+                  borderRadius: 'var(--radius-full)',
+                  animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                }} 
+              />
+              
+              <div className="status-info">
+                <div 
+                  style={{ 
+                    height: '1.5rem',
+                    width: '120px',
+                    backgroundColor: 'var(--bg-tertiary)',
+                    borderRadius: 'var(--radius-base)',
+                    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                  }} 
+                />
+              </div>
+              
+              <div className="status-avatars">
+                <div className="avatar-group">
+                  <div 
+                    className="avatar avatar-1" 
+                    style={{ 
+                      backgroundColor: 'var(--bg-tertiary)',
+                      animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                    }}
+                  />
+                  <div 
+                    className="avatar avatar-2" 
+                    style={{ 
+                      backgroundColor: 'var(--bg-tertiary)',
+                      animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                    }}
+                  />
+                  <div 
+                    className="avatar avatar-3" 
+                    style={{ 
+                      backgroundColor: 'var(--bg-tertiary)',
+                      animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                    }}
+                  />
+                  <div 
+                    style={{ 
+                      height: '1rem',
+                      width: '120px',
+                      backgroundColor: 'var(--bg-tertiary)',
+                      borderRadius: 'var(--radius-base)',
+                      marginLeft: 'var(--space-2)',
+                      animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                    }} 
+                  />
+                </div>
+              </div>
             </div>
 
-            {/* Sub-tasks Skeleton */}
+            {/* Sub-tasks Skeleton - uses exact same classes */}
             <section className="tasks-section">
-              <div className="skeleton-section-header"></div>
-              <div className="skeleton-section-subtitle"></div>
+              <header className="tasks-header">
+                <h2 className="tasks-title">
+                  <div 
+                    style={{ 
+                      height: '1em',
+                      backgroundColor: 'var(--bg-tertiary)', 
+                      width: '150px',
+                      borderRadius: 'var(--radius-base)',
+                      animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                      margin: '0 auto'
+                    }} 
+                  />
+                </h2>
+                <p className="tasks-subtitle">
+                  <div 
+                    style={{ 
+                      height: '1em',
+                      backgroundColor: 'var(--bg-tertiary)', 
+                      width: '300px',
+                      borderRadius: 'var(--radius-base)',
+                      animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                      margin: '0 auto'
+                    }} 
+                  />
+                </p>
+              </header>
               
               <div className="subtasks-list">
-                <div className="skeleton-subtask-card"></div>
-                <div className="skeleton-subtask-card"></div>
+                {/* First subtask skeleton - uses exact same class */}
+                <div className="subtask-button-card" style={{ cursor: 'default', pointerEvents: 'none' }}>
+                  <div className="subtask-icon-wrapper">
+                    <div 
+                      style={{ 
+                        height: '2rem',
+                        width: '2rem',
+                        backgroundColor: 'var(--bg-tertiary)',
+                        borderRadius: 'var(--radius-lg)',
+                        animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                      }} 
+                    />
+                  </div>
+                  <div className="subtask-content">
+                    <h3 className="subtask-title">
+                      <div 
+                        style={{ 
+                          height: '1em',
+                          backgroundColor: 'var(--bg-tertiary)',
+                          width: '60%',
+                          borderRadius: 'var(--radius-base)',
+                          animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                        }} 
+                      />
+                    </h3>
+                  </div>
+                  <div className="subtask-xp-pill">
+                    <div 
+                      style={{ 
+                        height: '1em',
+                        width: '3rem',
+                        backgroundColor: 'var(--bg-tertiary)',
+                        borderRadius: 'var(--radius-base)',
+                        animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                      }} 
+                    />
+                  </div>
+                </div>
+                
+                {/* Second subtask skeleton - uses exact same class */}
+                <div className="subtask-button-card" style={{ cursor: 'default', pointerEvents: 'none' }}>
+                  <div className="subtask-icon-wrapper">
+                    <div 
+                      style={{ 
+                        height: '2rem',
+                        width: '2rem',
+                        backgroundColor: 'var(--bg-tertiary)',
+                        borderRadius: 'var(--radius-lg)',
+                        animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                      }} 
+                    />
+                  </div>
+                  <div className="subtask-content">
+                    <h3 className="subtask-title">
+                      <div 
+                        style={{ 
+                          height: '1em',
+                          backgroundColor: 'var(--bg-tertiary)',
+                          width: '70%',
+                          borderRadius: 'var(--radius-base)',
+                          animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                        }} 
+                      />
+                    </h3>
+                  </div>
+                  <div className="subtask-xp-pill">
+                    <div 
+                      style={{ 
+                        height: '1em',
+                        width: '3rem',
+                        backgroundColor: 'var(--bg-tertiary)',
+                        borderRadius: 'var(--radius-base)',
+                        animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                      }} 
+                    />
+                  </div>
+                </div>
               </div>
             </section>
 
-            {/* Claim Block Skeleton */}
+            {/* Claim Block Skeleton - uses exact same classes */}
             <div className="claim-block-section">
-              <div className="skeleton-claim-card"></div>
+              <div className="claim-now-card" style={{ cursor: 'default', pointerEvents: 'none' }}>
+                <div 
+                  style={{ 
+                    height: '1em',
+                    backgroundColor: 'var(--bg-tertiary)',
+                    width: '200px',
+                    borderRadius: 'var(--radius-base)',
+                    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    margin: '0 auto'
+                  }} 
+                />
+              </div>
             </div>
 
           </div>
@@ -551,7 +757,7 @@ export default function CampaignTaskDetailPage() {
           <div className="status-strip-row">
             <div className="status-chip ongoing">
               <span className="status-dot"></span>
-              Campaign Task
+              Ongoing
             </div>
             
             <div className="status-info">
@@ -566,7 +772,7 @@ export default function CampaignTaskDetailPage() {
                 <div className="avatar avatar-1"></div>
                 <div className="avatar avatar-2"></div>
                 <div className="avatar avatar-3"></div>
-                <div className="avatar-count">Campaign</div>
+                <div className="avatar-count">5K+ Participants</div>
               </div>
             </div>
           </div>

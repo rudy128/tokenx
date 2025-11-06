@@ -6,7 +6,6 @@ import {
   Filter, 
   Calendar, 
   Target, 
-  MoreVertical,
   Eye,
   Edit,
   Plus,
@@ -273,9 +272,14 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
             {campaign.status}
           </span>
         </div>
-        <button className="btn btn-ghost p-2" style={{ minWidth: 'unset' }}>
-          <MoreVertical size={18} />
-        </button>
+        <Link
+          href={`/campaigns/${campaign.id}/edit`}
+          className="btn btn-ghost p-2"
+          style={{ minWidth: 'unset' }}
+          title="Edit campaign"
+        >
+          <Edit size={18} />
+        </Link>
       </div>
 
       {/* Description */}

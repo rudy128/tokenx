@@ -1,8 +1,7 @@
 "use client"
 
-import { signOut } from "next-auth/react"
-import { Shield, LogOut, Users, BarChart3, Settings, Briefcase } from "lucide-react"
-import { ThemeToggle } from "./theme-toggle"
+import { Shield, Users, BarChart3, Settings, Briefcase } from "lucide-react"
+import AdminLayout from "./admin-layout"
 
 interface AdminDashboardProps {
   user: {
@@ -14,84 +13,9 @@ interface AdminDashboardProps {
 }
 
 export default function AdminDashboard({ user }: AdminDashboardProps) {
-  const handleSignOut = async () => {
-    await signOut({ callbackUrl: "/sign-in" })
-  }
-
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-app)' }}>
-      {/* Header */}
-      <header 
-        className="border-b"
-        style={{ 
-          backgroundColor: 'var(--bg-surface)', 
-          borderColor: 'var(--border-default)',
-          position: 'sticky',
-          top: 0,
-          zIndex: 40,
-          backdropFilter: 'blur(8px)'
-        }}
-      >
-        <div className="flex items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div 
-              className="inline-flex items-center justify-center w-10 h-10 rounded-lg"
-              style={{ backgroundColor: 'var(--interactive-primary)', color: 'var(--text-on-primary)' }}
-            >
-              <Shield size={24} />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                Admin Portal
-              </h1>
-              <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
-                TokenX Ambassador Platform
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <ThemeToggle />
-            
-            <div className="flex items-center gap-3 px-4 py-2 rounded-lg" style={{ backgroundColor: 'var(--bg-subtle)' }}>
-              <div className="text-right">
-                <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                  {user.name || "Admin"}
-                </p>
-                <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                  {user.email}
-                </p>
-              </div>
-              {user.image ? (
-                <img 
-                  src={user.image} 
-                  alt={user.name || "Admin"} 
-                  className="w-9 h-9 rounded-full"
-                />
-              ) : (
-                <div 
-                  className="w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm"
-                  style={{ backgroundColor: 'var(--interactive-primary)', color: 'var(--text-on-primary)' }}
-                >
-                  {user.name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || "A"}
-                </div>
-              )}
-            </div>
-
-            <button
-              onClick={handleSignOut}
-              className="btn btn-ghost"
-              style={{ gap: '0.5rem' }}
-            >
-              <LogOut size={18} />
-              Sign Out
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="p-8">
+    <AdminLayout>
+      <div className="p-8">
         <div className="max-w-7xl mx-auto">
           {/* Welcome Section */}
           <div className="mb-12">
@@ -183,8 +107,8 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
             </div>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </AdminLayout>
   )
 }
 

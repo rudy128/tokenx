@@ -1,7 +1,7 @@
 "use client"
 
 import { signOut, useSession } from "next-auth/react"
-import { Shield, LogOut, LayoutDashboard, Briefcase, Users, FileText, Settings } from "lucide-react"
+import { Shield, LogOut, LayoutDashboard, Briefcase, Users, FileText, Settings, CheckSquare } from "lucide-react"
 import { ThemeToggle } from "./theme-toggle"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -16,6 +16,7 @@ export default function AdminHeader() {
 
   const navItems = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/tasks", label: "Tasks", icon: CheckSquare },
     { href: "/campaigns", label: "Campaigns", icon: Briefcase },
     { href: "/users", label: "Users", icon: Users },
     { href: "/submissions", label: "Submissions", icon: FileText },

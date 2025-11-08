@@ -69,6 +69,7 @@ model Session {
 }
 
 model Task {
+  id                 String             @id @default(uuid())
   campaignId         String
   name               String
   description        String
@@ -76,29 +77,41 @@ model Task {
   xpReward           Int
   verificationMethod VerificationMethod @default(MANUAL)
   requirements       Json?
+  status             TaskStatus         @default(draft)
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
-  status             TaskStatus         @default(draft)
-  id                 String             @id @default(uuid())
   Campaign           Campaign           @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   TaskSubmission     TaskSubmission[]
+  taskSubTasks       TaskSubTask[]
+
+  @@index([campaignId])
+  @@index([status])
 }
 
 model TaskSubmission {
-  id                 String               @id
+  id                 String               @id @default(cuid())
   userId             String
+  taskId             String
   proofUrl           String?
+  proofImageUrl      String?              // Store the uploaded proof image path
   screenshot         String?
   description        String?
   status             SubmissionStatus     @default(PENDING)
   submittedAt        DateTime             @default(now())
   reviewedAt         DateTime?
-  taskId             String
-  Task               Task                 @relation(fields: [taskId], references: [id])
-  User               User                 @relation(fields: [userId], references: [id])
+  reviewedBy         String?
+  reviewNotes        String?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  Task               Task                 @relation(fields: [taskId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  User               User                 @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   VerificationAction VerificationAction[]
 
   @@unique([taskId, userId])
+  @@index([taskId])
+  @@index([userId])
+  @@index([status])
+  @@map("task_submissions")
 }
 
 model User {
@@ -171,6 +184,7 @@ model NewTask {
   taskType           String              @default("GENERAL")
   submissions        NewTaskSubmission[]
   pinnedByUsers      UserPinnedTask[]
+  subTasks           SubTask[]
 
   @@index([campaignId])
   @@map("new_tasks")
@@ -204,6 +218,42 @@ model UserPinnedTask {
 
   @@id([userId, taskId])
   @@map("user_pinned_tasks")
+}
+
+model SubTask {
+  id            String   @id @default(cuid())
+  title         String
+  description   String?
+  link          String?
+  xpReward      Int      @default(0)
+  order         Int      @default(0)
+  isCompleted   Boolean  @default(false)
+  isUploadProof Boolean  @default(false)
+  taskId        String   @db.Uuid
+  task          NewTask  @relation(fields: [taskId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([taskId])
+  @@map("subtasks")
+}
+
+model TaskSubTask {
+  id            String   @id @default(cuid())
+  title         String
+  description   String?
+  link          String?
+  xpReward      Int      @default(0)
+  order         Int      @default(0)
+  isCompleted   Boolean  @default(false)
+  isUploadProof Boolean  @default(false)
+  taskId        String
+  task          Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([taskId])
+  @@map("task_subtasks")
 }
 
 enum TaskStatus {

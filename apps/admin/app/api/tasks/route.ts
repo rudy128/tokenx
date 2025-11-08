@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
 // GET /api/tasks - Get all tasks
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const session = await auth()
 
@@ -14,7 +14,18 @@ export async function GET() {
       )
     }
 
+    // Get query parameters
+    const { searchParams } = new URL(request.url)
+    const campaignId = searchParams.get("campaignId")
+    const status = searchParams.get("status")
+
+    // Build where clause
+    const where: any = {}
+    if (campaignId) where.campaignId = campaignId
+    if (status) where.status = status
+
     const tasks = await prisma.task.findMany({
+      where,
       include: {
         Campaign: {
           select: {
@@ -22,6 +33,9 @@ export async function GET() {
             name: true,
             status: true,
           },
+        },
+        taskSubTasks: {
+          orderBy: { order: "asc" },
         },
         _count: {
           select: {
@@ -35,13 +49,17 @@ export async function GET() {
     })
 
     // Convert dates to ISO strings for JSON serialization
-    const tasksData = tasks.map(task => ({
+    const tasksData = tasks.map((task) => ({
       ...task,
       createdAt: task.createdAt.toISOString(),
       updatedAt: task.updatedAt.toISOString(),
     }))
 
-    return NextResponse.json(tasksData)
+    return NextResponse.json({
+      success: true,
+      count: tasks.length,
+      tasks: tasksData,
+    })
   } catch (error) {
     console.error("Error fetching tasks:", error)
     return NextResponse.json(
@@ -54,16 +72,29 @@ export async function GET() {
 // POST /api/tasks - Create a new task
 export async function POST(request: NextRequest) {
   try {
+    // 1. Authenticate
     const session = await auth()
 
     if (!session?.user) {
       return NextResponse.json(
-        { error: "Unauthorized" },
+        { error: "Unauthorized - Please sign in" },
         { status: 401 }
       )
     }
 
+    // Check if user is admin
+    const user = session.user as { id: string; role?: string }
+    if (user.role !== "ADMIN") {
+      return NextResponse.json(
+        { error: "Forbidden - Admin access required" },
+        { status: 403 }
+      )
+    }
+
+    // 2. Parse and validate request body
     const body = await request.json()
+    console.log("📝 Received task data:", JSON.stringify(body, null, 2))
+
     const {
       campaignId,
       name,
@@ -73,6 +104,7 @@ export async function POST(request: NextRequest) {
       verificationMethod,
       requirements,
       status,
+      subTasks = [],
     } = body
 
     // Validation
@@ -92,14 +124,7 @@ export async function POST(request: NextRequest) {
 
     if (!description || typeof description !== "string" || description.trim().length === 0) {
       return NextResponse.json(
-        { error: "Description is required" },
-        { status: 400 }
-      )
-    }
-
-    if (!category || !["SOCIAL_ENGAGEMENT", "CONTENT_CREATION", "COMMUNITY_BUILDING", "REFERRAL", "CUSTOM"].includes(category)) {
-      return NextResponse.json(
-        { error: "Invalid category" },
+        { error: "Task description is required" },
         { status: 400 }
       )
     }
@@ -111,18 +136,24 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!verificationMethod || !["AI_AUTO", "MANUAL", "HYBRID"].includes(verificationMethod)) {
-      return NextResponse.json(
-        { error: "Invalid verification method" },
-        { status: 400 }
-      )
-    }
-
     if (status && !["draft", "active", "archived"].includes(status)) {
       return NextResponse.json(
         { error: "Invalid status" },
         { status: 400 }
       )
+    }
+
+    // Validate subtasks if provided
+    if (subTasks && Array.isArray(subTasks)) {
+      for (let i = 0; i < subTasks.length; i++) {
+        const subTask = subTasks[i]
+        if (!subTask.title || subTask.title.trim() === "") {
+          return NextResponse.json(
+            { error: `Subtask ${i + 1}: Title is required` },
+            { status: 400 }
+          )
+        }
+      }
     }
 
     // Verify campaign exists
@@ -137,7 +168,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create task
+    // 3. Create task with subtasks in a single transaction
     const task = await prisma.task.create({
       data: {
         campaignId,
@@ -148,6 +179,16 @@ export async function POST(request: NextRequest) {
         verificationMethod,
         requirements: requirements || null,
         status: status || "draft",
+        taskSubTasks: subTasks && Array.isArray(subTasks) && subTasks.length > 0 ? {
+          create: subTasks.map((subTask: any, index: number) => ({
+            title: subTask.title.trim(),
+            link: subTask.link?.trim() || null,
+            xpReward: parseInt(subTask.xpReward) || 0,
+            order: index,
+            isCompleted: false,
+            isUploadProof: subTask.isUploadProof || false,
+          }))
+        } : undefined,
       },
       include: {
         Campaign: {
@@ -157,24 +198,61 @@ export async function POST(request: NextRequest) {
             status: true,
           },
         },
+        taskSubTasks: {
+          orderBy: { order: "asc" },
+        },
       },
     })
 
+    console.log("✅ Task created successfully:", task.id)
+    console.log("✅ Subtasks created:", task.taskSubTasks.length)
+
+    // 4. Return success response
     return NextResponse.json(
       {
+        success: true,
         message: "Task created successfully",
         task: {
-          ...task,
+          id: task.id,
+          title: task.name,
+          subtaskCount: task.taskSubTasks.length,
           createdAt: task.createdAt.toISOString(),
           updatedAt: task.updatedAt.toISOString(),
         },
       },
       { status: 201 }
     )
-  } catch (error) {
-    console.error("Error creating task:", error)
+  } catch (error: any) {
+    console.error("❌ Task creation error:", error)
+
+    // Handle specific Prisma errors
+    if (error.code === "P2002") {
+      return NextResponse.json(
+        { error: "A task with this name already exists in this campaign" },
+        { status: 400 }
+      )
+    }
+
+    if (error.code === "P2003") {
+      return NextResponse.json(
+        { error: "Invalid reference - Campaign or user not found" },
+        { status: 400 }
+      )
+    }
+
+    if (error.code === "P2025") {
+      return NextResponse.json(
+        { error: "Related record not found" },
+        { status: 404 }
+      )
+    }
+
+    // Generic error
     return NextResponse.json(
-      { error: "Failed to create task" },
+      {
+        error: "Failed to create task",
+        details: process.env.NODE_ENV === "development" ? error.message : undefined,
+      },
       { status: 500 }
     )
   }

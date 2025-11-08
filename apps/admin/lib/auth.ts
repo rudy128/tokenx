@@ -21,9 +21,13 @@ declare module "next-auth" {
 
 const AUTH_SECRET_VALUE = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET
 
+if (!AUTH_SECRET_VALUE) {
+  console.warn("⚠️ AUTH_SECRET not found, using fallback secret for development")
+}
+
 export const authConfig: NextAuthConfig = {
   adapter: PrismaAdapter(prisma),
-  secret: AUTH_SECRET_VALUE || (process.env.NODE_ENV === "production" ? undefined : "dev-secret-admin"),
+  secret: AUTH_SECRET_VALUE || "dev-secret-admin-fallback-key-12345",
   trustHost: true,
   basePath: "/api/auth",
   providers: [

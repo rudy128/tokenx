@@ -1,58 +1,35 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 
 export default function ClearCookiesPage() {
   const router = useRouter()
-  const [cleared, setCleared] = useState(false)
+  const [status, setStatus] = useState("Clearing cookies...")
 
   useEffect(() => {
-    // Clear all possible session cookies
-    const cookies = [
-      "admin.session-token",
-      "next-auth.session-token",
-      "__Secure-next-auth.session-token",
-      "next-auth.csrf-token",
-      "__Secure-next-auth.csrf-token",
-      "next-auth.callback-url",
-      "__Secure-next-auth.callback-url",
-    ]
-
-    cookies.forEach((cookieName) => {
-      // Clear for current domain
-      document.cookie = `${cookieName}=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;`
-      // Clear for subdomain
-      document.cookie = `${cookieName}=; path=/; domain=localhost; expires=Thu, 01 Jan 1970 00:00:01 GMT;`
+    // Clear all cookies
+    document.cookie.split(";").forEach((c) => {
+      document.cookie = c
+        .replace(/^ +/, "")
+        .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/")
     })
 
-    setCleared(true)
+    setStatus("Cookies cleared! Redirecting to sign-in...")
     
-    // Redirect to sign-in after 2 seconds
     setTimeout(() => {
-      router.push("/sign-in?cleared=true")
-    }, 2000)
+      router.push("/sign-in")
+    }, 1500)
   }, [router])
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--bg-app)' }}>
       <div className="text-center">
-        <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-gray-200 border-t-blue-500"></div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          {cleared ? "✅ Cookies Cleared!" : "🔄 Clearing Cookies..."}
+        <h1 className="text-2xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
+          {status}
         </h1>
-        <p className="mt-2 text-gray-600 dark:text-gray-400">
-          {cleared 
-            ? "Redirecting to sign-in..." 
-            : "Removing all session cookies..."}
-        </p>
-        {cleared && (
-          <div className="mt-4 space-y-1 text-sm text-gray-500">
-            <p>✅ admin.session-token</p>
-            <p>✅ next-auth.session-token</p>
-            <p>✅ CSRF tokens</p>
-          </div>
-        )}
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto" 
+             style={{ borderColor: 'var(--interactive-primary)' }}></div>
       </div>
     </div>
   )

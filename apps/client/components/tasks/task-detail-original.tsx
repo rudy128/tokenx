@@ -1,0 +1,489 @@
+'use client'
+
+import { useState } from 'react'
+import { CheckCircle2, Circle, ExternalLink, Upload, X, Check } from 'lucide-react'
+
+// Helper function to get platform-specific logo and color
+function getPlatformLogo(url: string): { icon: string; color: string } {
+  try {
+    const hostname = new URL(url).hostname.toLowerCase()
+    
+    // Social Media Platforms
+    if (hostname.includes('twitter.com') || hostname.includes('x.com')) {
+      return {
+        icon: 'https://abs.twimg.com/icons/apple-touch-icon-192x192.png',
+        color: 'from-blue-400 to-blue-600'
+      }
+    }
+    if (hostname.includes('instagram.com')) {
+      return {
+        icon: 'https://www.instagram.com/static/images/ico/favicon-192.png/68d99ba29cc8.png',
+        color: 'from-pink-400 to-purple-600'
+      }
+    }
+    if (hostname.includes('youtube.com')) {
+      return {
+        icon: 'https://www.youtube.com/s/desktop/f506bd45/img/favicon_144x144.png',
+        color: 'from-red-500 to-red-600'
+      }
+    }
+    if (hostname.includes('tiktok.com')) {
+      return {
+        icon: 'https://sf16-website-login.neutral.ttwstatic.com/obj/tiktok_web_login_static/tiktok/webapp/main/webapp-desktop/8152caf0c8e8bc67ae0d.png',
+        color: 'from-black to-gray-800'
+      }
+    }
+    if (hostname.includes('linkedin.com')) {
+      return {
+        icon: 'https://static.licdn.com/aero-v1/sc/h/al2o9zrvru7aqj8e1x2rzsrca',
+        color: 'from-blue-600 to-blue-700'
+      }
+    }
+    if (hostname.includes('facebook.com')) {
+      return {
+        icon: 'https://static.xx.fbcdn.net/rsrc.php/y8/r/dF5SId3UHWd.svg',
+        color: 'from-blue-500 to-blue-700'
+      }
+    }
+    if (hostname.includes('discord.com')) {
+      return {
+        icon: 'https://discord.com/assets/847541504914fd33810e70a0ea73177e.ico',
+        color: 'from-indigo-500 to-indigo-600'
+      }
+    }
+    if (hostname.includes('telegram.org') || hostname.includes('t.me')) {
+      return {
+        icon: 'https://telegram.org/img/t_logo.png',
+        color: 'from-blue-400 to-blue-500'
+      }
+    }
+    if (hostname.includes('reddit.com')) {
+      return {
+        icon: 'https://www.redditstatic.com/desktop2x/img/favicon/favicon-96x96.png',
+        color: 'from-orange-500 to-orange-600'
+      }
+    }
+    if (hostname.includes('medium.com')) {
+      return {
+        icon: 'https://miro.medium.com/max/195/1*emiGsBgJu2KHWyjluhKXQw.png',
+        color: 'from-gray-800 to-black'
+      }
+    }
+    
+    // Default fallback
+    return {
+      icon: `https://www.google.com/s2/favicons?domain=${hostname}&sz=128`,
+      color: 'from-purple-500 to-purple-600'
+    }
+  } catch {
+    return {
+      icon: '',
+      color: 'from-gray-700 to-gray-800'
+    }
+  }
+}
+
+interface SubTask {
+  id: string
+  title: string
+  description: string | null
+  link: string | null
+  xpReward: number
+  order: number
+  isCompleted: boolean
+  isUploadProof?: boolean
+}
+
+interface Task {
+  id: string
+  title: string
+  description: string
+  xpReward: number
+  status: string
+  campaign?: {
+    id: string
+    name: string
+    slug: string
+    status: string
+  }
+  subTasks: SubTask[]
+  _count?: {
+    submissions: number
+  }
+}
+
+interface Props {
+  task: Task
+  userId: string
+}
+
+export default function TaskDetailView({ task, userId }: Props) {
+  const [subtasks, setSubtasks] = useState<SubTask[]>(task.subTasks || [])
+  const [loading, setLoading] = useState<string | null>(null)
+  const [uploadedFiles, setUploadedFiles] = useState<Record<string, File>>({}) // Track uploaded files
+  const [uploadPreviews, setUploadPreviews] = useState<Record<string, string>>({}) // Track preview URLs
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Calculate total XP from all subtasks
+  const totalXP = subtasks.reduce((sum, st) => sum + (st.xpReward || 0), 0)
+  const participantCount = task._count?.submissions || 0
+  const displayParticipants = participantCount > 5000 ? '5K+' : `${participantCount}+`
+
+  // Handle file selection for upload proof subtask
+  const handleFileSelect = (subtaskId: string, event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // Validate file type (images only)
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload an image file')
+      return
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size must be less than 5MB')
+      return
+    }
+
+    // Store file
+    setUploadedFiles(prev => ({
+      ...prev,
+      [subtaskId]: file
+    }))
+
+    // Create preview URL
+    const previewUrl = URL.createObjectURL(file)
+    setUploadPreviews(prev => ({
+      ...prev,
+      [subtaskId]: previewUrl
+    }))
+  }
+
+  // Remove uploaded file
+  const removeUploadedFile = (subtaskId: string) => {
+    // Revoke preview URL to free memory
+    if (uploadPreviews[subtaskId]) {
+      URL.revokeObjectURL(uploadPreviews[subtaskId])
+    }
+
+    setUploadedFiles(prev => {
+      const newFiles = { ...prev }
+      delete newFiles[subtaskId]
+      return newFiles
+    })
+
+    setUploadPreviews(prev => {
+      const newPreviews = { ...prev }
+      delete newPreviews[subtaskId]
+      return newPreviews
+    })
+  }
+
+  // Handle claim submission
+  const handleClaimSubmission = async () => {
+    try {
+      setIsSubmitting(true)
+
+      // Check if upload proof subtask has file
+      const uploadProofSubtask = subtasks.find(st => st.isUploadProof)
+      if (uploadProofSubtask && !uploadedFiles[uploadProofSubtask.id]) {
+        alert('Please upload proof before claiming rewards')
+        return
+      }
+
+      // Create FormData for file upload
+      const formData = new FormData()
+      formData.append('taskId', task.id)
+      formData.append('userId', userId)
+
+      // Add uploaded file if exists
+      if (uploadProofSubtask && uploadedFiles[uploadProofSubtask.id]) {
+        formData.append('proofFile', uploadedFiles[uploadProofSubtask.id])
+      }
+
+      // Submit to API
+      const response = await fetch('/api/tasks/submit', {
+        method: 'POST',
+        body: formData
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to submit task')
+      }
+
+      alert('Task submitted successfully! XP will be credited after review.')
+      // Optionally redirect or refresh
+      window.location.reload()
+
+    } catch (error: any) {
+      console.error('Submission error:', error)
+      alert(error.message || 'Failed to submit task')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-[#0A0E1A] text-white px-6 py-8">
+      <div className="max-w-7xl mx-auto">
+        
+        {/* Header Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+          
+          {/* Left: Title and Description */}
+          <div>
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+              {task.title}
+            </h1>
+            <p className="text-gray-400 text-lg">
+              {task.description}
+            </p>
+          </div>
+
+          {/* Right: Gradient Card */}
+          <div className="flex items-center justify-center">
+            <div className="w-full aspect-video bg-gradient-to-br from-blue-500 via-purple-500 via-pink-500 to-yellow-400 rounded-3xl flex items-center justify-center shadow-2xl">
+              <h2 className="text-3xl md:text-4xl font-bold text-white text-center px-8">
+                {task.title}
+              </h2>
+            </div>
+          </div>
+        </div>
+
+        {/* Status Bar */}
+        <div className="flex items-center justify-between bg-gray-900/50 rounded-2xl px-6 py-4 mb-12">
+          
+          {/* Left: Status Badge */}
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+            <span className="text-gray-300 font-medium">
+              {task.status === 'ACTIVE' ? 'Ongoing' : task.status}
+            </span>
+          </div>
+
+          {/* Center: XP Reward */}
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+            <span className="text-white font-semibold">{task.xpReward || totalXP} XP Reward</span>
+          </div>
+
+          {/* Right: Participants */}
+          <div className="flex items-center gap-2">
+            {/* Avatar Stack */}
+            <div className="flex -space-x-2">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 border-2 border-gray-900"></div>
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 border-2 border-gray-900"></div>
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 border-2 border-gray-900"></div>
+            </div>
+            <span className="text-gray-300 font-medium">{displayParticipants} Participants</span>
+          </div>
+        </div>
+
+        {/* Sub-tasks Section */}
+        <div className="mb-12">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-3xl md:text-4xl font-bold">Sub-tasks</h2>
+            <div className="text-sm text-gray-400">
+              Complete all tasks to unlock rewards
+            </div>
+          </div>
+          
+          {subtasks.length > 0 ? (
+            <div className="grid gap-6">
+              {subtasks.map((subtask, index) => {
+                const platformInfo = subtask.link ? getPlatformLogo(subtask.link) : null
+                const isUploadProof = subtask.isUploadProof || subtask.title.toLowerCase().includes('upload proof')
+                const hasUploadedFile = uploadedFiles[subtask.id]
+                
+                return (
+                  <div
+                    key={subtask.id}
+                    className="group relative bg-gradient-to-r from-gray-900 to-gray-900/50 backdrop-blur-sm rounded-2xl border border-gray-800/50 hover:border-purple-500/50 transition-all duration-300 overflow-hidden"
+                  >
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-cyan-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    
+                    <div className="relative p-6">
+                      <div className="flex items-center gap-6">
+                        
+                        {/* Left: Icon */}
+                        <div className="flex-shrink-0">
+                          {isUploadProof ? (
+                            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-pink-500 p-2 flex items-center justify-center shadow-lg">
+                              {hasUploadedFile ? (
+                                <Check className="w-8 h-8 text-white" />
+                              ) : (
+                                <Upload className="w-8 h-8 text-white" />
+                              )}
+                            </div>
+                          ) : platformInfo && platformInfo.icon ? (
+                            <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${platformInfo.color} p-2 flex items-center justify-center shadow-lg`}>
+                              <img
+                                src={platformInfo.icon}
+                                alt="Platform"
+                                className="w-full h-full object-contain"
+                                onError={(e) => {
+                                  const parent = e.currentTarget.parentElement
+                                  if (parent) {
+                                    parent.innerHTML = `
+                                      <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                                      </svg>
+                                    `
+                                  }
+                                }}
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-lg">
+                              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Middle: Task Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-3 mb-2">
+                            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                              Task {index + 1}
+                            </span>
+                          </div>
+                          
+                          <h3 className="text-xl md:text-2xl font-bold text-white mb-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-cyan-400 group-hover:to-purple-400 transition-all duration-300">
+                            {subtask.title}
+                          </h3>
+                          
+                          {/* Link for non-upload subtasks */}
+                          {!isUploadProof && subtask.link && (
+                            <a
+                              href={subtask.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-cyan-400 transition-colors"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                              <span className="truncate max-w-xs">
+                                {new URL(subtask.link).hostname.replace('www.', '')}
+                              </span>
+                            </a>
+                          )}
+
+                          {/* File Upload Section for Upload Proof */}
+                          {isUploadProof && (
+                            <div className="mt-3">
+                              {hasUploadedFile ? (
+                                <div className="flex items-center gap-3 bg-green-500/10 border border-green-500/30 rounded-lg p-3">
+                                  <img
+                                    src={uploadPreviews[subtask.id]}
+                                    alt="Uploaded proof"
+                                    className="w-16 h-16 object-cover rounded-lg"
+                                  />
+                                  <div className="flex-1">
+                                    <p className="text-sm text-green-400 font-medium">
+                                      {uploadedFiles[subtask.id].name}
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      {(uploadedFiles[subtask.id].size / 1024).toFixed(1)} KB
+                                    </p>
+                                  </div>
+                                  <button
+                                    onClick={() => removeUploadedFile(subtask.id)}
+                                    className="text-red-400 hover:text-red-300 p-2"
+                                  >
+                                    <X className="w-5 h-5" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <label className="flex items-center gap-3 bg-purple-500/10 border border-purple-500/30 hover:border-purple-500/50 rounded-lg p-3 cursor-pointer transition-colors">
+                                  <Upload className="w-5 h-5 text-purple-400" />
+                                  <span className="text-sm text-purple-300">
+                                    Click to upload image proof
+                                  </span>
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => handleFileSelect(subtask.id, e)}
+                                    className="hidden"
+                                  />
+                                </label>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Right: XP Badge and Action */}
+                        <div className="flex-shrink-0 flex items-center gap-4">
+                          <div className="text-right">
+                            <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">
+                              Reward
+                            </div>
+                            <div className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
+                              {subtask.xpReward}
+                            </div>
+                            <div className="text-xs text-gray-400 font-semibold">
+                              XP
+                            </div>
+                          </div>
+                          
+                          {!isUploadProof && subtask.link && (
+                            <button
+                              onClick={() => window.open(subtask.link, '_blank', 'noopener,noreferrer')}
+                              className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/25 hover:shadow-purple-500/50 transition-all duration-300 transform hover:scale-110"
+                            >
+                              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="bg-gradient-to-br from-gray-900 to-gray-900/50 rounded-2xl p-16 text-center border border-gray-800/50">
+              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gray-800/50 flex items-center justify-center">
+                <svg className="w-10 h-10 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-400 mb-2">No subtasks available</h3>
+              <p className="text-gray-500">The admin hasn't added any subtasks to this task yet</p>
+            </div>
+          )}
+        </div>
+
+        {/* Claim Button */}
+        <div className="flex justify-center mt-8">
+          <button
+            onClick={handleClaimSubmission}
+            disabled={isSubmitting}
+            className="bg-gradient-to-r from-purple-600 via-purple-500 to-pink-500 hover:from-purple-700 hover:via-purple-600 hover:to-pink-600 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-bold text-xl px-12 py-4 rounded-full shadow-2xl shadow-purple-500/50 transition-all transform hover:scale-105 disabled:scale-100"
+          >
+            {isSubmitting ? (
+              <span className="flex items-center gap-3">
+                <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Submitting...
+              </span>
+            ) : (
+              `${task.xpReward || 0} XP - Claim Now`
+            )}
+          </button>
+        </div>
+
+      </div>
+    </div>
+  )
+}

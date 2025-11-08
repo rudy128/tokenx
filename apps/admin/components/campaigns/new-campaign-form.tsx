@@ -11,9 +11,13 @@ import {
   DollarSign,
   FileText,
   Loader2,
+  CheckSquare,
+  Plus,
 } from "lucide-react"
 import Link from "next/link"
 import AdminLayout from "../admin-layout"
+import TaskCard, { CampaignTask } from "./task-card"
+import { SubTask } from "./subtask-row"
 
 interface NewCampaignFormProps {
   userId: string
@@ -37,12 +41,80 @@ export default function NewCampaignForm({ userId }: NewCampaignFormProps) {
     status: "DRAFT" as "DRAFT" | "ACTIVE" | "PAUSED" | "COMPLETED" | "CANCELLED",
   })
 
+  // Tasks state
+  const [tasks, setTasks] = useState<CampaignTask[]>([])
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
     setError("")
+  }
+
+  // Task management functions
+  const addNewTask = () => {
+    const newTask: CampaignTask = {
+      id: crypto.randomUUID(),
+      title: '',
+      description: '',
+      type: 'SOCIAL_MEDIA',
+      xpReward: 0,
+      isRequired: false,
+      verificationMethod: 'MANUAL',
+      subTasks: []
+    }
+    setTasks([...tasks, newTask])
+  }
+
+  const updateTask = (taskId: string, field: keyof CampaignTask, value: any) => {
+    setTasks(tasks.map(task => 
+      task.id === taskId ? { ...task, [field]: value } : task
+    ))
+  }
+
+  const removeTask = (taskId: string) => {
+    setTasks(tasks.filter(task => task.id !== taskId))
+  }
+
+  const addSubTask = (taskId: string) => {
+    setTasks(tasks.map(task => {
+      if (task.id === taskId) {
+        const newSubTask: SubTask = {
+          id: crypto.randomUUID(),
+          title: '',
+          link: '',
+          xpReward: 0,
+          order: task.subTasks.length,
+          isUploadProof: false
+        }
+        return { ...task, subTasks: [...task.subTasks, newSubTask] }
+      }
+      return task
+    }))
+  }
+
+  const updateSubTask = (taskId: string, subTaskIndex: number, field: keyof SubTask, value: string | number) => {
+    setTasks(tasks.map(task => {
+      if (task.id === taskId) {
+        const updatedSubTasks = [...task.subTasks]
+        updatedSubTasks[subTaskIndex] = { ...updatedSubTasks[subTaskIndex], [field]: value }
+        return { ...task, subTasks: updatedSubTasks }
+      }
+      return task
+    }))
+  }
+
+  const removeSubTask = (taskId: string, subTaskIndex: number) => {
+    setTasks(tasks.map(task => {
+      if (task.id === taskId) {
+        return { 
+          ...task, 
+          subTasks: task.subTasks.filter((_, idx) => idx !== subTaskIndex)
+        }
+      }
+      return task
+    }))
   }
 
   const handleSubmit = async (e: React.FormEvent, saveAsDraft = false) => {
@@ -81,6 +153,36 @@ export default function NewCampaignForm({ userId }: NewCampaignFormProps) {
       return
     }
 
+    // Validate tasks
+    for (let i = 0; i < tasks.length; i++) {
+      const task = tasks[i]
+      if (!task.title.trim()) {
+        setError(`Task ${i + 1}: Title is required`)
+        setIsSubmitting(false)
+        return
+      }
+      if (task.xpReward < 0) {
+        setError(`Task ${i + 1}: XP reward must be 0 or greater`)
+        setIsSubmitting(false)
+        return
+      }
+      // Validate subtasks
+      for (let j = 0; j < task.subTasks.length; j++) {
+        const subTask = task.subTasks[j]
+        if (!subTask.title.trim()) {
+          setError(`Task ${i + 1}, Subtask ${j + 1}: Title is required`)
+          setIsSubmitting(false)
+          return
+        }
+        // Validate XP reward is non-negative
+        if (subTask.xpReward < 0) {
+          setError(`Task ${i + 1}, Subtask ${j + 1}: XP reward cannot be negative`)
+          setIsSubmitting(false)
+          return
+        }
+      }
+    }
+
     try {
       const response = await fetch("/api/campaigns", {
         method: "POST",
@@ -93,6 +195,21 @@ export default function NewCampaignForm({ userId }: NewCampaignFormProps) {
           participantLimit: formData.participantLimit ? parseInt(formData.participantLimit) : null,
           status: saveAsDraft ? "DRAFT" : formData.status,
           createdById: userId,
+          tasks: tasks.map(task => ({
+            title: task.title,
+            description: task.description,
+            type: task.type,
+            xpReward: task.xpReward,
+            isRequired: task.isRequired,
+            verificationMethod: task.verificationMethod,
+            subTasks: task.subTasks.map((subTask, index) => ({
+              title: subTask.title,
+              link: subTask.link?.trim() || null,
+              xpReward: subTask.xpReward,
+              order: index,
+              isUploadProof: subTask.isUploadProof || false
+            }))
+          }))
         }),
       })
 
@@ -326,6 +443,51 @@ export default function NewCampaignForm({ userId }: NewCampaignFormProps) {
                   </p>
                 </div>
               </div>
+            </div>
+
+            {/* Campaign Tasks */}
+            <div 
+              className="card mb-6"
+              style={{ 
+                backgroundColor: 'var(--bg-surface)',
+                border: '1px solid var(--border-default)'
+              }}
+            >
+              <div className="flex items-center gap-3 mb-6 pb-4 border-b" style={{ borderColor: 'var(--border-subtle)' }}>
+                <CheckSquare size={24} style={{ color: 'var(--interactive-primary)' }} />
+                <h2 className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>
+                  Campaign Tasks
+                </h2>
+              </div>
+
+              <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
+                Define tasks that ambassadors need to complete to earn rewards
+              </p>
+
+              {/* Task List */}
+              <div className="space-y-4 mb-4">
+                {tasks.map((task, index) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    index={index}
+                    onUpdate={updateTask}
+                    onRemove={removeTask}
+                    onAddSubTask={addSubTask}
+                    onUpdateSubTask={updateSubTask}
+                    onRemoveSubTask={removeSubTask}
+                  />
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={addNewTask}
+                className="btn btn-secondary flex items-center gap-2"
+              >
+                <Plus size={18} />
+                Add Task
+              </button>
             </div>
 
             {/* Rewards */}

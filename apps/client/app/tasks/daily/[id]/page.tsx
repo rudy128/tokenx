@@ -4,7 +4,7 @@ import React from 'react'
 import Link from 'next/link'
 import { notFound, useParams } from 'next/navigation'
 import {
-  ChevronLeft, Clock, Users, Calendar, CheckCircle, AlertCircle, XCircle, Zap, ArrowRight, Gift, ExternalLink, Copy,
+  ChevronLeft, Clock, Users, Calendar, CheckCircle, AlertCircle, XCircle, Zap, ArrowRight, Gift, Copy,
   Twitter, MessageSquare, FileText, Upload, ArrowUpRight, Play, Share2, ShieldCheck, Star, X, AlertTriangle, 
   RefreshCw, Mail, ArrowLeft, Search
 } from 'lucide-react'
@@ -18,6 +18,86 @@ import { useToast } from '@/components/ui/use-toast'
 import { type TaskType } from '@/lib/task-types'
 import { cn } from '@/lib/utils'
 import NavBar from '@/components/NavBar'
+
+// Helper function to get platform-specific logo and color
+function getPlatformLogo(url: string): { icon: string; color: string } {
+  try {
+    const hostname = new URL(url).hostname.toLowerCase()
+    
+    // Social Media Platforms
+    if (hostname.includes('twitter.com') || hostname.includes('x.com')) {
+      return {
+        icon: 'https://abs.twimg.com/icons/apple-touch-icon-192x192.png',
+        color: 'from-blue-400 to-blue-600'
+      }
+    }
+    if (hostname.includes('instagram.com')) {
+      return {
+        icon: 'https://www.instagram.com/static/images/ico/favicon-192.png/68d99ba29cc8.png',
+        color: 'from-pink-400 to-purple-600'
+      }
+    }
+    if (hostname.includes('youtube.com')) {
+      return {
+        icon: 'https://www.youtube.com/s/desktop/f506bd45/img/favicon_144x144.png',
+        color: 'from-red-500 to-red-600'
+      }
+    }
+    if (hostname.includes('tiktok.com')) {
+      return {
+        icon: 'https://sf16-website-login.neutral.ttwstatic.com/obj/tiktok_web_login_static/tiktok/webapp/main/webapp-desktop/8152caf0c8e8bc67ae0d.png',
+        color: 'from-black to-gray-800'
+      }
+    }
+    if (hostname.includes('linkedin.com')) {
+      return {
+        icon: 'https://static.licdn.com/aero-v1/sc/h/al2o9zrvru7aqj8e1x2rzsrca',
+        color: 'from-blue-600 to-blue-700'
+      }
+    }
+    if (hostname.includes('facebook.com')) {
+      return {
+        icon: 'https://static.xx.fbcdn.net/rsrc.php/y8/r/dF5SId3UHWd.svg',
+        color: 'from-blue-500 to-blue-700'
+      }
+    }
+    if (hostname.includes('discord.com')) {
+      return {
+        icon: 'https://discord.com/assets/847541504914fd33810e70a0ea73177e.ico',
+        color: 'from-indigo-500 to-indigo-600'
+      }
+    }
+    if (hostname.includes('telegram.org') || hostname.includes('t.me')) {
+      return {
+        icon: 'https://telegram.org/img/t_logo.png',
+        color: 'from-blue-400 to-blue-500'
+      }
+    }
+    if (hostname.includes('reddit.com')) {
+      return {
+        icon: 'https://www.redditstatic.com/desktop2x/img/favicon/favicon-96x96.png',
+        color: 'from-orange-500 to-orange-600'
+      }
+    }
+    if (hostname.includes('medium.com')) {
+      return {
+        icon: 'https://miro.medium.com/max/195/1*emiGsBgJu2KHWyjluhKXQw.png',
+        color: 'from-gray-800 to-black'
+      }
+    }
+    
+    // Default fallback
+    return {
+      icon: `https://www.google.com/s2/favicons?domain=${hostname}&sz=128`,
+      color: 'from-purple-500 to-purple-600'
+    }
+  } catch {
+    return {
+      icon: '',
+      color: 'from-gray-700 to-gray-800'
+    }
+  }
+}
 
 async function getTask(id: string) {
   try {
@@ -65,47 +145,57 @@ async function getTask(id: string) {
       contract: task.contract || undefined,
       contractAddress: task.contractAddress || undefined,
       timer: task.availableTo ? new Date(task.availableTo) : undefined,
-      // Generate two fixed subtasks for every daily task
-      subtasks: [
-        // 1. Main Title Task - Action card that redirects to the given link
-        {
-          id: 'main-action',
-          title: task.name, // Use the main task title
-          xp: Math.floor((task.xp || 50) * 0.7), // 70% of main task XP for action
-          icon: determineTaskIcon(task.platform, task.instructions), // Determine icon based on platform/content
-          action: { 
-            type: 'link' as const, 
-            url: task.actionUrl || task.instructions || '#' // Use actionUrl or fallback to instructions or placeholder
-          },
-          completed: false
-        },
-        // 2. Upload Task - Always present for media/file submission
-        {
-          id: 'upload-proof',
-          title: 'Upload proof/media for this task',
-          xp: Math.floor((task.xp || 50) * 0.3), // 30% of main task XP for upload
-          icon: 'upload' as const,
-          action: { 
-            type: 'upload' as const, 
-            uploadHandler: () => {
-              // Handle file upload
-              const input = document.createElement('input')
-              input.type = 'file'
-              input.accept = 'image/*,video/*,.pdf,.doc,.docx'
-              input.onchange = (e) => {
-                const file = (e.target as HTMLInputElement).files?.[0]
-                if (file) {
-                  console.log('File selected for upload:', file.name)
-                  // TODO: Implement actual file upload logic here
-                  // You can integrate with your existing upload system
+      // Use subtasks from database or fallback to default subtasks
+      subtasks: task.subTasks && task.subTasks.length > 0
+        ? task.subTasks.map((subTask: any) => ({
+            id: subTask.id,
+            title: subTask.title,
+            xp: subTask.xpReward || 0,
+            icon: determineTaskIcon(task.platform, subTask.title),
+            action: { 
+              type: 'link' as const, 
+              url: subTask.link || task.actionUrl || task.instructions || '#'
+            },
+            completed: subTask.isCompleted || false,
+            description: subTask.description,
+            link: subTask.link || null
+          }))
+        : [
+            // Fallback: Generate two fixed subtasks if none exist in database
+            {
+              id: 'main-action',
+              title: task.name,
+              xp: Math.floor((task.xp || 50) * 0.7),
+              icon: determineTaskIcon(task.platform, task.instructions),
+              action: { 
+                type: 'link' as const, 
+                url: task.actionUrl || task.instructions || '#'
+              },
+              completed: false
+            },
+            {
+              id: 'upload-proof',
+              title: 'Upload proof/media for this task',
+              xp: Math.floor((task.xp || 50) * 0.3),
+              icon: 'upload' as const,
+              action: { 
+                type: 'upload' as const, 
+                uploadHandler: () => {
+                  const input = document.createElement('input')
+                  input.type = 'file'
+                  input.accept = 'image/*,video/*,.pdf,.doc,.docx'
+                  input.onchange = (e) => {
+                    const file = (e.target as HTMLInputElement).files?.[0]
+                    if (file) {
+                      console.log('File selected for upload:', file.name)
+                    }
+                  }
+                  input.click()
                 }
-              }
-              input.click()
+              },
+              completed: false
             }
-          },
-          completed: false
-        }
-      ] as Subtask[]
+          ] as Subtask[]
     }
   } catch (error) {
     console.error('Error fetching task:', error)
@@ -161,6 +251,8 @@ type Subtask = {
   icon: 'twitter' | 'discord' | 'document' | 'video' | 'share' | 'upload'
   action: SubtaskAction
   completed?: boolean
+  description?: string
+  link?: string | null
 }
 
 // Function to determine task icon based on platform and instructions
@@ -303,12 +395,27 @@ function ClaimStatusModal({
 }
 
 // TaskSubtasks Component
-function TaskSubtasks({ subtasks, loading = false }: { subtasks: Subtask[], loading?: boolean }) {
+function TaskSubtasks({ 
+  subtasks, 
+  loading = false,
+  onToggleComplete
+}: { 
+  subtasks: Subtask[]
+  loading?: boolean
+  onToggleComplete?: (subtaskId: string, currentStatus: boolean) => void
+}) {
   const handleSubtaskClick = (subtask: Subtask) => {
     if (subtask.action.type === 'link' && subtask.action.url) {
       window.open(subtask.action.url, '_blank', 'noopener,noreferrer')
     } else if (subtask.action.type === 'upload' && subtask.action.uploadHandler) {
       subtask.action.uploadHandler()
+    }
+  }
+
+  const handleCheckboxClick = (e: React.MouseEvent, subtaskId: string, currentStatus: boolean) => {
+    e.stopPropagation()
+    if (onToggleComplete) {
+      onToggleComplete(subtaskId, currentStatus)
     }
   }
 
@@ -336,12 +443,12 @@ function TaskSubtasks({ subtasks, loading = false }: { subtasks: Subtask[], load
   return (
     <div className="space-y-5">
       <h2 className="text-xl font-bold text-white mb-6">Sub-tasks</h2>
-      {subtasks.map((subtask) => (
+      {subtasks.map((subtask, index) => (
         <div
           key={subtask.id}
-          onClick={() => handleSubtaskClick(subtask)}
+          data-subtask-id={subtask.id}
           className={cn(
-            "bg-gradient-to-br from-[#191B24] to-[#181B28] border border-[#23263B] shadow-xl rounded-xl p-6 mb-5 cursor-pointer",
+            "bg-gradient-to-br from-[#191B24] to-[#181B28] border border-[#23263B] shadow-xl rounded-xl p-6 mb-5",
             "transition-all duration-200 hover:scale-[1.02] hover:ring-2 hover:ring-[#8c6cfb]/40 hover:shadow-2xl",
             "group relative overflow-hidden",
             subtask.completed && "opacity-75 bg-gradient-to-br from-[#1a2e1a] to-[#162416]"
@@ -350,49 +457,88 @@ function TaskSubtasks({ subtasks, loading = false }: { subtasks: Subtask[], load
           {/* Subtle glow effect on hover */}
           <div className="absolute inset-0 bg-gradient-to-r from-[#8c6cfb]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
           
-          <div className="flex items-center justify-between relative z-10">
-            {/* Left side: Icon + Title */}
-            <div className="flex items-center flex-1 min-w-0">
-              {getSubtaskIcon(subtask.icon)}
-              
-              <div className="flex-1 min-w-0 mr-4">
-                <h3 className="font-semibold text-base md:text-lg text-white truncate group-hover:text-[#8c6cfb] transition-colors">
-                  {subtask.title}
-                </h3>
-                {subtask.completed && (
-                  <div className="flex items-center gap-2 mt-1">
-                    <CheckCircle className="h-4 w-4 text-green-400" />
-                    <span className="text-xs text-green-400 font-medium">Completed</span>
-                  </div>
-                )}
-              </div>
+          <div className="flex items-start gap-4 relative z-10">
+            {/* Platform Logo/Favicon */}
+            <div className="flex-shrink-0">
+              {subtask.link ? (
+                (() => {
+                  const { icon, color } = getPlatformLogo(subtask.link)
+                  return (
+                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${color} border border-gray-700 flex items-center justify-center overflow-hidden p-1.5`}>
+                      {icon ? (
+                        <img
+                          src={icon}
+                          alt={`${subtask.title} platform`}
+                          className="w-full h-full object-contain"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none'
+                            const parent = e.currentTarget.parentElement
+                            if (parent) {
+                              parent.innerHTML = `
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                                </svg>
+                              `
+                            }
+                          }}
+                        />
+                      ) : (
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                        </svg>
+                      )}
+                    </div>
+                  )
+                })()
+              ) : (
+                <div className="w-12 h-12 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  </svg>
+                </div>
+              )}
             </div>
 
-            {/* Right side: XP Badge + Action */}
-            <div className="flex items-center gap-3 flex-shrink-0">
-              {/* XP Badge */}
-              <Badge className="rounded-full bg-[#222950] text-[#82EC40] font-semibold px-4 py-1.5 text-sm shadow-lg border border-[#82EC40]/20">
-                {subtask.xp} XP
-              </Badge>
-
-              {/* Action Button/Icon */}
-              {subtask.action.type === 'link' ? (
-                <div className="w-8 h-8 rounded-full bg-[#8c6cfb]/20 flex items-center justify-center group-hover:bg-[#8c6cfb]/30 transition-colors">
-                  <ArrowUpRight className="h-4 w-4 text-[#8c6cfb] group-hover:scale-110 transition-transform" />
+            {/* Content - Title Only */}
+            <div 
+              onClick={() => handleSubtaskClick(subtask)}
+              className="flex-1 cursor-pointer"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <h3 className={cn(
+                    "font-semibold text-base md:text-lg group-hover:text-[#8c6cfb] transition-colors",
+                    subtask.completed ? "text-gray-400 line-through" : "text-white"
+                  )}>
+                    {subtask.title}
+                  </h3>
                 </div>
-              ) : subtask.action.type === 'upload' ? (
-                <Button
-                  size="sm"
-                  className="bg-gradient-to-tr from-indigo-600 to-purple-700 hover:from-indigo-500 hover:to-purple-600 text-white font-semibold px-4 py-2 rounded-full shadow-lg border-0 hover:scale-105 transition-all"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleSubtaskClick(subtask)
-                  }}
-                >
-                  <Upload className="h-3.5 w-3.5 mr-1.5" />
-                  Upload
-                </Button>
-              ) : null}
+
+                {/* Right side: XP Badge + Action */}
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  <Badge className="rounded-full bg-[#222950] text-[#82EC40] font-semibold px-4 py-1.5 text-sm shadow-lg border border-[#82EC40]/20">
+                    {subtask.xp} XP
+                  </Badge>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      if (subtask.link) {
+                        window.open(subtask.link, '_blank', 'noopener,noreferrer')
+                      }
+                    }}
+                    disabled={!subtask.link}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                      subtask.link
+                        ? 'bg-[#8c6cfb]/20 hover:bg-[#8c6cfb]/30 cursor-pointer'
+                        : 'bg-gray-800/20 cursor-not-allowed opacity-50'
+                    }`}
+                    title={subtask.link ? 'Open link' : 'No link available'}
+                  >
+                    <ArrowUpRight className="h-4 w-4 text-[#8c6cfb] group-hover:scale-110 transition-transform" />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -586,35 +732,70 @@ export default function TaskDetailPage() {
     }
   }
 
-  // Handle subtask completion with animations
-  const handleSubtaskComplete = (subtaskId: string) => {
-    const subtaskElement = document.querySelector(`[data-subtask-id="${subtaskId}"]`)
-    const xpElement = subtaskElement?.querySelector('.task-subtask-xp')
-    
-    if (subtaskElement) {
-      // Add completion state
-      subtaskElement.classList.add('completed')
+  // Handle subtask completion with animations and API update
+  const handleSubtaskComplete = async (subtaskId: string, currentStatus: boolean) => {
+    try {
+      // Optimistically update UI
+      setTask((prevTask: any) => {
+        if (!prevTask) return prevTask
+        return {
+          ...prevTask,
+          subtasks: prevTask.subtasks.map((st: any) =>
+            st.id === subtaskId ? { ...st, completed: !currentStatus } : st
+          )
+        }
+      })
+
+      // Update in database
+      const response = await fetch(`/api/tasks/${taskId}/subtasks/${subtaskId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isCompleted: !currentStatus
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update subtask')
+      }
+
+      // Animate completion
+      const subtaskElement = document.querySelector(`[data-subtask-id="${subtaskId}"]`)
+      const xpElement = subtaskElement?.querySelector('.task-subtask-xp')
       
-      // Animate XP counter
-      if (xpElement) {
-        xpElement.classList.add('animate-xp-award')
+      if (subtaskElement) {
+        subtaskElement.classList.add('completed')
         
-        // Remove animation class after completion
-        setTimeout(() => {
-          xpElement.classList.remove('animate-xp-award')
-        }, 600)
+        if (xpElement) {
+          xpElement.classList.add('animate-xp-award')
+          setTimeout(() => {
+            xpElement.classList.remove('animate-xp-award')
+          }, 600)
+        }
       }
       
-      // Show success feedback
-      showFeedback('success', 'Sub-task completed successfully!')
+      showFeedback('success', 'Sub-task updated successfully!')
+    } catch (error) {
+      console.error('Failed to update subtask:', error)
+      // Revert optimistic update
+      setTask((prevTask: any) => {
+        if (!prevTask) return prevTask
+        return {
+          ...prevTask,
+          subtasks: prevTask.subtasks.map((st: any) =>
+            st.id === subtaskId ? { ...st, completed: currentStatus } : st
+          )
+        }
+      })
+      showFeedback('error', 'Failed to update sub-task. Please try again.')
     }
   }
 
   // Handle keyboard interactions for subtasks
-  const handleSubtaskKeyDown = (event: React.KeyboardEvent, subtaskId: string) => {
+  const handleSubtaskKeyDown = (event: React.KeyboardEvent, subtaskId: string, currentStatus: boolean) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault()
-      handleSubtaskComplete(subtaskId)
+      handleSubtaskComplete(subtaskId, currentStatus)
     }
   }
   
@@ -781,49 +962,18 @@ export default function TaskDetailPage() {
 
           {/* Sub-tasks Section */}
           <section className="tasks-section">
-            <header className="tasks-header">
-              <h2 className="tasks-title">Sub-tasks</h2>
-              <p className="tasks-subtitle">Complete all tasks to unlock rewards</p>
-            </header>
-            
-            <div className="subtasks-list">
-              {/* Share TokenX Post Sub-task - Full Button Card */}
-              <button 
-                onClick={() => window.open('https://x.com/CubaneSpace', '_blank', 'noopener,noreferrer')}
-                className="subtask-button-card subtask-share-card"
-                aria-label="Share TokenX Post on X.com"
-              >
-                <div className="subtask-icon-wrapper">
-                  <ArrowUpRight className="subtask-icon" aria-hidden="true" />
-                </div>
-                <div className="subtask-content">
-                  <h3 className="subtask-title">Share TokenX Post</h3>
-                </div>
-                <div className="subtask-xp-pill">52 XP</div>
-              </button>
-              
-              {/* Upload Proof Sub-task - Full Button Card */}
-              <button 
-                onClick={handleFileUpload}
-                className="subtask-button-card subtask-upload-card"
-                aria-label="Upload files for task verification"
-              >
-                <div className="subtask-icon-wrapper">
-                  <Upload className="subtask-icon" aria-hidden="true" />
-                </div>
-                <div className="subtask-content">
-                  <h3 className="subtask-title">Upload proof/media for this task</h3>
-                </div>
-                <div className="subtask-xp-pill">22 XP</div>
-              </button>
+            <TaskSubtasks 
+              subtasks={task.subtasks || []} 
+              loading={loading}
+              onToggleComplete={handleSubtaskComplete}
+            />
 
-              {uploadedFiles.length > 0 && (
-                <div className="uploaded-files-indicator animate-fade-in" role="status" aria-live="polite">
-                  <CheckCircle className="h-4 w-4 text-green-500" aria-hidden="true" />
-                  <span>{uploadedFiles.length} file(s) uploaded successfully</span>
-                </div>
-              )}
-            </div>
+            {uploadedFiles.length > 0 && (
+              <div className="uploaded-files-indicator animate-fade-in" role="status" aria-live="polite">
+                <CheckCircle className="h-4 w-4 text-green-500" aria-hidden="true" />
+                <span>{uploadedFiles.length} file(s) uploaded successfully</span>
+              </div>
+            )}
           </section>
 
           {/* Claim Now Block */}

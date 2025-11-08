@@ -10,9 +10,14 @@ export async function GET(
     const resolvedParams = await params
     const taskId = resolvedParams.id
 
+    console.log('📥 Fetching task:', taskId)
+
     // Try to fetch actual task from database
     let task = null
+    let taskSubTasks: any[] = []
+    
     try {
+      // First try NewTask model (UUID-based)
       task = await prisma.newTask.findUnique({
         where: { id: taskId },
         include: {
@@ -21,11 +26,104 @@ export async function GET(
               status: true,
               userId: true
             }
+          },
+          subTasks: {
+            orderBy: {
+              order: 'asc'
+            },
+            select: {
+              id: true,
+              title: true,
+              description: true,
+              link: true,
+              xpReward: true,
+              order: true,
+              isCompleted: true
+            }
           }
         }
       })
+      
+      if (task) {
+        taskSubTasks = task.subTasks || []
+        console.log('✅ Found NewTask with', taskSubTasks.length, 'subtasks')
+      }
     } catch (dbError) {
-      console.log('Database query failed, using mock data:', dbError)
+      console.log('NewTask query failed, trying Task model:', dbError)
+    }
+
+    // If not found, try regular Task model (String-based)
+    if (!task) {
+      try {
+        const regularTask = await prisma.task.findUnique({
+          where: { id: taskId },
+          include: {
+            Campaign: {
+              select: {
+                id: true,
+                name: true,
+                status: true
+              }
+            },
+            TaskSubmission: {
+              select: {
+                status: true,
+                userId: true
+              }
+            },
+            taskSubTasks: {
+              orderBy: {
+                order: 'asc'
+              },
+              select: {
+                id: true,
+                title: true,
+                description: true,
+                link: true,
+                xpReward: true,
+                order: true,
+                isCompleted: true
+              }
+            }
+          }
+        })
+
+        if (regularTask) {
+          // Transform regular Task to match NewTask structure
+          task = {
+            id: regularTask.id,
+            name: regularTask.name,
+            description: regularTask.description,
+            instructions: null,
+            xp: regularTask.xpReward,
+            frequency: 'one_time',
+            status: regularTask.status,
+            rewardOverride: false,
+            rewardToken: null,
+            rewardAmount: null,
+            perUserCap: null,
+            globalCap: null,
+            availableFrom: null,
+            availableTo: null,
+            submissionCutoff: null,
+            evidenceMode: 'manual',
+            approvalWorkflow: 'manual',
+            uniqueContent: false,
+            minAccountAgeDays: null,
+            minFollowers: null,
+            createdAt: regularTask.createdAt,
+            updatedAt: regularTask.updatedAt,
+            taskType: regularTask.category,
+            submissions: regularTask.TaskSubmission,
+            subTasks: regularTask.taskSubTasks
+          } as any
+          
+          taskSubTasks = regularTask.taskSubTasks || []
+          console.log('✅ Found Task with', taskSubTasks.length, 'subtasks')
+        }
+      } catch (dbError) {
+        console.log('Task query also failed:', dbError)
+      }
     }
 
     // If actual task found, return it
@@ -63,9 +161,19 @@ export async function GET(
         steps: (task as any).steps || [],
         referrals: (task as any).referrals || undefined,
         contract: (task as any).contract || undefined,
-        contractAddress: (task as any).contractAddress || undefined
+        contractAddress: (task as any).contractAddress || undefined,
+        subTasks: taskSubTasks.map((st: any) => ({
+          id: st.id,
+          title: st.title,
+          description: st.description || null,
+          link: st.link || null,
+          xpReward: st.xpReward || 0,
+          order: st.order || 0,
+          isCompleted: st.isCompleted || false
+        }))
       }
 
+      console.log('✅ Returning task with', transformedTask.subTasks.length, 'subtasks')
       return NextResponse.json(transformedTask)
     }
 

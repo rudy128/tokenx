@@ -73,114 +73,104 @@ export default function CampaignsView({ campaigns }: CampaignsViewProps) {
 
   return (
     <AdminLayout>
-      <div style={{ backgroundColor: 'var(--bg-app)' }}>
-      {/* Header */}
-      <div 
-        className="border-b"
-        style={{ 
-          backgroundColor: 'var(--bg-surface)', 
-          borderColor: 'var(--border-default)',
-        }}
-      >
-        <div className="px-8 py-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
-                Campaigns
-              </h1>
-              <p className="text-base" style={{ color: 'var(--text-secondary)' }}>
-                Manage and monitor all ambassador campaigns
-              </p>
+      <div className="admin-campaigns-main">
+        {/* Header */}
+        <div className="admin-campaigns-header">
+          <div className="admin-campaigns-header-content">
+            <div className="admin-campaigns-title-row">
+              <div className="admin-campaigns-title-section">
+                <h1 className="admin-campaigns-title">Campaigns</h1>
+                <p className="admin-campaigns-subtitle">
+                  Manage and monitor all ambassador campaigns
+                </p>
+              </div>
+              <div className="admin-campaigns-actions">
+                <button className="btn btn-secondary flex items-center gap-2">
+                  <Download size={18} />
+                  Export
+                </button>
+                <Link href="/campaigns/new" className="btn btn-primary flex items-center gap-2">
+                  <Plus size={18} />
+                  New Campaign
+                </Link>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              <button className="btn btn-secondary flex items-center gap-2">
-                <Download size={18} />
-                Export
+
+            {/* Stats Cards */}
+            <div className="admin-campaigns-stats-grid">
+              <div className="admin-campaigns-stat-card admin-campaigns-stat-card-primary">
+                <p className="admin-campaigns-stat-label">Total Campaigns</p>
+                <p className="admin-campaigns-stat-value">{stats.total}</p>
+              </div>
+              <div className="admin-campaigns-stat-card admin-campaigns-stat-card-success">
+                <p className="admin-campaigns-stat-label">Active</p>
+                <p className="admin-campaigns-stat-value">{stats.active}</p>
+              </div>
+              <div className="admin-campaigns-stat-card admin-campaigns-stat-card-warning">
+                <p className="admin-campaigns-stat-label">Draft</p>
+                <p className="admin-campaigns-stat-value">{stats.draft}</p>
+              </div>
+              <div className="admin-campaigns-stat-card admin-campaigns-stat-card-info">
+                <p className="admin-campaigns-stat-label">Completed</p>
+                <p className="admin-campaigns-stat-value">{stats.completed}</p>
+              </div>
+              <div className="admin-campaigns-stat-card">
+                <p className="admin-campaigns-stat-label">Participants</p>
+                <p className="admin-campaigns-stat-value">{stats.totalParticipants}</p>
+              </div>
+              <div className="admin-campaigns-stat-card">
+                <p className="admin-campaigns-stat-label">Tasks</p>
+                <p className="admin-campaigns-stat-value">{stats.totalTasks}</p>
+              </div>
+            </div>
+
+            {/* Filters */}
+            <div className="admin-campaigns-filter-section">
+              <div className="admin-campaigns-search-wrapper">
+                <Search size={18} className="admin-campaigns-search-icon" />
+                <input
+                  type="text"
+                  placeholder="Search campaigns..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="admin-campaigns-search-input"
+                />
+              </div>
+
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="admin-campaigns-filter-select"
+              >
+                <option value="ALL">All Status</option>
+                <option value="DRAFT">Draft</option>
+                <option value="ACTIVE">Active</option>
+                <option value="PAUSED">Paused</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="CANCELLED">Cancelled</option>
+              </select>
+
+              <button className="btn btn-secondary">
+                <Filter size={18} />
               </button>
-              <Link href="/campaigns/new" className="btn btn-primary flex items-center gap-2">
-                <Plus size={18} />
-                New Campaign
-              </Link>
             </div>
-          </div>
-
-          {/* Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-            <StatCard label="Total Campaigns" value={stats.total} color="var(--interactive-primary)" />
-            <StatCard label="Active" value={stats.active} color="var(--status-success)" />
-            <StatCard label="Draft" value={stats.draft} color="var(--status-warning)" />
-            <StatCard label="Completed" value={stats.completed} color="var(--status-info)" />
-            <StatCard label="Participants" value={stats.totalParticipants} color="var(--text-primary)" />
-            <StatCard label="Tasks" value={stats.totalTasks} color="var(--text-primary)" />
-          </div>
-
-          {/* Filters */}
-          <div className="flex items-center gap-4 flex-wrap">
-            <div className="flex-1 min-w-[300px]" style={{ position: 'relative' }}>
-              <Search 
-                size={18} 
-                style={{ 
-                  position: 'absolute', 
-                  left: '12px', 
-                  top: '50%', 
-                  transform: 'translateY(-50%)',
-                  color: 'var(--text-tertiary)'
-                }} 
-              />
-              <input
-                type="text"
-                placeholder="Search campaigns..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="input"
-                style={{ paddingLeft: '40px' }}
-              />
-            </div>
-
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="input"
-              style={{ width: '200px' }}
-            >
-              <option value="ALL">All Status</option>
-              <option value="DRAFT">Draft</option>
-              <option value="ACTIVE">Active</option>
-              <option value="PAUSED">Paused</option>
-              <option value="COMPLETED">Completed</option>
-              <option value="CANCELLED">Cancelled</option>
-            </select>
-
-            <button className="btn btn-secondary">
-              <Filter size={18} />
-            </button>
           </div>
         </div>
-      </div>
 
-      {/* Campaigns List */}
-      <div className="p-8">
-        <div className="max-w-7xl mx-auto">
+        {/* Campaigns List */}
+        <div className="admin-campaigns-content">
           {filteredCampaigns.length === 0 ? (
-            <div 
-              className="text-center py-12 rounded-lg border-2 border-dashed"
-              style={{ 
-                borderColor: 'var(--border-subtle)',
-                backgroundColor: 'var(--bg-surface)'
-              }}
-            >
-              <Target size={48} style={{ color: 'var(--text-tertiary)', margin: '0 auto 1rem' }} />
-              <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
-                No campaigns found
-              </h3>
-              <p style={{ color: 'var(--text-secondary)' }}>
+            <div className="admin-campaigns-empty-state">
+              <Target className="admin-campaigns-empty-icon" />
+              <h3 className="admin-campaigns-empty-title">No campaigns found</h3>
+              <p className="admin-campaigns-empty-description">
                 {searchQuery || statusFilter !== "ALL" 
                   ? "Try adjusting your filters" 
                   : "Create your first campaign to get started"}
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="admin-campaigns-grid">
               {filteredCampaigns.map((campaign) => (
                 <CampaignCard key={campaign.id} campaign={campaign} />
               ))}
@@ -188,50 +178,21 @@ export default function CampaignsView({ campaigns }: CampaignsViewProps) {
           )}
         </div>
       </div>
-      </div>
     </AdminLayout>
   )
 }
 
-function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
-  return (
-    <div 
-      className="rounded-lg p-4 border"
-      style={{ 
-        backgroundColor: 'var(--bg-surface)',
-        borderColor: 'var(--border-default)'
-      }}
-    >
-      <p className="text-xs font-medium mb-1" style={{ color: 'var(--text-tertiary)' }}>
-        {label}
-      </p>
-      <p className="text-2xl font-bold" style={{ color }}>
-        {value}
-      </p>
-    </div>
-  )
-}
+// StatCard component removed - now using inline styles in main component
 
 function CampaignCard({ campaign }: { campaign: Campaign }) {
-  const getStatusColor = (status: Campaign['status']) => {
+  const getStatusClass = (status: Campaign['status']) => {
     switch (status) {
-      case 'ACTIVE': return 'var(--status-success)'
-      case 'DRAFT': return 'var(--status-warning)'
-      case 'PAUSED': return 'var(--status-info)'
-      case 'COMPLETED': return 'var(--text-tertiary)'
-      case 'CANCELLED': return 'var(--status-error)'
-      default: return 'var(--text-tertiary)'
-    }
-  }
-
-  const getStatusBg = (status: Campaign['status']) => {
-    switch (status) {
-      case 'ACTIVE': return 'var(--status-success-bg)'
-      case 'DRAFT': return 'var(--status-warning-bg)'
-      case 'PAUSED': return 'var(--status-info-bg)'
-      case 'COMPLETED': return 'var(--bg-subtle)'
-      case 'CANCELLED': return 'var(--status-error-bg)'
-      default: return 'var(--bg-subtle)'
+      case 'ACTIVE': return 'admin-campaign-card-status-active'
+      case 'DRAFT': return 'admin-campaign-card-status-draft'
+      case 'PAUSED': return 'admin-campaign-card-status-paused'
+      case 'COMPLETED': return 'admin-campaign-card-status-completed'
+      case 'CANCELLED': return 'admin-campaign-card-status-cancelled'
+      default: return 'admin-campaign-card-status-draft'
     }
   }
 
@@ -239,43 +200,18 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
   const daysLeft = Math.ceil((new Date(campaign.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
 
   return (
-    <div 
-      className="card group"
-      style={{ 
-        backgroundColor: 'var(--bg-surface)',
-        border: '1px solid var(--border-default)',
-        transition: 'all 0.2s ease',
-        cursor: 'pointer'
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = 'var(--border-hover)'
-        e.currentTarget.style.transform = 'translateY(-2px)'
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = 'var(--border-default)'
-        e.currentTarget.style.transform = 'translateY(0)'
-      }}
-    >
+    <div className="admin-campaign-card">
       {/* Header */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex-1">
-          <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
-            {campaign.name}
-          </h3>
-          <span 
-            className="inline-block px-2 py-1 rounded-full text-xs font-semibold"
-            style={{ 
-              backgroundColor: getStatusBg(campaign.status),
-              color: getStatusColor(campaign.status)
-            }}
-          >
+      <div className="admin-campaign-card-header">
+        <div className="admin-campaign-card-title-section">
+          <h3 className="admin-campaign-card-title">{campaign.name}</h3>
+          <span className={`admin-campaign-card-status ${getStatusClass(campaign.status)}`}>
             {campaign.status}
           </span>
         </div>
         <Link
           href={`/campaigns/${campaign.id}/edit`}
-          className="btn btn-ghost p-2"
-          style={{ minWidth: 'unset' }}
+          className="admin-campaign-card-edit-btn"
           title="Edit campaign"
         >
           <Edit size={18} />
@@ -283,77 +219,66 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
       </div>
 
       {/* Description */}
-      <p 
-        className="text-sm mb-4 line-clamp-2" 
-        style={{ color: 'var(--text-secondary)' }}
-      >
+      <p className="admin-campaign-card-description">
         {campaign.description}
       </p>
 
       {/* Dates */}
-      <div className="flex items-center gap-2 mb-3 text-xs" style={{ color: 'var(--text-tertiary)' }}>
-        <Calendar size={14} />
+      <div className="admin-campaign-card-dates">
+        <Calendar className="admin-campaign-card-dates-icon" />
         <span>
           {new Date(campaign.startDate).toLocaleDateString()} - {new Date(campaign.endDate).toLocaleDateString()}
         </span>
       </div>
 
       {isActive && daysLeft > 0 && (
-        <div 
-          className="text-xs font-medium mb-3"
-          style={{ color: 'var(--status-warning)' }}
-        >
+        <p className="admin-campaign-card-days-remaining">
           🔥 {daysLeft} days remaining
-        </div>
+        </p>
       )}
 
       {/* Stats */}
-      <div 
-        className="grid grid-cols-3 gap-3 pt-3 mb-4 border-t"
-        style={{ borderColor: 'var(--border-subtle)' }}
-      >
-        <div>
-          <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Participants</p>
-          <p className="font-bold" style={{ color: 'var(--text-primary)' }}>
+      <div className="admin-campaign-card-stats">
+        <div className="admin-campaign-card-stat">
+          <p className="admin-campaign-card-stat-label">Participants</p>
+          <p className="admin-campaign-card-stat-value">
             {campaign._count.CampaignParticipation}
             {campaign.participantLimit && `/${campaign.participantLimit}`}
           </p>
         </div>
-        <div>
-          <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Tasks</p>
-          <p className="font-bold" style={{ color: 'var(--text-primary)' }}>
+        <div className="admin-campaign-card-stat">
+          <p className="admin-campaign-card-stat-label">Tasks</p>
+          <p className="admin-campaign-card-stat-value">
             {campaign._count.Task}
           </p>
         </div>
-        <div>
-          <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Rewards</p>
-          <p className="font-bold text-sm" style={{ color: 'var(--status-success)' }}>
+        <div className="admin-campaign-card-stat">
+          <p className="admin-campaign-card-stat-label">Rewards</p>
+          <p className="admin-campaign-card-stat-value admin-campaign-card-stat-value-success">
             {campaign.rewardPool} {campaign.rewardToken}
           </p>
         </div>
       </div>
 
       {/* Creator */}
-      <div className="flex items-center justify-between text-xs" style={{ color: 'var(--text-tertiary)' }}>
+      <div className="admin-campaign-card-creator">
         <span>By {campaign.User.name || campaign.User.email}</span>
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-2 mt-4 pt-4 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
+      <div className="admin-campaign-card-actions">
         <Link 
           href={`/campaigns/${campaign.id}`}
-          className="btn btn-secondary flex-1 flex items-center justify-center gap-2"
-          style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
+          className="admin-campaign-card-action-btn"
         >
-          <Eye size={16} />
+          <Eye className="admin-campaign-card-action-icon" />
           View
         </Link>
         <Link 
           href={`/campaigns/${campaign.id}/edit`}
-          className="btn btn-secondary flex-1 flex items-center justify-center gap-2"
-          style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
+          className="admin-campaign-card-action-btn"
         >
-          <Edit size={16} />
+          <Edit className="admin-campaign-card-action-icon" />
           Edit
         </Link>
       </div>

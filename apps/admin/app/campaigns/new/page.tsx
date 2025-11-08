@@ -1,12 +1,6 @@
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
-import dynamic from "next/dynamic"
-
-// Dynamic import to help with TypeScript resolution
-const NewCampaignForm = dynamic(
-  () => import("@/components/campaigns/new-campaign-form"),
-  { ssr: false }
-)
+import NewCampaignFormClient from "@/components/campaigns/new-campaign-form-client"
 
 export default async function NewCampaignPage() {
   const session = await auth()
@@ -17,5 +11,5 @@ export default async function NewCampaignPage() {
 
   const userId = session.user.id as string
 
-  return <NewCampaignForm userId={userId} />
+  return <NewCampaignFormClient userId={userId} />
 }

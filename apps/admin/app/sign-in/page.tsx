@@ -47,47 +47,37 @@ export default function AdminSignIn() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: 'var(--bg-app)' }}>
-      {/* Theme Toggle - Fixed Position */}
-      <div style={{ position: 'fixed', top: '1.5rem', right: '1.5rem', zIndex: 50 }}>
+    <div className="auth-page-container">
+      {/* Theme Toggle */}
+      <div className="auth-theme-toggle">
         <ThemeToggle />
       </div>
 
-      <div className="w-full max-w-md">
+      <div className="auth-content-wrapper">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4" 
-               style={{ backgroundColor: 'var(--interactive-primary)', color: 'var(--text-on-primary)' }}>
+        <div className="auth-header">
+          <div className="auth-icon-container">
             <Shield size={32} />
           </div>
-          <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
-            Admin Portal
-          </h1>
-          <p className="text-base" style={{ color: 'var(--text-secondary)' }}>
+          <h1 className="auth-title">Admin Portal</h1>
+          <p className="auth-subtitle">
             Sign in to access the admin dashboard
           </p>
         </div>
 
         {/* Sign In Card */}
-        <div className="card">
-          <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        <div className="auth-card">
+          <form onSubmit={handleSubmit} className="auth-form">
             {/* Error Message */}
             {error && (
-              <div 
-                className="p-4 rounded-lg text-sm font-medium"
-                style={{ 
-                  backgroundColor: 'var(--status-error-bg)', 
-                  color: 'var(--status-error)',
-                  border: '1px solid var(--status-error)'
-                }}
-              >
+              <div className="auth-error">
                 {error}
               </div>
             )}
 
             {/* Email Field */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+            <div className="auth-field">
+              <label htmlFor="email" className="auth-label">
                 Email Address
               </label>
               <input
@@ -95,7 +85,7 @@ export default function AdminSignIn() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="input"
+                className="auth-input"
                 placeholder="admin@example.com"
                 required
                 disabled={isLoading}
@@ -104,35 +94,26 @@ export default function AdminSignIn() {
             </div>
 
             {/* Password Field */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+            <div className="auth-field">
+              <label htmlFor="password" className="auth-label">
                 Password
               </label>
-              <div style={{ position: 'relative' }}>
+              <div className="auth-password-wrapper">
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="input"
+                  className="auth-input auth-password-input"
                   placeholder="Enter your password"
                   required
                   disabled={isLoading}
                   autoComplete="current-password"
-                  style={{ paddingRight: '3rem' }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="btn-ghost"
-                  style={{
-                    position: 'absolute',
-                    right: '0.5rem',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    padding: '0.5rem',
-                    minWidth: 'unset',
-                  }}
+                  className="auth-password-toggle"
                   disabled={isLoading}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
@@ -144,13 +125,12 @@ export default function AdminSignIn() {
             {/* Submit Button */}
             <button
               type="submit"
-              className="btn btn-primary w-full"
+              className="auth-submit-btn"
               disabled={isLoading}
-              style={{ marginTop: '0.5rem' }}
             >
               {isLoading ? (
                 <>
-                  <Loader2 size={18} className="animate-spin" />
+                  <Loader2 size={18} className="auth-spinner" />
                   Signing in...
                 </>
               ) : (
@@ -164,26 +144,10 @@ export default function AdminSignIn() {
         </div>
 
         {/* Footer Note */}
-        <p className="text-center text-sm mt-6" style={{ color: 'var(--text-tertiary)' }}>
+        <p className="auth-disclaimer">
           This is a restricted area. Only administrators can access this portal.
         </p>
       </div>
-
-      {/* Loading Animation CSS */}
-      <style jsx global>{`
-        @keyframes spin {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(360deg);
-          }
-        }
-        
-        .animate-spin {
-          animation: spin 1s linear infinite;
-        }
-      `}</style>
     </div>
   )
 }

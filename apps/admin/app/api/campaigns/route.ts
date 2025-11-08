@@ -61,19 +61,22 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create campaign
+    // Extract tasks from body
+    const { tasks, ...campaignData } = body
+
+    // Create campaign with tasks and subtasks
     const campaign = await prisma.campaign.create({
       data: {
-        name,
-        description,
-        startDate: new Date(startDate),
-        endDate: new Date(endDate),
-        participantLimit: participantLimit || null,
-        eligibilityCriteria: eligibilityCriteria || null,
-        rewardPool: parseFloat(rewardPool),
-        rewardToken: rewardToken || "USDT",
-        status: status || "DRAFT",
-        createdById: createdById || session.user.id,
+        name: campaignData.name,
+        description: campaignData.description,
+        startDate: new Date(campaignData.startDate),
+        endDate: new Date(campaignData.endDate),
+        participantLimit: campaignData.participantLimit || null,
+        eligibilityCriteria: campaignData.eligibilityCriteria || null,
+        rewardPool: parseFloat(campaignData.rewardPool),
+        rewardToken: campaignData.rewardToken || "USDT",
+        status: campaignData.status || "DRAFT",
+        createdById: campaignData.createdById || session.user.id,
         updatedAt: new Date(),
       },
       include: {
@@ -86,6 +89,42 @@ export async function POST(request: NextRequest) {
         },
       },
     })
+
+    // Create tasks with subtasks if provided
+    if (tasks && Array.isArray(tasks) && tasks.length > 0) {
+      await Promise.all(
+        tasks.map(async (task: any) => {
+          const createdTask = await prisma.newTask.create({
+            data: {
+              name: task.title,
+              description: task.description,
+              taskType: task.type || 'GENERAL',
+              xp: task.xpReward || 0,
+              status: 'active',
+              frequency: 'one_time',
+              approvalWorkflow: task.verificationMethod === 'AUTO' ? 'auto' : 'manual',
+              evidenceMode: task.verificationMethod === 'LINK_SUBMISSION' ? 'manual' : 'auto',
+              campaignId: campaign.id,
+            },
+          })
+
+          // Create subtasks if provided
+          if (task.subTasks && Array.isArray(task.subTasks) && task.subTasks.length > 0) {
+            await prisma.subTask.createMany({
+              data: task.subTasks.map((subTask: any, index: number) => ({
+                title: subTask.title,
+                link: subTask.link?.trim() || null,
+                xpReward: subTask.xpReward || 0,
+                order: index,
+                isCompleted: false,
+                isUploadProof: subTask.isUploadProof || false,
+                taskId: createdTask.id,
+              })),
+            })
+          }
+        })
+      )
+    }
 
     return NextResponse.json(
       { 

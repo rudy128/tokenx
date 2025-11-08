@@ -34,17 +34,23 @@ export async function middleware(request: NextRequest) {
   } catch (error) {
     // If there's a JWT error (e.g., invalid token), clear cookies and redirect to sign-in
     console.error("❌ Auth error in middleware:", error)
-    const signInUrl = new URL("/sign-in", request.url)
-    signInUrl.searchParams.set("callbackUrl", pathname)
-    signInUrl.searchParams.set("error", "jwt_error")
-    const response = NextResponse.redirect(signInUrl)
     
-    // Clear all potential session cookies
-    response.cookies.delete("admin.session-token")
-    response.cookies.delete("next-auth.session-token")
-    response.cookies.delete("__Secure-next-auth.session-token")
+    // Only redirect if we're not already on the sign-in page
+    if (pathname !== "/sign-in") {
+      const signInUrl = new URL("/sign-in", request.url)
+      signInUrl.searchParams.set("callbackUrl", pathname)
+      const response = NextResponse.redirect(signInUrl)
+      
+      // Clear all potential session cookies
+      response.cookies.delete("admin.session-token")
+      response.cookies.delete("next-auth.session-token")
+      response.cookies.delete("__Secure-next-auth.session-token")
+      
+      return response
+    }
     
-    return response
+    // If we're already on sign-in, just continue
+    return NextResponse.next()
   }
 
   if (!session?.user) {

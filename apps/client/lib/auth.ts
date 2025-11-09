@@ -31,7 +31,8 @@ if (!AUTH_SECRET_VALUE && process.env.NODE_ENV !== "production") {
 }
 
 export const authConfig: NextAuthConfig = {
-  adapter: PrismaAdapter(prisma),
+  // Don't use adapter with credentials provider and JWT strategy
+  // adapter: PrismaAdapter(prisma),
   // Prefer AUTH_SECRET, fall back to NEXTAUTH_SECRET for compatibility.
   // If neither is present, use a dev fallback to avoid MissingSecret errors during local dev.
   secret:
@@ -112,23 +113,36 @@ export const authConfig: NextAuthConfig = {
   ],
   session: {
     strategy: "jwt" as const,
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   pages: {
     signIn: "/auth/signin",
   },
   callbacks: {
-    async jwt(params: { token: JWT; user?: any }) {
-      const { token, user } = params
+    async jwt(params: { token: JWT; user?: any; trigger?: string }) {
+      const { token, user, trigger } = params
+      
+      // On sign in, add user data to token
       if (user) {
         token.id = user.id
+        token.email = user.email
+        token.name = user.name
+        token.picture = user.image
       }
+      
       return token
     },
     async session(params: { session: Session; token: JWT }) {
       const { session, token } = params
-      if (session.user && token.id) {
+      
+      // Add user data from token to session
+      if (token && session.user) {
         session.user.id = token.id as string
+        session.user.email = token.email as string
+        session.user.name = token.name as string
+        session.user.image = token.picture as string
       }
+      
       return session
     },
     async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
@@ -147,7 +161,9 @@ const nextAuthResult = NextAuth(authConfig)
 // Export handlers
 export const handlers = nextAuthResult.handlers
 
-// Export other functions with explicit any typing to avoid inference issues
+// Export auth function for server components and middleware
 export const auth = nextAuthResult.auth as any
+
+// Export signIn and signOut
 export const signIn = nextAuthResult.signIn as any
 export const signOut = nextAuthResult.signOut as any

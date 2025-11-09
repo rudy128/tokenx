@@ -1,21 +1,31 @@
 "use client"
 
-import { signIn, getProviders } from "next-auth/react"
+import { signIn, getProviders, useSession } from "next-auth/react"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, useRouter } from "next/navigation"
 
 export default function SignInPage() {
+  const router = useRouter()
+  const { data: session, status } = useSession()
   const [providers, setProviders] = useState<any>(null)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const searchParams = useSearchParams()
   const error = searchParams.get("error")
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (status === "authenticated" && session?.user) {
+      console.log("Already authenticated, redirecting to dashboard...")
+      router.push("/dashboard")
+    }
+  }, [status, session, router])
 
   useEffect(() => {
     const setUpProviders = async () => {
@@ -30,13 +40,29 @@ export default function SignInPage() {
     setIsLoading(true)
 
     try {
-      // With redirect: true, signIn will automatically redirect on success
-      await signIn("credentials", {
+      console.log("Attempting sign in...")
+      // Use redirect: false to handle redirect manually
+      const result = await signIn("credentials", {
         email,
         password,
-        callbackUrl: "/dashboard",
-        redirect: true,
+        redirect: false,
       })
+      
+      console.log("Sign in result:", result)
+      
+      if (result?.error) {
+        console.error("Sign in error:", result.error)
+        setIsLoading(false)
+      } else if (result?.ok) {
+        // Wait a moment for the session to be established
+        console.log("Login successful, waiting for session...")
+        await new Promise(resolve => setTimeout(resolve, 500))
+        
+        // Force a session update
+        window.location.href = "/dashboard"
+      } else {
+        setIsLoading(false)
+      }
     } catch (error) {
       console.error("Sign in error:", error)
       setIsLoading(false)

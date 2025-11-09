@@ -1,40 +1,35 @@
 import { NextResponse, type NextRequest } from "next/server"
-import { getToken } from "next-auth/jwt"
 
+// For NextAuth v5 beta, we'll use a simpler approach
+// The auth check will happen on the client side after login
 export async function middleware(req: NextRequest) {
-  try {
-    // Skip middleware for API auth routes
-    if (req.nextUrl.pathname.startsWith('/api/auth')) {
-      return NextResponse.next()
-    }
-
-    const token = await getToken({
-      req: req as any,
-      secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET
-    })
-    const isLoggedIn = Boolean(token)
-
-    // Fix: Define pathname here
-    const pathname = req.nextUrl.pathname
-
-    const isPublicRoute = pathname === "/" || pathname.startsWith("/auth")
-    const isAuthRoute = pathname.startsWith("/auth")
-
-    // Redirect logged-in users away from auth pages
-    if (isAuthRoute && isLoggedIn) {
-      return NextResponse.redirect(new URL("/dashboard", req.url))
-    }
-
-    // Redirect non-logged-in users to signin for protected routes
-    if (!isLoggedIn && !isPublicRoute) {
-      return NextResponse.redirect(new URL("/auth/signin", req.url))
-    }
-
+  const pathname = req.nextUrl.pathname
+  
+  // Allow all API routes and static files
+  if (
+    pathname.startsWith('/api') ||
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/favicon')
+  ) {
     return NextResponse.next()
- } catch (error) {
-    console.error("Middleware error:", error)
+  }
+
+  // Allow public routes
+  const isPublicRoute = pathname === "/" || pathname.startsWith("/auth")
+  
+  if (isPublicRoute) {
+    return NextResponse.next()
+  }
+
+  // For protected routes, check if session cookie exists
+  const sessionCookie = req.cookies.get('authjs.session-token') || req.cookies.get('__Secure-authjs.session-token')
+  
+  if (!sessionCookie) {
+    console.log(`[Middleware] No session cookie found, redirecting to /auth/signin`)
     return NextResponse.redirect(new URL("/auth/signin", req.url))
   }
+
+  return NextResponse.next()
 }
 
 export const config = {

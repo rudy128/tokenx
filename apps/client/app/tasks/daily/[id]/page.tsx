@@ -421,16 +421,24 @@ function TaskSubtasks({
 
   if (loading) {
     return (
-      <div className="space-y-5">
+      <div className="subtasks-container">
         <h2 className="text-xl font-bold text-white mb-6">Sub-tasks</h2>
         {[1, 2, 3].map((i) => (
           <div key={i} className="animate-pulse bg-gradient-to-br from-[#191B24] to-[#181B28] border border-[#23263B] shadow-xl rounded-xl p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center flex-1">
-                <div className="h-8 w-8 bg-zinc-700/50 rounded-lg mr-4" />
-                <div className="h-5 bg-zinc-700/50 rounded-lg flex-1 max-w-xs" />
+            <div className="flex items-center gap-4">
+              {/* Platform Logo Skeleton */}
+              <div className="w-12 h-12 bg-zinc-700/50 rounded-xl flex-shrink-0" />
+              
+              {/* Title Skeleton */}
+              <div className="flex-1 min-w-0">
+                <div className="h-5 bg-zinc-700/50 rounded-lg w-2/3" />
               </div>
-              <div className="h-6 w-16 bg-zinc-700/50 rounded-full" />
+              
+              {/* XP Badge Skeleton */}
+              <div className="h-7 w-16 bg-zinc-700/50 rounded-full flex-shrink-0" />
+              
+              {/* Action Button Skeleton */}
+              <div className="w-8 h-8 bg-zinc-700/50 rounded-full flex-shrink-0" />
             </div>
           </div>
         ))}
@@ -441,14 +449,14 @@ function TaskSubtasks({
   if (!subtasks || subtasks.length === 0) return null
 
   return (
-    <div className="space-y-5">
+    <div className="subtasks-container">
       <h2 className="text-xl font-bold text-white mb-6">Sub-tasks</h2>
       {subtasks.map((subtask, index) => (
         <div
           key={subtask.id}
           data-subtask-id={subtask.id}
           className={cn(
-            "bg-gradient-to-br from-[#191B24] to-[#181B28] border border-[#23263B] shadow-xl rounded-xl p-6 mb-5",
+            "bg-gradient-to-br from-[#191B24] to-[#181B28] border border-[#23263B] shadow-xl rounded-xl p-6",
             "transition-all duration-200 hover:scale-[1.02] hover:ring-2 hover:ring-[#8c6cfb]/40 hover:shadow-2xl",
             "group relative overflow-hidden",
             subtask.completed && "opacity-75 bg-gradient-to-br from-[#1a2e1a] to-[#162416]"

@@ -73,11 +73,13 @@ model Task {
   campaignId         String
   name               String
   description        String
+  instructions       String?
   category           TaskCategory
   xpReward           Int
   verificationMethod VerificationMethod @default(MANUAL)
   requirements       Json?
   status             TaskStatus         @default(draft)
+  isActive           Boolean            @default(true)
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
   Campaign           Campaign           @relation(fields: [campaignId], references: [id], onDelete: Cascade)

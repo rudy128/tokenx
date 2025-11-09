@@ -30,14 +30,15 @@ export default function SignInPage() {
     setIsLoading(true)
 
     try {
+      // With redirect: true, signIn will automatically redirect on success
       await signIn("credentials", {
         email,
         password,
         callbackUrl: "/dashboard",
+        redirect: true,
       })
     } catch (error) {
       console.error("Sign in error:", error)
-    } finally {
       setIsLoading(false)
     }
   }

@@ -3,6 +3,11 @@ import { getToken } from "next-auth/jwt"
 
 export async function middleware(req: NextRequest) {
   try {
+    // Skip middleware for API auth routes
+    if (req.nextUrl.pathname.startsWith('/api/auth')) {
+      return NextResponse.next()
+    }
+
     const token = await getToken({
       req: req as any,
       secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET
@@ -34,6 +39,13 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|auth).*)",
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes - but we still want to check api/auth)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    "/((?!_next/static|_next/image|favicon.ico).*)",
   ],
 }

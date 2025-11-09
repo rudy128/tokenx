@@ -21,19 +21,7 @@ interface LeaderboardUser {
 
 type TimeFilter = 'weekly' | 'monthly' | 'all-time'
 
-// Mock data - realistic leaderboard data for platform consistency
-const mockLeaderboardUsers: LeaderboardUser[] = [
-  { id: "1", name: "Alex Chen", email: "alex@tokenx.io", xp: 15420, tier: "PLATINUM", rank: 1 },
-  { id: "2", name: "Sarah Kim", email: "sarah@tokenx.io", xp: 14890, tier: "PLATINUM", rank: 2 },
-  { id: "3", name: "Marcus Johnson", email: "marcus@tokenx.io", xp: 13750, tier: "GOLD", rank: 3 },
-  { id: "4", name: "Elena Rodriguez", email: "elena@tokenx.io", xp: 12980, tier: "GOLD", rank: 4 },
-  { id: "5", name: "David Park", email: "david@tokenx.io", xp: 11650, tier: "GOLD", rank: 5 },
-  { id: "6", name: "Lisa Wang", email: "lisa@tokenx.io", xp: 10420, tier: "SILVER", rank: 6 },
-  { id: "7", name: "James Wilson", email: "james@tokenx.io", xp: 9850, tier: "SILVER", rank: 7 },
-  { id: "8", name: "Nina Patel", email: "nina@tokenx.io", xp: 8920, tier: "SILVER", rank: 8 },
-  { id: "9", name: "Ryan Miller", email: "ryan@tokenx.io", xp: 8150, tier: "BRONZE", rank: 9 },
-  { id: "10", name: "Emma Taylor", email: "emma@tokenx.io", xp: 7680, tier: "BRONZE", rank: 10 }
-]
+// Mock data removed - now using real API data from /api/leaderboard
 
 // Helper functions - Standardized XP formatting
 const formatXP = (xp: number): string => {
@@ -182,19 +170,44 @@ export default function LeaderboardPage() {
     const fetchLeaderboard = async () => {
       setLoading(true)
       
-      // Simulate loading time
-      await new Promise(resolve => setTimeout(resolve, 800))
-      
       try {
-        setUsers(mockLeaderboardUsers)
-        setTotalUsers(mockLeaderboardUsers.length)
+        console.log('📊 Fetching leaderboard from API...')
+        
+        // Fetch real data from API
+        const response = await fetch('/api/leaderboard?limit=100')
+        
+        console.log('📊 API Response status:', response.status)
+        
+        if (!response.ok) {
+          const errorText = await response.text()
+          console.error('❌ API Error:', response.status, errorText)
+          throw new Error('Failed to fetch leaderboard')
+        }
+
+        const data = await response.json()
+        
+        console.log('📊 Leaderboard data received:', {
+          usersCount: data.users?.length || 0,
+          totalUsers: data.totalUsers,
+          firstUser: data.users?.[0]
+        })
+        
+        setUsers(data.users || [])
+        setTotalUsers(data.totalUsers || 0)
+        
+        if (data.users?.length === 0) {
+          console.warn('⚠️ No users returned from API - database might be empty')
+        }
       } catch (error) {
-        console.error('Failed to fetch leaderboard:', error)
+        console.error('❌ Failed to fetch leaderboard:', error)
         toast({
           title: "Error",
           description: "Failed to load leaderboard data",
           variant: "destructive",
         })
+        // Fallback to empty array instead of mock data
+        setUsers([])
+        setTotalUsers(0)
       } finally {
         setLoading(false)
       }

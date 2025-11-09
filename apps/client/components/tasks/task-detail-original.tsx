@@ -118,11 +118,23 @@ interface Props {
 }
 
 export default function TaskDetailView({ task, userId }: Props) {
+  // 🔍 DEBUG: Log task data on component mount
+  console.log('🎯 TaskDetailView - Received task:', {
+    taskId: task.id,
+    taskTitle: task.title,
+    subtasksCount: task.subTasks?.length || 0,
+    subtasks: task.subTasks?.map(st => ({
+      id: st.id,
+      title: st.title,
+      isUploadProof: st.isUploadProof,
+      hasIsUploadProofField: 'isUploadProof' in st
+    }))
+  })
+
   const [subtasks, setSubtasks] = useState<SubTask[]>(task.subTasks || [])
   const [loading, setLoading] = useState<string | null>(null)
   const [uploadedFiles, setUploadedFiles] = useState<Record<string, File>>({}) // Track uploaded files
   const [uploadPreviews, setUploadPreviews] = useState<Record<string, string>>({}) // Track preview URLs
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Calculate total XP from all subtasks
   const totalXP = subtasks.reduce((sum, st) => sum + (st.xpReward || 0), 0)
@@ -180,15 +192,14 @@ export default function TaskDetailView({ task, userId }: Props) {
     })
   }
 
-  // Handle claim submission
-  const handleClaimSubmission = async () => {
+  // Handle individual subtask submission
+  const handleSubtaskSubmission = async (subtask: SubTask) => {
     try {
-      setIsSubmitting(true)
+      setLoading(subtask.id)
 
-      // Check if upload proof subtask has file
-      const uploadProofSubtask = subtasks.find(st => st.isUploadProof)
-      if (uploadProofSubtask && !uploadedFiles[uploadProofSubtask.id]) {
-        alert('Please upload proof before claiming rewards')
+      // Check if this subtask requires proof upload and file is missing
+      if (subtask.isUploadProof && !uploadedFiles[subtask.id]) {
+        alert('Please upload proof before submitting this subtask')
         return
       }
 
@@ -196,11 +207,23 @@ export default function TaskDetailView({ task, userId }: Props) {
       const formData = new FormData()
       formData.append('taskId', task.id)
       formData.append('userId', userId)
+      
+      // ✅ ALWAYS include subTaskId for individual subtask submissions
+      formData.append('subTaskId', subtask.id)
+      console.log('🔵 Frontend - Submitting subtask:', subtask.id, subtask.title)
 
       // Add uploaded file if exists
-      if (uploadProofSubtask && uploadedFiles[uploadProofSubtask.id]) {
-        formData.append('proofFile', uploadedFiles[uploadProofSubtask.id])
+      if (uploadedFiles[subtask.id]) {
+        formData.append('proofFile', uploadedFiles[subtask.id])
+        console.log('📎 Frontend - Including uploaded file')
       }
+
+      // 🔍 DEBUG: Log what we're sending
+      console.log('📤 Frontend - Sending FormData:')
+      console.log('   Task ID:', task.id)
+      console.log('   Subtask ID:', subtask.id)
+      console.log('   User ID:', userId)
+      console.log('   Has File:', !!uploadedFiles[subtask.id])
 
       // Submit to API
       const response = await fetch('/api/tasks/submit', {
@@ -211,18 +234,21 @@ export default function TaskDetailView({ task, userId }: Props) {
       const result = await response.json()
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to submit task')
+        throw new Error(result.error || 'Failed to submit subtask')
       }
 
-      alert('Task submitted successfully! XP will be credited after review.')
-      // Optionally redirect or refresh
-      window.location.reload()
+      alert(`Subtask "${subtask.title}" submitted successfully! XP will be credited after review.`)
+      
+      // Mark subtask as completed in UI
+      setSubtasks(prev => prev.map(st => 
+        st.id === subtask.id ? { ...st, isCompleted: true } : st
+      ))
 
     } catch (error: any) {
-      console.error('Submission error:', error)
-      alert(error.message || 'Failed to submit task')
+      console.error('Subtask submission error:', error)
+      alert(error.message || 'Failed to submit subtask')
     } finally {
-      setIsSubmitting(false)
+      setLoading(null)
     }
   }
 
@@ -435,14 +461,32 @@ export default function TaskDetailView({ task, userId }: Props) {
                             </div>
                           </div>
                           
-                          {!isUploadProof && subtask.link && (
+                          {/* Submit Button for Each Subtask */}
+                          {subtask.isCompleted ? (
+                            <div className="px-6 py-3 rounded-xl bg-green-500/20 border border-green-500/50 flex items-center gap-2">
+                              <Check className="w-5 h-5 text-green-400" />
+                              <span className="text-sm font-semibold text-green-400">Submitted</span>
+                            </div>
+                          ) : (
                             <button
-                              onClick={() => window.open(subtask.link, '_blank', 'noopener,noreferrer')}
-                              className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/25 hover:shadow-purple-500/50 transition-all duration-300 transform hover:scale-110"
+                              onClick={() => handleSubtaskSubmission(subtask)}
+                              disabled={loading === subtask.id}
+                              className="px-6 py-3 rounded-xl bg-gradient-to-br from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg shadow-purple-500/25 hover:shadow-purple-500/50 transition-all duration-300 transform hover:scale-105 disabled:scale-100"
                             >
-                              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                              </svg>
+                              {loading === subtask.id ? (
+                                <>
+                                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                  </svg>
+                                  <span className="text-sm font-semibold text-white">Submitting...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Check className="w-5 h-5 text-white" />
+                                  <span className="text-sm font-semibold text-white">Submit</span>
+                                </>
+                              )}
                             </button>
                           )}
                         </div>
@@ -465,25 +509,11 @@ export default function TaskDetailView({ task, userId }: Props) {
           )}
         </div>
 
-        {/* Claim Button */}
-        <div className="flex justify-center mt-8">
-          <button
-            onClick={handleClaimSubmission}
-            disabled={isSubmitting}
-            className="bg-gradient-to-r from-purple-600 via-purple-500 to-pink-500 hover:from-purple-700 hover:via-purple-600 hover:to-pink-600 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-bold text-xl px-12 py-4 rounded-full shadow-2xl shadow-purple-500/50 transition-all transform hover:scale-105 disabled:scale-100"
-          >
-            {isSubmitting ? (
-              <span className="flex items-center gap-3">
-                <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Submitting...
-              </span>
-            ) : (
-              `${task.xpReward || 0} XP - Claim Now`
-            )}
-          </button>
+        {/* Info message */}
+        <div className="mt-8 bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
+          <p className="text-sm text-blue-300 text-center">
+            💡 Submit each subtask individually to earn XP rewards after admin review
+          </p>
         </div>
 
       </div>

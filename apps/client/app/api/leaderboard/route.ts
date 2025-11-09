@@ -8,21 +8,21 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "10")
     const skip = (page - 1) * limit
 
-    // Get total count
+    console.log('📊 Fetching leaderboard - page:', page, 'limit:', limit)
+
+    // Get total count of ambassadors only
     const totalUsers = await prisma.user.count({
       where: {
-        xp: {
-          gt: 0
-        }
+        role: 'AMBASSADOR'
       }
     })
 
-    // Get leaderboard users sorted by XP
+    console.log('📊 Total ambassadors in database:', totalUsers)
+
+    // Get leaderboard users sorted by XP (ambassadors only)
     const users = await prisma.user.findMany({
       where: {
-        xp: {
-          gt: 0
-        }
+        role: 'AMBASSADOR'
       },
       select: {
         id: true,
@@ -39,6 +39,9 @@ export async function GET(request: NextRequest) {
       take: limit
     })
 
+    console.log('📊 Fetched ambassadors:', users.length)
+    console.log('📊 Sample ambassador:', users[0])
+
     // Add rank to each user
     const usersWithRank = users.map((user, index) => ({
       ...user,
@@ -52,7 +55,7 @@ export async function GET(request: NextRequest) {
       currentPage: page
     })
   } catch (error) {
-    console.error("Error fetching leaderboard:", error)
+    console.error("❌ Error fetching leaderboard:", error)
     return NextResponse.json(
       { error: "Failed to fetch leaderboard" }, 
       { status: 500 }

@@ -73,11 +73,13 @@ model Task {
   campaignId         String
   name               String
   description        String
+  instructions       String?
   category           TaskCategory
   xpReward           Int
   verificationMethod VerificationMethod @default(MANUAL)
   requirements       Json?
   status             TaskStatus         @default(draft)
+  isActive           Boolean            @default(true)
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
   Campaign           Campaign           @relation(fields: [campaignId], references: [id], onDelete: Cascade)
@@ -92,6 +94,7 @@ model TaskSubmission {
   id                 String               @id @default(cuid())
   userId             String
   taskId             String
+  subTaskId          String?              // Optional: specific subtask being submitted
   proofUrl           String?
   proofImageUrl      String?              // Store the uploaded proof image path
   screenshot         String?
@@ -107,10 +110,11 @@ model TaskSubmission {
   User               User                 @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   VerificationAction VerificationAction[]
 
-  @@unique([taskId, userId])
+  @@unique([taskId, userId, subTaskId])
   @@index([taskId])
   @@index([userId])
   @@index([status])
+  @@index([subTaskId])
   @@map("task_submissions")
 }
 
@@ -158,7 +162,7 @@ model NewTask {
   description        String?
   instructions       String?
   status             TaskStatus          @default(draft)
-  campaignId         String?             @db.Uuid
+  campaignId         String?
   xp                 Int
   rewardOverride     Boolean             @default(false)
   rewardToken        String?

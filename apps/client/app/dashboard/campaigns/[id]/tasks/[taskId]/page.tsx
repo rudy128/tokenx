@@ -40,7 +40,8 @@ async function getCampaignTask(campaignId: string, taskId: string) {
         link: st.link || null,
         xpReward: st.xpReward || 0,
         order: st.order || 0,
-        isCompleted: st.isCompleted || false
+        isCompleted: st.isCompleted || false,
+        isUploadProof: st.isUploadProof || false  // 🔥 CRITICAL: Include this field!
       })),
       _count: {
         submissions: task.submissions?.length || 0

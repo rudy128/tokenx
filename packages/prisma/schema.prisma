@@ -94,6 +94,7 @@ model TaskSubmission {
   id                 String               @id @default(cuid())
   userId             String
   taskId             String
+  subTaskId          String?              // Optional: specific subtask being submitted
   proofUrl           String?
   proofImageUrl      String?              // Store the uploaded proof image path
   screenshot         String?
@@ -109,10 +110,11 @@ model TaskSubmission {
   User               User                 @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   VerificationAction VerificationAction[]
 
-  @@unique([taskId, userId])
+  @@unique([taskId, userId, subTaskId])
   @@index([taskId])
   @@index([userId])
   @@index([status])
+  @@index([subTaskId])
   @@map("task_submissions")
 }
 

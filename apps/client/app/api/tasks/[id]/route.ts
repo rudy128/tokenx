@@ -38,7 +38,8 @@ export async function GET(
               link: true,
               xpReward: true,
               order: true,
-              isCompleted: true
+              isCompleted: true,
+              isUploadProof: true  // 🔥 CRITICAL: Need this to identify upload proof subtasks
             }
           }
         }
@@ -82,7 +83,8 @@ export async function GET(
                 link: true,
                 xpReward: true,
                 order: true,
-                isCompleted: true
+                isCompleted: true,
+                isUploadProof: true  // 🔥 CRITICAL: Need this to identify upload proof subtasks
               }
             }
           }

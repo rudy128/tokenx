@@ -93,34 +93,71 @@ export async function POST(request: NextRequest) {
     // Create tasks with subtasks if provided
     if (tasks && Array.isArray(tasks) && tasks.length > 0) {
       await Promise.all(
-        tasks.map(async (task: any) => {
-          const createdTask = await prisma.newTask.create({
+        tasks.map(async (task: {
+          title: string
+          description?: string
+          type: string
+          xpReward: number
+          verificationMethod: string
+          subTasks?: Array<{
+            title: string
+            description?: string
+            link?: string
+            xpReward?: number
+            isUploadProof?: boolean
+          }>
+        }) => {
+          // Map task type to TaskCategory enum
+          let category: 'SOCIAL_ENGAGEMENT' | 'CONTENT_CREATION' | 'COMMUNITY_BUILDING' | 'REFERRAL' | 'CUSTOM' = 'CUSTOM'
+          
+          switch(task.type) {
+            case 'SOCIAL_MEDIA':
+              category = 'SOCIAL_ENGAGEMENT'
+              break
+            case 'CONTENT':
+              category = 'CONTENT_CREATION'
+              break
+            case 'COMMUNITY':
+              category = 'COMMUNITY_BUILDING'
+              break
+            case 'REFERRAL':
+              category = 'REFERRAL'
+              break
+            default:
+              category = 'CUSTOM'
+          }
+          
+          // Create campaign Task (not NewTask)
+          const createdTask = await prisma.task.create({
             data: {
-              name: task.title,
-              description: task.description,
-              taskType: task.type || 'GENERAL',
-              xp: task.xpReward || 0,
-              status: 'active',
-              frequency: 'one_time',
-              approvalWorkflow: task.verificationMethod === 'AUTO' ? 'auto' : 'manual',
-              evidenceMode: task.verificationMethod === 'LINK_SUBMISSION' ? 'manual' : 'auto',
               campaignId: campaign.id,
+              name: task.title,
+              description: task.description || '',
+              category: category,
+              xpReward: task.xpReward || 0,
+              verificationMethod: task.verificationMethod === 'AUTO' ? 'AI_AUTO' : 'MANUAL',
+              status: 'active',
             },
           })
 
-          // Create subtasks if provided
+          // Create TaskSubTasks if provided  
           if (task.subTasks && Array.isArray(task.subTasks) && task.subTasks.length > 0) {
-            await prisma.subTask.createMany({
-              data: task.subTasks.map((subTask: any, index: number) => ({
-                title: subTask.title,
-                link: subTask.link?.trim() || null,
-                xpReward: subTask.xpReward || 0,
-                order: index,
-                isCompleted: false,
-                isUploadProof: subTask.isUploadProof || false,
-                taskId: createdTask.id,
-              })),
-            })
+            for (let i = 0; i < task.subTasks.length; i++) {
+              const subTask = task.subTasks[i]
+              // @ts-expect-error - TaskSubTask model exists but TS doesn't recognize it yet
+              await prisma.taskSubTask.create({
+                data: {
+                  title: subTask.title,
+                  description: subTask.description || undefined,
+                  link: subTask.link?.trim() || undefined,
+                  xpReward: subTask.xpReward || 0,
+                  order: i,
+                  isCompleted: false,
+                  isUploadProof: subTask.isUploadProof || false,
+                  taskId: createdTask.id,
+                },
+              })
+            }
           }
         })
       )

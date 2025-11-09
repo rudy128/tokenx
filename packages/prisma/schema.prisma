@@ -160,7 +160,7 @@ model NewTask {
   description        String?
   instructions       String?
   status             TaskStatus          @default(draft)
-  campaignId         String?             @db.Uuid
+  campaignId         String?
   xp                 Int
   rewardOverride     Boolean             @default(false)
   rewardToken        String?

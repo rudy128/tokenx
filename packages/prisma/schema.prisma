@@ -128,6 +128,7 @@ model User {
   image                 String?
   role                  Role                    @default(AMBASSADOR)
   walletAddress         String?                 @unique
+  twitterUsername       String?
   tier                  Tier                    @default(BRONZE)
   xp                    Int                     @default(0)
   tokenBalance          Float                   @default(0)

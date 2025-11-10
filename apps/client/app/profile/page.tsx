@@ -1,212 +1,160 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-// No authentication needed
-import { useAccount, useConnect, useDisconnect } from "wagmi"
-import { metaMask } from "wagmi/connectors"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { useToast } from "@/components/ui/use-toast"
-import { Wallet, Chrome, User, Mail, Shield, Star } from "lucide-react"
+import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import NavBar from '@/components/NavBar'
+import { Button } from '@/components/ui/button'
+import { useToast } from '@/components/ui/use-toast'
 
 export default function ProfilePage() {
-  const { address, isConnected } = useAccount()
-  const { connect } = useConnect()
-  const { disconnect } = useDisconnect()
+  const router = useRouter()
   const { toast } = useToast()
-
-  const [displayName, setDisplayName] = useState("Demo User")
-  const [walletAddress, setWalletAddress] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-
-  const mockUser = {
-    name: "Demo User",
-    email: "demo@example.com"
-  }
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [twitterUsername, setTwitterUsername] = useState('')
+  const [user, setUser] = useState<any>(null)
 
   useEffect(() => {
-    if (address) {
-      setWalletAddress(address)
-    }
-  }, [address])
+    fetchProfile()
+  }, [])
 
-  const handleUpdateProfile = async () => {
-    setIsLoading(true)
+  const fetchProfile = async () => {
     try {
-      const response = await fetch("/api/user/profile", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: displayName,
-          walletAddress: isConnected ? address : walletAddress,
-        }),
-      })
-
+      const response = await fetch('/api/profile')
       if (response.ok) {
-        // Refresh user data if needed
-        toast({
-          title: "Success",
-          description: "Profile updated successfully!",
-        })
-      } else {
-        throw new Error("Failed to update profile")
+        const data = await response.json()
+        setUser(data)
+        setTwitterUsername(data.twitterUsername || '')
       }
     } catch (error) {
+      console.error('Error fetching profile:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    // Remove @ if user added it
+    const cleanUsername = twitterUsername.replace('@', '').trim()
+    
+    if (!cleanUsername) {
       toast({
-        title: "Error",
-        description: "Failed to update profile. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Please enter a Twitter username',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    console.log('💾 Saving Twitter username:', cleanUsername)
+    
+    setSaving(true)
+    try {
+      const response = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ twitterUsername: cleanUsername }),
+      })
+
+      console.log('📡 Save response status:', response.status)
+      
+      if (response.ok) {
+        const data = await response.json()
+        console.log('✅ Save successful:', data)
+        
+        toast({
+          title: 'Success',
+          description: 'Twitter username saved successfully',
+        })
+        setTwitterUsername(cleanUsername)
+        setUser({ ...user, twitterUsername: cleanUsername })
+      } else {
+        const errorData = await response.json()
+        console.error('❌ Save failed:', errorData)
+        throw new Error(errorData.error || 'Failed to save')
+      }
+    } catch (error) {
+      console.error('❌ Save error:', error)
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to save Twitter username',
+        variant: 'destructive',
       })
     } finally {
-      setIsLoading(false)
+      setSaving(false)
     }
   }
 
-  const handleConnectWallet = () => {
-    connect({ connector: metaMask() })
+  if (loading) {
+    return (
+      <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+        <NavBar />
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-2xl mx-auto">
+            <p className="text-white">Loading...</p>
+          </div>
+        </div>
+      </div>
+    )
   }
-
-  const handleDisconnectWallet = () => {
-    disconnect()
-    setWalletAddress("")
-  }
-
-  const getTierColor = (tier: string) => {
-    switch (tier) {
-      case "BRONZE":
-        return "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200"
-      case "SILVER":
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
-      case "GOLD":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-      case "PLATINUM":
-        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
-  }
-
-  // Always allow access to profile
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-4xl">
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Profile Settings</h1>
-          <p className="text-muted-foreground">Manage your account and connected services</p>
-        </div>
+    <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+      <NavBar />
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-2xl mx-auto">
+          <h1 className="text-3xl font-bold text-white mb-8">Profile Settings</h1>
+          
+          <div className="bg-gray-800 rounded-lg p-6 mb-6">
+            <h2 className="text-xl font-semibold text-white mb-4">Account Information</h2>
+            <div className="space-y-3">
+              <div>
+                <span className="text-gray-400">Email:</span>
+                <span className="text-white ml-2">{user?.email}</span>
+              </div>
+              <div>
+                <span className="text-gray-400">Name:</span>
+                <span className="text-white ml-2">{user?.name || 'Not set'}</span>
+              </div>
+              <div>
+                <span className="text-gray-400">XP:</span>
+                <span className="text-white ml-2">{user?.xp || 0}</span>
+              </div>
+            </div>
+          </div>
 
-        {/* Profile Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Profile Information
-            </CardTitle>
-            <CardDescription>Update your personal information</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="displayName">Display Name</Label>
-                <Input
-                  id="displayName"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="Enter your display name"
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h2 className="text-xl font-semibold text-white mb-4">Twitter/X Settings</h2>
+            <form onSubmit={handleSubmit}>
+              <div className="mb-4">
+                <label htmlFor="twitterUsername" className="block text-sm font-medium text-gray-300 mb-2">
+                  Twitter Username (without @)
+                </label>
+                <input
+                  type="text"
+                  id="twitterUsername"
+                  value={twitterUsername}
+                  onChange={(e) => setTwitterUsername(e.target.value)}
+                  placeholder="username"
+                  className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
+                <p className="text-sm text-gray-400 mt-2">
+                  Enter your Twitter/X username without the @ symbol
+                </p>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input id="email" value={mockUser.email} disabled className="pl-10" />
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Shield className="h-4 w-4" />
-                <span className="text-sm font-medium">Role:</span>
-                <Badge variant="outline">Ambassador</Badge>
-              </div>
-              <div className="flex items-center gap-2">
-                <Star className="h-4 w-4" />
-                <span className="text-sm font-medium">Tier:</span>
-                <Badge className={getTierColor("BRONZE")}>Bronze</Badge>
-              </div>
-            </div>
-            <Button onClick={handleUpdateProfile} disabled={isLoading}>
-              {isLoading ? "Updating..." : "Update Profile"}
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Connected Accounts */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Connected Accounts</CardTitle>
-            <CardDescription>Manage your connected social accounts and wallet</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Social Accounts */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Chrome className="h-5 w-5" />
-                  <div>
-                    <p className="font-medium">Simple Auth</p>
-                    <p className="text-sm text-muted-foreground">{mockUser.email}</p>
-                  </div>
-                </div>
-                <Badge variant="secondary">Connected</Badge>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Wallet Connection */}
-            <div className="space-y-3">
-              <h4 className="font-medium">Wallet Connection</h4>
-              <div className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Wallet className="h-5 w-5" />
-                  <div>
-                    <p className="font-medium">MetaMask</p>
-                    <p className="text-sm text-muted-foreground">
-                      {isConnected && address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "Not connected"}
-                    </p>
-                  </div>
-                </div>
-                {isConnected ? (
-                  <Button variant="outline" size="sm" onClick={handleDisconnectWallet}>
-                    Disconnect
-                  </Button>
-                ) : (
-                  <Button variant="outline" size="sm" onClick={handleConnectWallet}>
-                    Connect
-                  </Button>
-                )}
-              </div>
-
-              {!isConnected && (
-                <div className="space-y-2">
-                  <Label htmlFor="walletAddress">Manual Wallet Address</Label>
-                  <Input
-                    id="walletAddress"
-                    value={walletAddress}
-                    onChange={(e) => setWalletAddress(e.target.value)}
-                    placeholder="Enter your wallet address"
-                  />
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+              
+              <Button
+                type="submit"
+                disabled={saving}
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+              >
+                {saving ? 'Saving...' : 'Save Twitter Username'}
+              </Button>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
   )

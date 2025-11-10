@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { LogOut } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 import { signOut } from "next-auth/react";
 import Image from "next/image";
+import Link from "next/link";
 
 interface DashboardProfileMenuProps {
   name: string | null;
@@ -163,6 +164,36 @@ export function DashboardProfileMenu({ name, email, image, tier = "BRONZE TIER" 
               {tier}
             </p>
           </div>
+
+          {/* Profile Link */}
+          <Link
+            href="/profile"
+            onClick={() => setIsOpen(false)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--space-3)',
+              padding: 'var(--space-3)',
+              borderRadius: 'var(--radius-base)',
+              fontSize: 'var(--font-size-sm)',
+              fontWeight: 'var(--font-weight-medium)',
+              color: 'var(--text-primary)',
+              backgroundColor: 'transparent',
+              textDecoration: 'none',
+              width: '100%',
+              transition: 'var(--transition-base)',
+              marginBottom: 'var(--space-2)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--bg-surface)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent'
+            }}
+          >
+            <User style={{ height: '1rem', width: '1rem' }} />
+            <span>Profile</span>
+          </Link>
 
           {/* Logout Button */}
           <button

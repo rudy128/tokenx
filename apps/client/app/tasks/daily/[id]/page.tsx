@@ -727,12 +727,43 @@ export default function TaskDetailPage() {
 
   // Enhanced claim logic with comprehensive error handling
   const handleClaimReward = async () => {
+    console.log('🎯 Claim button clicked')
+    
     if (!task) {
       showFeedback('error', 'Task data not available. Please refresh the page.')
       return
     }
     
     try {
+      // Check if user has Twitter username
+      console.log('📡 Fetching profile...')
+      const profileResponse = await fetch('/api/profile')
+      console.log('📡 Profile response status:', profileResponse.status)
+      
+      if (profileResponse.ok) {
+        const profile = await profileResponse.json()
+        console.log('👤 Profile data:', profile)
+        
+        if (!profile.twitterUsername) {
+          console.log('⚠️ No Twitter username found, showing alert')
+          // Show alert and redirect to profile
+          const shouldRedirect = window.confirm(
+            'Please add your Twitter/X username to your profile before claiming rewards.\n\nClick OK to go to your profile page.'
+          )
+          
+          console.log('🔄 User chose to redirect:', shouldRedirect)
+          
+          if (shouldRedirect) {
+            window.location.href = '/profile'
+          }
+          return
+        }
+        
+        console.log('✅ Twitter username exists:', profile.twitterUsername)
+      } else {
+        console.error('❌ Profile fetch failed:', profileResponse.status)
+      }
+      
       // Show info feedback for processing
       showFeedback('info', 'Processing reward claim...')
       

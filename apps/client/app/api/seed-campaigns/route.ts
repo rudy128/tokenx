@@ -433,7 +433,7 @@ export async function POST(request: NextRequest) {
                    taskData.taskType === 'COMMUNITY_MANAGEMENT' ? 'COMMUNITY_BUILDING' :
                    taskData.taskType === 'EVENT_MANAGEMENT' ? 'CUSTOM' : 'CUSTOM',
           xpReward: taskData.xp,
-          verificationMethod: taskData.approvalWorkflow === 'auto' ? 'AI_AUTO' : 'MANUAL',
+          verificationMethod: taskData.approvalWorkflow?.includes('auto') ? 'AI_AUTO' : 'MANUAL',
           requirements: [taskData.instructions],
           status: 'active',
           campaignId: taskData.campaignId

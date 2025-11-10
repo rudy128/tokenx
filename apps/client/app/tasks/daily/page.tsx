@@ -548,7 +548,7 @@ export default function DailyTasksPage() {
                 status: task.status === 'available' ? 'available' : 
                         task.status === 'submitted' ? 'pending' : 
                         task.status === 'approved' ? 'completed' : 'available',
-                verificationMode: task.approvalWorkflow === 'auto' ? "AUTO" : "MANUAL",
+                verificationMode: task.verificationMethod || (task.approvalWorkflow === 'auto' ? "AUTO" : "MANUAL"),
                 difficulty: "medium",
                 estimatedTime: task.frequency === 'daily' ? "Daily" : "10 min",
                 requirements: task.instructions ? [task.instructions] : ["Complete the required action"],

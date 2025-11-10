@@ -85,7 +85,7 @@ export async function GET(
             taskType: task.category,
             frequency: 'one_time', // Default since not in schema
             evidenceMode: 'manual', // Default
-            approvalWorkflow: task.verificationMethod === 'AI_AUTO' ? 'auto' : 'manual',
+            approvalWorkflow: task.verificationMethod?.includes('AUTO') ? 'auto' : 'manual',
             status: task.status, // Use the actual task status from database
             submissionStatus: submission?.status,
             submittedAt: submission?.submittedAt?.toISOString(),
@@ -113,7 +113,7 @@ export async function GET(
           taskType: task.category,
           frequency: 'one_time',
           evidenceMode: 'manual',
-          approvalWorkflow: task.verificationMethod === 'AI_AUTO' ? 'auto' : 'manual',
+          approvalWorkflow: task.verificationMethod?.includes('AUTO') ? 'auto' : 'manual',
           status: task.status, // Use the actual task status from database
           // Add missing required properties
           createdAt: task.createdAt,

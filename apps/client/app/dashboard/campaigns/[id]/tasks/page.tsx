@@ -188,7 +188,7 @@ export default function CampaignTasksPage() {
               <Target className="campaign-card-stat-icon" />
             </div>
             <div className="campaign-card-stat-content">
-              <div className="campaign-card-stat-value">{task.approvalWorkflow === 'auto' ? 'AUTO' : 'MANUAL'}</div>
+              <div className="campaign-card-stat-value">{task.verificationMethod || (task.approvalWorkflow === 'auto' ? 'AUTO' : 'MANUAL')}</div>
               <div className="campaign-card-stat-label">Verification</div>
             </div>
           </div>
@@ -283,10 +283,10 @@ export default function CampaignTasksPage() {
                 <span className="badge badge-success">XP</span>
               </div>
               <span className="badge badge-secondary">
-                {task.approvalWorkflow === 'auto' ? 'AUTO' : 'MANUAL'}
+                {task.verificationMethod || (task.approvalWorkflow === 'auto' ? 'AUTO' : 'MANUAL')}
               </span>
               <span className="badge badge-info">
-                {task.approvalWorkflow === 'auto' ? "AUTO-VERIFIED" : "MANUAL REVIEW"}
+                {(task.verificationMethod || task.approvalWorkflow)?.toUpperCase().includes('AUTO') ? "AUTO-VERIFIED" : "MANUAL REVIEW"}
               </span>
             </div>
 
@@ -310,7 +310,7 @@ export default function CampaignTasksPage() {
             <div className="task-modal-verification">
               <h3 className="task-modal-section-title">Verification Process</h3>
               <div className="task-modal-verification-content">
-                {task.approvalWorkflow === 'auto' ? (
+                {(task.verificationMethod || task.approvalWorkflow)?.toUpperCase().includes('AUTO') ? (
                   <>
                     <span className="task-modal-verification-type">Auto-Verified Task</span>
                     <p className="task-modal-verification-desc">

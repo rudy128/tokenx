@@ -11,7 +11,7 @@ export interface CampaignTask {
   type: 'SOCIAL_ENGAGEMENT' | 'CONTENT_CREATION' | 'COMMUNITY_BUILDING' | 'REFERRAL' | 'CUSTOM'
   xpReward: number
   isRequired: boolean
-  verificationMethod: 'AUTO' | 'MANUAL' | 'LINK_SUBMISSION'
+  verificationMethod: 'AI_AUTO' | 'MANUAL' | 'HYBRID'
   subTasks: SubTask[]
 }
 
@@ -142,8 +142,8 @@ export default function TaskCard({
                 className="input"
               >
                 <option value="MANUAL">Manual Review</option>
-                <option value="LINK_SUBMISSION">Link Submission</option>
-                <option value="AUTO">Automatic</option>
+                <option value="AI_AUTO">AI Automatic</option>
+                <option value="HYBRID">Hybrid (AI + Manual)</option>
               </select>
             </div>
 

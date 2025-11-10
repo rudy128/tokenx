@@ -133,7 +133,8 @@ async function getTask(id: string) {
       submissionCutoff: task.submissionCutoff,
       evidenceMode: task.evidenceMode,
       approvalWorkflow: task.approvalWorkflow,
-      verificationMode: task.verificationMode || (task.approvalWorkflow === 'auto' ? 'AUTO' : 'MANUAL'),
+      verificationMethod: task.verificationMethod,
+      verificationMode: task.verificationMode || task.verificationMethod || (task.approvalWorkflow === 'auto' ? 'AUTO' : 'MANUAL'),
       uniqueContent: task.uniqueContent,
       minAccountAgeDays: task.minAccountAgeDays,
       minFollowers: task.minFollowers,
@@ -362,18 +363,18 @@ function ClaimStatusModal({
           aria-modal="true"
           aria-labelledby="claim-modal-title"
         >
-          {mode === 'AUTO' ? (
+          {mode?.includes('AUTO') || mode?.includes('AI_AUTO') ? (
             <>
               <div className="claim-modal-icon claim-modal-icon-success">
                 <CheckCircle className="text-green-400 h-8 w-8" />
               </div>
-              <div id="claim-modal-title" className="claim-modal-title">Claimed Successfully!</div>
+              <div id="claim-modal-title" className="claim-modal-title">AI Verified Successfully!</div>
               <div className="claim-modal-description">
-                Your {xpAmount} XP{rewardToken && rewardAmount ? ` and ${rewardAmount} ${rewardToken}` : ''} have been credited.
+                Your submission was automatically verified by AI. {xpAmount} XP{rewardToken && rewardAmount ? ` and ${rewardAmount} ${rewardToken}` : ''} will be credited shortly.
               </div>
               <div className="claim-modal-badge claim-modal-badge-success">
                 <Star className="text-green-400 h-4 w-4" />
-                <span className="text-sm font-semibold text-green-400">Reward Added</span>
+                <span className="text-sm font-semibold text-green-400">AI Verified</span>
               </div>
             </>
           ) : (
@@ -740,38 +741,100 @@ export default function TaskDetailPage() {
       const profileResponse = await fetch('/api/profile')
       console.log('📡 Profile response status:', profileResponse.status)
       
-      if (profileResponse.ok) {
-        const profile = await profileResponse.json()
-        console.log('👤 Profile data:', profile)
+      if (!profileResponse.ok) {
+        console.error('❌ Profile fetch failed:', profileResponse.status)
+        showFeedback('error', 'Failed to fetch profile. Please try again.')
+        return
+      }
+
+      const profile = await profileResponse.json()
+      console.log('👤 Profile data:', profile)
+      
+      if (!profile.twitterUsername) {
+        console.log('⚠️ No Twitter username found, showing alert')
+        // Show alert and redirect to profile
+        const shouldRedirect = window.confirm(
+          'Please add your Twitter/X username to your profile before claiming rewards.\n\nClick OK to go to your profile page.'
+        )
         
-        if (!profile.twitterUsername) {
-          console.log('⚠️ No Twitter username found, showing alert')
-          // Show alert and redirect to profile
-          const shouldRedirect = window.confirm(
-            'Please add your Twitter/X username to your profile before claiming rewards.\n\nClick OK to go to your profile page.'
-          )
-          
-          console.log('🔄 User chose to redirect:', shouldRedirect)
-          
-          if (shouldRedirect) {
-            window.location.href = '/profile'
-          }
+        console.log('🔄 User chose to redirect:', shouldRedirect)
+        
+        if (shouldRedirect) {
+          window.location.href = '/profile'
+        }
+        return
+      }
+      
+      console.log('✅ Twitter username exists:', profile.twitterUsername)
+      
+      // Check if user already submitted this task
+      console.log('📡 Checking for existing submission...')
+      const submissionCheckResponse = await fetch(`/api/tasks/${taskId}/check-submission`)
+      
+      if (submissionCheckResponse.ok) {
+        const { hasSubmitted } = await submissionCheckResponse.json()
+        console.log('📋 Has submitted:', hasSubmitted)
+        
+        if (hasSubmitted) {
+          alert('You have already submitted this task. You can only submit once.')
           return
         }
-        
-        console.log('✅ Twitter username exists:', profile.twitterUsername)
-      } else {
-        console.error('❌ Profile fetch failed:', profileResponse.status)
       }
       
       // Show info feedback for processing
-      showFeedback('info', 'Processing reward claim...')
+      showFeedback('info', 'Submitting task...')
       
-      // Simulate claim processing (replace with actual API call)
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // Submit the task to database
+      console.log('💾 Submitting task to database...')
+      const submitResponse = await fetch('/api/tasks/daily', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          taskId: taskId,
+          evidence: {
+            twitterUsername: profile.twitterUsername,
+            completedAt: new Date().toISOString()
+          }
+        })
+      })
       
-      // Show success feedback
-      showFeedback('success', 'Reward claim initiated successfully')
+      console.log('📡 Submit response status:', submitResponse.status)
+      
+      if (!submitResponse.ok) {
+        const errorData = await submitResponse.json()
+        console.error('❌ Submit failed:', errorData)
+        showFeedback('error', errorData.error || 'Failed to submit task')
+        return
+      }
+      
+      const submitData = await submitResponse.json()
+      console.log('✅ Task submitted successfully:', submitData)
+      
+      // Check verification method and show appropriate message
+      console.log('🔍 Task verification details:', {
+        verificationMethod: task.verificationMethod,
+        verificationMode: task.verificationMode,
+        approvalWorkflow: task.approvalWorkflow,
+        fullTask: task
+      })
+      
+      const verificationMethod = task.verificationMethod || task.verificationMode
+      const isAIVerified = verificationMethod?.includes('AI_AUTO') || verificationMethod?.includes('AUTO')
+      
+      console.log('📊 Verification check:', {
+        verificationMethod,
+        isAIVerified,
+        includes_AI_AUTO: verificationMethod?.includes('AI_AUTO'),
+        includes_AUTO: verificationMethod?.includes('AUTO')
+      })
+      
+      if (isAIVerified) {
+        console.log('🤖 AI Verification: Task automatically verified by AI')
+        showFeedback('success', 'AI verified successfully! Reward will be credited automatically.')
+      } else {
+        console.log('👤 Manual Verification: Task submitted for admin review')
+        showFeedback('success', 'Task submitted successfully! Pending admin review.')
+      }
       
       // Show the centered modal
       setShowClaimModal(true)
@@ -1031,7 +1094,7 @@ export default function TaskDetailPage() {
               onClick={handleClaimReward}
               className="claim-now-card"
             >
-              75 XP - Claim Now
+              {task.xp || 0} XP - Claim Now
             </button>
           </div>
 
@@ -1053,7 +1116,7 @@ export default function TaskDetailPage() {
       {/* Claim Status Modal */}
       <ClaimStatusModal
         open={showClaimModal}
-        mode={task?.approvalWorkflow === 'manual' || task?.verificationMode === 'MANUAL' ? 'MANUAL' : 'AUTO'}
+        mode={task?.verificationMethod || task?.verificationMode || task?.approvalWorkflow?.toUpperCase() || 'MANUAL'}
         xpAmount={task?.xp}
         rewardToken={task?.rewardToken}
         rewardAmount={task?.rewardAmount?.toString()}

@@ -459,7 +459,8 @@ export default function EditTaskForm({ task, campaigns }: EditTaskFormProps) {
                     required
                   >
                     <option value="MANUAL">Manual Review</option>
-                    <option value="AUTO">Automatic</option>
+                    <option value="AI_AUTO">AI Automatic</option>
+                    <option value="HYBRID">Hybrid (AI + Manual)</option>
                   </select>
                 </div>
               </div>

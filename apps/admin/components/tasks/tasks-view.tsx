@@ -5,6 +5,7 @@ import {
   Search, 
   Plus,
   Edit,
+  Eye,
   Target,
   Users,
   Award,
@@ -358,18 +359,30 @@ function TaskCard({ task }: TaskCardProps) {
               {task.status.toUpperCase()}
             </span>
           </div>
-          <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
-            {task.name}
-          </h3>
+          <Link href={`/tasks/${task.id}`} className="hover:underline">
+            <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
+              {task.name}
+            </h3>
+          </Link>
         </div>
-        <Link
-          href={`/tasks/${task.id}/edit`}
-          className="btn btn-ghost p-2"
-          style={{ minWidth: 'unset' }}
-          title="Edit task"
-        >
-          <Edit size={18} />
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/tasks/${task.id}`}
+            className="btn btn-ghost p-2"
+            style={{ minWidth: 'unset' }}
+            title="View submissions"
+          >
+            <Eye size={18} />
+          </Link>
+          <Link
+            href={`/tasks/${task.id}/edit`}
+            className="btn btn-ghost p-2"
+            style={{ minWidth: 'unset' }}
+            title="Edit task"
+          >
+            <Edit size={18} />
+          </Link>
+        </div>
       </div>
 
       {/* Description */}

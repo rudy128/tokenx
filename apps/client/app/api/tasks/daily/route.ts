@@ -228,23 +228,80 @@ export async function POST(request: NextRequest) {
 
     // Get user from database
     const dbUser = await prisma.user.findUnique({
-      where: { id: session.user.id }
+      where: { email: session.user.email }
     })
 
     if (!dbUser) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
-    // Create task submission
-    const submission = await prisma.newTaskSubmission.create({
-      data: {
-        taskId: taskId,
-        userId: dbUser.id,
-        status: 'submitted',
-        evidence: evidence || {},
-        createdAt: new Date()
-      }
+    // Check which table the task exists in
+    const newTask = await prisma.newTask.findUnique({
+      where: { id: taskId }
     })
+
+    const oldTask = !newTask ? await prisma.task.findUnique({
+      where: { id: taskId }
+    }) : null
+
+    if (!newTask && !oldTask) {
+      return NextResponse.json({ error: "Task not found" }, { status: 404 })
+    }
+
+    let submission: any
+
+    if (newTask) {
+      // Check if user already submitted this task (NewTask)
+      const existingSubmission = await prisma.newTaskSubmission.findFirst({
+        where: {
+          taskId,
+          userId: dbUser.id
+        }
+      })
+
+      if (existingSubmission) {
+        return NextResponse.json(
+          { error: 'You have already submitted this task' },
+          { status: 400 }
+        )
+      }
+
+      // Create submission for NewTask
+      submission = await prisma.newTaskSubmission.create({
+        data: {
+          taskId: taskId,
+          userId: dbUser.id,
+          status: 'submitted',
+          evidence: evidence || {},
+          createdAt: new Date()
+        }
+      })
+    } else if (oldTask) {
+      // Check if user already submitted this task (Task)
+      const existingSubmission = await prisma.taskSubmission.findFirst({
+        where: {
+          taskId,
+          userId: dbUser.id
+        }
+      })
+
+      if (existingSubmission) {
+        return NextResponse.json(
+          { error: 'You have already submitted this task' },
+          { status: 400 }
+        )
+      }
+
+      // Create submission for Task
+      submission = await prisma.taskSubmission.create({
+        data: {
+          taskId: taskId,
+          userId: dbUser.id,
+          status: 'PENDING',
+          submittedAt: new Date()
+        }
+      })
+    }
 
     console.log(`✅ Task submission created: ${submission.id} for task ${taskId}`)
 

@@ -18,7 +18,7 @@ export interface CampaignTask {
 interface TaskCardProps {
   task: CampaignTask
   index: number
-  onUpdate: (taskId: string, field: keyof CampaignTask, value: any) => void
+  onUpdate: (taskId: string, field: keyof CampaignTask, value: string | number | boolean) => void
   onRemove: (taskId: string) => void
   onAddSubTask: (taskId: string) => void
   onUpdateSubTask: (taskId: string, subTaskIndex: number, field: keyof SubTask, value: string | number) => void

@@ -94,9 +94,9 @@ model TaskSubmission {
   id                 String               @id @default(cuid())
   userId             String
   taskId             String
-  subTaskId          String?              // Optional: specific subtask being submitted
+  subTaskId          String? // Optional: specific subtask being submitted
   proofUrl           String?
-  proofImageUrl      String?              // Store the uploaded proof image path
+  proofImageUrl      String? // Store the uploaded proof image path
   screenshot         String?
   description        String?
   status             SubmissionStatus     @default(PENDING)
@@ -225,36 +225,38 @@ model UserPinnedTask {
 }
 
 model SubTask {
-  id            String   @id @default(cuid())
+  id            String      @id @default(cuid())
   title         String
   description   String?
   link          String?
-  xpReward      Int      @default(0)
-  order         Int      @default(0)
-  isCompleted   Boolean  @default(false)
-  isUploadProof Boolean  @default(false)
-  taskId        String   @db.Uuid
-  task          NewTask  @relation(fields: [taskId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  xpReward      Int         @default(0)
+  order         Int         @default(0)
+  isCompleted   Boolean     @default(false)
+  isUploadProof Boolean     @default(false)
+  type          SubTaskType @default(X_TWEET)
+  taskId        String      @db.Uuid
+  task          NewTask     @relation(fields: [taskId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 
   @@index([taskId])
   @@map("subtasks")
 }
 
 model TaskSubTask {
-  id            String   @id @default(cuid())
+  id            String      @id @default(cuid())
   title         String
   description   String?
   link          String?
-  xpReward      Int      @default(0)
-  order         Int      @default(0)
-  isCompleted   Boolean  @default(false)
-  isUploadProof Boolean  @default(false)
+  xpReward      Int         @default(0)
+  order         Int         @default(0)
+  isCompleted   Boolean     @default(false)
+  isUploadProof Boolean     @default(false)
+  type          SubTaskType @default(X_TWEET)
   taskId        String
-  task          Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  task          Task        @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 
   @@index([taskId])
   @@map("task_subtasks")
@@ -342,4 +344,15 @@ enum SubmissionState {
   submitted
   approved
   rejected
+}
+
+enum SubTaskType {
+  X_LIKE
+  X_COMMENT
+  X_SHARE
+  X_SPACE_HOST
+  X_QUOTE
+  X_RETWEET
+  X_TWEET
+  X_CUSTOM
 }

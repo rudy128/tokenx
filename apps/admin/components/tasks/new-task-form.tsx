@@ -74,7 +74,7 @@ export default function NewTaskForm({ campaigns }: NewTaskFormProps) {
         }
       ])
     }
-  }, []) // Run only once on mount
+  }, [subTasks.length]) // Run only once on mount
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -95,7 +95,8 @@ export default function NewTaskForm({ campaigns }: NewTaskFormProps) {
       link: '',
       xpReward: 0,
       order: subTasks.length - 1, // Insert before upload proof
-      isUploadProof: false
+      isUploadProof: false,
+      type: 'X_TWEET'
     }
     
     if (uploadProofIndex !== -1) {
@@ -238,7 +239,8 @@ export default function NewTaskForm({ campaigns }: NewTaskFormProps) {
           link: subTask.link?.trim() || null,
           xpReward: parseInt(String(subTask.xpReward)) || 0,
           order: index,
-          isUploadProof: subTask.isUploadProof || false
+          isUploadProof: subTask.isUploadProof || false,
+          type: subTask.type || 'X_TWEET'
         }))
       }
 
@@ -679,6 +681,38 @@ export default function NewTaskForm({ campaigns }: NewTaskFormProps) {
                       </div>
 
                       <div className="flex-1 space-y-3">
+                        {/* Sub Task Type Selector - Only for regular subtasks */}
+                        {!subTask.isUploadProof && (
+                          <div>
+                            <label 
+                              className="block text-sm font-medium mb-1"
+                              style={{ color: 'var(--text-primary)' }}
+                            >
+                              Sub Task Type *
+                            </label>
+                            <select
+                              value={subTask.type || 'X_TWEET'}
+                              onChange={(e) => updateSubTask(index, 'type', e.target.value)}
+                              className="w-full px-3 py-2 rounded-lg text-sm"
+                              style={{
+                                backgroundColor: 'var(--bg-surface)',
+                                border: '1px solid var(--border-default)',
+                                color: 'var(--text-primary)',
+                              }}
+                              required
+                            >
+                              <option value="X_LIKE">X Like</option>
+                              <option value="X_COMMENT">X Comment</option>
+                              <option value="X_SHARE">X Share</option>
+                              <option value="X_SPACE_HOST">X Space Host</option>
+                              <option value="X_QUOTE">X Quote</option>
+                              <option value="X_RETWEET">X Retweet</option>
+                              <option value="X_TWEET">X Tweet</option>
+                              <option value="X_CUSTOM">X Custom</option>
+                            </select>
+                          </div>
+                        )}
+
                         {/* Title Input */}
                         <div>
                           <label 
@@ -804,7 +838,7 @@ export default function NewTaskForm({ campaigns }: NewTaskFormProps) {
                     Upload proof subtask added automatically
                   </p>
                   <p className="text-sm mt-1" style={{ color: 'var(--text-tertiary)' }}>
-                    Click "Add Subtask" to add more steps
+                    Click &quot;Add Subtask&quot; to add more steps
                   </p>
                 </div>
               )}

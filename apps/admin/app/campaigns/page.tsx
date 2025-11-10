@@ -1,7 +1,6 @@
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
-// @ts-expect-error - Module resolution issue, component exists and works
 import CampaignsView from "@/components/campaigns/campaigns-view"
 
 export default async function CampaignsPage() {

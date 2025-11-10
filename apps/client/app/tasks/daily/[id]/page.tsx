@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { TaskSubmissionForm } from '@/components/ui/task-submission-form'
 import { TaskTypeBadge } from '@/components/ui/task-type-badge'
+import { SubTaskTypeBadge } from '@/components/ui/subtask-type-badge'
 import { useToast } from '@/components/ui/use-toast'
 import { type TaskType } from '@/lib/task-types'
 import { cn } from '@/lib/utils'
@@ -158,7 +159,8 @@ async function getTask(id: string) {
             },
             completed: subTask.isCompleted || false,
             description: subTask.description,
-            link: subTask.link || null
+            link: subTask.link || null,
+            type: subTask.type || 'X_TWEET'
           }))
         : [
             // Fallback: Generate two fixed subtasks if none exist in database
@@ -253,6 +255,7 @@ type Subtask = {
   completed?: boolean
   description?: string
   link?: string | null
+  type?: string
 }
 
 // Function to determine task icon based on platform and instructions
@@ -507,19 +510,26 @@ function TaskSubtasks({
               )}
             </div>
 
-            {/* Content - Title Only */}
+            {/* Content - Title and Type Badge */}
             <div 
               onClick={() => handleSubtaskClick(subtask)}
               className="flex-1 cursor-pointer"
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
-                  <h3 className={cn(
-                    "font-semibold text-base md:text-lg group-hover:text-[#8c6cfb] transition-colors",
-                    subtask.completed ? "text-gray-400 line-through" : "text-white"
-                  )}>
-                    {subtask.title}
-                  </h3>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className={cn(
+                      "font-semibold text-base md:text-lg group-hover:text-[#8c6cfb] transition-colors",
+                      subtask.completed ? "text-gray-400 line-through" : "text-white"
+                    )}>
+                      {subtask.title}
+                    </h3>
+                  </div>
+                  {subtask.type && (
+                    <div className="mt-1">
+                      <SubTaskTypeBadge type={subtask.type} />
+                    </div>
+                  )}
                 </div>
 
                 {/* Right side: XP Badge + Action */}

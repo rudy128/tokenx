@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next"
-// @ts-expect-error - Geist font imports may have type issues
 import { GeistSans, GeistMono } from "geist/font"
 import "./globals.css"
 import { AdminProviders } from "./providers"

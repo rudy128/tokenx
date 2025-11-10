@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get("status")
 
     // Build where clause
-    const where: any = {}
+    const where: Record<string, string> = {}
     if (campaignId) where.campaignId = campaignId
     if (status) where.status = status
 
@@ -180,13 +180,14 @@ export async function POST(request: NextRequest) {
         requirements: requirements || null,
         status: status || "draft",
         taskSubTasks: subTasks && Array.isArray(subTasks) && subTasks.length > 0 ? {
-          create: subTasks.map((subTask: any, index: number) => ({
+          create: subTasks.map((subTask: { title: string; link?: string; xpReward: number; isUploadProof?: boolean; type?: string }, index: number) => ({
             title: subTask.title.trim(),
             link: subTask.link?.trim() || null,
-            xpReward: parseInt(subTask.xpReward) || 0,
+            xpReward: parseInt(String(subTask.xpReward)) || 0,
             order: index,
             isCompleted: false,
             isUploadProof: subTask.isUploadProof || false,
+            type: subTask.type || 'X_TWEET',
           }))
         } : undefined,
       },
@@ -222,25 +223,26 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     )
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("❌ Task creation error:", error)
+    const err = error as { code?: string; message?: string }
 
     // Handle specific Prisma errors
-    if (error.code === "P2002") {
+    if (err.code === "P2002") {
       return NextResponse.json(
         { error: "A task with this name already exists in this campaign" },
         { status: 400 }
       )
     }
 
-    if (error.code === "P2003") {
+    if (err.code === "P2003") {
       return NextResponse.json(
         { error: "Invalid reference - Campaign or user not found" },
         { status: 400 }
       )
     }
 
-    if (error.code === "P2025") {
+    if (err.code === "P2025") {
       return NextResponse.json(
         { error: "Related record not found" },
         { status: 404 }
@@ -251,7 +253,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error: "Failed to create task",
-        details: process.env.NODE_ENV === "development" ? error.message : undefined,
+        details: process.env.NODE_ENV === "development" ? err.message : undefined,
       },
       { status: 500 }
     )

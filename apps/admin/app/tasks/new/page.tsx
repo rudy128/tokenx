@@ -1,7 +1,6 @@
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
-// @ts-expect-error - module resolution issue
 import NewTaskForm from "@/components/tasks/new-task-form"
 
 export default async function NewTaskPage() {

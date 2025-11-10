@@ -4,6 +4,7 @@ import { signOut, useSession } from "next-auth/react"
 import { Shield, LogOut, LayoutDashboard, Briefcase, Users, FileText, Settings, CheckSquare } from "lucide-react"
 import { ThemeToggle } from "./theme-toggle"
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 
 export default function AdminHeader() {
@@ -71,9 +72,11 @@ export default function AdminHeader() {
                   </p>
                 </div>
                 {session.user.image ? (
-                  <img 
+                  <Image 
                     src={session.user.image} 
                     alt={session.user.name || "Admin"} 
+                    width={36}
+                    height={36}
                     className="w-9 h-9 rounded-full"
                   />
                 ) : (

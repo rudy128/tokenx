@@ -67,7 +67,7 @@ export default function NewCampaignForm({ userId }: NewCampaignFormProps) {
     setTasks([...tasks, newTask])
   }
 
-  const updateTask = (taskId: string, field: keyof CampaignTask, value: any) => {
+  const updateTask = (taskId: string, field: keyof CampaignTask, value: string | number | boolean) => {
     setTasks(tasks.map(task => 
       task.id === taskId ? { ...task, [field]: value } : task
     ))
@@ -86,7 +86,8 @@ export default function NewCampaignForm({ userId }: NewCampaignFormProps) {
           link: '',
           xpReward: 0,
           order: task.subTasks.length,
-          isUploadProof: false
+          isUploadProof: false,
+          type: 'X_TWEET'
         }
         return { ...task, subTasks: [...task.subTasks, newSubTask] }
       }
@@ -207,7 +208,8 @@ export default function NewCampaignForm({ userId }: NewCampaignFormProps) {
               link: subTask.link?.trim() || null,
               xpReward: subTask.xpReward,
               order: index,
-              isUploadProof: subTask.isUploadProof || false
+              isUploadProof: subTask.isUploadProof || false,
+              type: subTask.type || 'X_TWEET'
             }))
           }))
         }),

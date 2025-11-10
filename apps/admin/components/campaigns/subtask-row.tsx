@@ -2,6 +2,16 @@
 
 import { X } from "lucide-react"
 
+export type SubTaskType = 
+  | 'X_LIKE'
+  | 'X_COMMENT'
+  | 'X_SHARE'
+  | 'X_SPACE_HOST'
+  | 'X_QUOTE'
+  | 'X_RETWEET'
+  | 'X_TWEET'
+  | 'X_CUSTOM'
+
 export interface SubTask {
   id: string
   title: string
@@ -9,6 +19,7 @@ export interface SubTask {
   xpReward: number
   order: number
   isUploadProof?: boolean
+  type?: SubTaskType
 }
 
 interface SubTaskRowProps {
@@ -17,6 +28,17 @@ interface SubTaskRowProps {
   onUpdate: (index: number, field: keyof SubTask, value: string | number) => void
   onRemove: (index: number) => void
 }
+
+const SUB_TASK_TYPE_OPTIONS: { value: SubTaskType; label: string }[] = [
+  { value: 'X_LIKE', label: 'X Like' },
+  { value: 'X_COMMENT', label: 'X Comment' },
+  { value: 'X_SHARE', label: 'X Share' },
+  { value: 'X_SPACE_HOST', label: 'X Space Host' },
+  { value: 'X_QUOTE', label: 'X Quote' },
+  { value: 'X_RETWEET', label: 'X Retweet' },
+  { value: 'X_TWEET', label: 'X Tweet' },
+  { value: 'X_CUSTOM', label: 'X Custom' },
+]
 
 export default function SubTaskRow({ subTask, index, onUpdate, onRemove }: SubTaskRowProps) {
   return (
@@ -38,6 +60,29 @@ export default function SubTaskRow({ subTask, index, onUpdate, onRemove }: SubTa
       </div>
 
       <div className="flex-1 space-y-3">
+        {/* Sub Task Type Selector */}
+        <div>
+          <label 
+            className="block text-sm font-medium mb-1"
+            style={{ color: 'var(--text-primary)' }}
+          >
+            Sub Task Type *
+          </label>
+          <select
+            value={subTask.type || 'X_TWEET'}
+            onChange={(e) => onUpdate(index, 'type', e.target.value as SubTaskType)}
+            className="input text-sm"
+            style={{ minHeight: '36px' }}
+            required
+          >
+            {SUB_TASK_TYPE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
         {/* Title Input */}
         <div>
           <label 

@@ -1,7 +1,6 @@
 import { auth } from "@/lib/auth"
 import { redirect, notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
-// @ts-expect-error - Module resolution issue, component exists and works
 import EditTaskForm from "@/components/tasks/edit-task-form"
 
 interface EditTaskPageProps {

@@ -1,7 +1,6 @@
 import { auth } from "@/lib/auth"
 import { redirect, notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
-// @ts-expect-error - Module resolution issue, component exists and works
 import CampaignDetailView from "@/components/campaigns/campaign-detail-view"
 
 export default async function CampaignViewPage({ params }: { params: { id: string } }) {
@@ -75,9 +74,6 @@ export default async function CampaignViewPage({ params }: { params: { id: strin
       ...task,
       createdAt: task.createdAt,
       updatedAt: task.updatedAt,
-      availableFrom: task.availableFrom,
-      availableTo: task.availableTo,
-      submissionCutoff: task.submissionCutoff,
     })),
     CampaignParticipation: campaign.CampaignParticipation.map(participation => ({
       ...participation,

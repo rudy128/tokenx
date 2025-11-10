@@ -1,7 +1,6 @@
 import NextAuth from "next-auth"
 import type { NextAuthConfig } from "next-auth"
 import { PrismaAdapter } from "@auth/prisma-adapter"
-// @ts-expect-error - Module resolution issue, file exists and works
 import { prisma } from "./prisma"
 import CredentialsProvider from "next-auth/providers/credentials"
 import bcrypt from "bcryptjs"

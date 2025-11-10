@@ -1,12 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, Suspense } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Shield, Eye, EyeOff, Loader2 } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 
-export default function AdminSignIn() {
+function SignInForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard"
@@ -149,5 +149,25 @@ export default function AdminSignIn() {
         </p>
       </div>
     </div>
+  )
+}
+
+export default function AdminSignIn() {
+  return (
+    <Suspense fallback={
+      <div className="auth-page-container">
+        <div className="auth-content-wrapper">
+          <div className="auth-header">
+            <div className="auth-icon-container">
+              <Shield size={32} />
+            </div>
+            <h1 className="auth-title">Admin Portal</h1>
+            <p className="auth-subtitle">Loading...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <SignInForm />
+    </Suspense>
   )
 }

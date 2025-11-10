@@ -31,12 +31,7 @@ export async function POST(request: NextRequest) {
       description,
       startDate,
       endDate,
-      participantLimit,
-      eligibilityCriteria,
       rewardPool,
-      rewardToken,
-      status,
-      createdById,
     } = body
 
     // Validation
@@ -144,7 +139,6 @@ export async function POST(request: NextRequest) {
           if (task.subTasks && Array.isArray(task.subTasks) && task.subTasks.length > 0) {
             for (let i = 0; i < task.subTasks.length; i++) {
               const subTask = task.subTasks[i]
-              // @ts-expect-error - TaskSubTask model exists but TS doesn't recognize it yet
               await prisma.taskSubTask.create({
                 data: {
                   title: subTask.title,
@@ -154,6 +148,7 @@ export async function POST(request: NextRequest) {
                   order: i,
                   isCompleted: false,
                   isUploadProof: subTask.isUploadProof || false,
+                  type: subTask.type || 'X_TWEET',
                   taskId: createdTask.id,
                 },
               })

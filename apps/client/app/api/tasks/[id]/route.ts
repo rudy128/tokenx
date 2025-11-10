@@ -39,7 +39,8 @@ export async function GET(
               xpReward: true,
               order: true,
               isCompleted: true,
-              isUploadProof: true  // 🔥 CRITICAL: Need this to identify upload proof subtasks
+              isUploadProof: true,
+              type: true
             }
           }
         }
@@ -84,7 +85,8 @@ export async function GET(
                 xpReward: true,
                 order: true,
                 isCompleted: true,
-                isUploadProof: true  // 🔥 CRITICAL: Need this to identify upload proof subtasks
+                isUploadProof: true,
+                type: true
               }
             }
           }
@@ -171,7 +173,8 @@ export async function GET(
           link: st.link || null,
           xpReward: st.xpReward || 0,
           order: st.order || 0,
-          isCompleted: st.isCompleted || false
+          isCompleted: st.isCompleted || false,
+          type: st.type || 'X_TWEET'
         }))
       }
 

@@ -36,7 +36,7 @@ interface Task {
   category: string
   xpReward: number
   verificationMethod: string
-  requirements: any
+  requirements: unknown
   status: string
   createdAt: Date
   updatedAt: Date
@@ -59,6 +59,16 @@ interface EditTaskFormProps {
   userId: string
 }
 
+type SubTaskType = 
+  | 'X_LIKE'
+  | 'X_COMMENT'
+  | 'X_SHARE'
+  | 'X_SPACE_HOST'
+  | 'X_QUOTE'
+  | 'X_RETWEET'
+  | 'X_TWEET'
+  | 'X_CUSTOM'
+
 interface SubtaskFormData {
   id?: string
   title: string
@@ -66,6 +76,13 @@ interface SubtaskFormData {
   xpReward: string
   link: string
   order: number
+  type: SubTaskType
+}
+
+interface SubtaskModalProps {
+  subtask: SubtaskFormData
+  onSave: (data: SubtaskFormData) => void
+  onClose: () => void
 }
 
 export default function EditTaskForm({ task, campaigns }: EditTaskFormProps) {
@@ -185,6 +202,7 @@ export default function EditTaskForm({ task, campaigns }: EditTaskFormProps) {
       xpReward: "10",
       link: "",
       order: subtasks.length,
+      type: 'X_TWEET',
     })
     setShowSubtaskModal(true)
   }
@@ -197,6 +215,7 @@ export default function EditTaskForm({ task, campaigns }: EditTaskFormProps) {
       xpReward: subtask.xpReward.toString(),
       link: subtask.link || "",
       order: subtask.order,
+      type: (subtask as any).type || 'X_TWEET',
     })
     setShowSubtaskModal(true)
   }
@@ -239,6 +258,7 @@ export default function EditTaskForm({ task, campaigns }: EditTaskFormProps) {
           xpReward: parseInt(subtaskData.xpReward),
           link: subtaskData.link.trim() || null,
           order: subtaskData.order,
+          type: subtaskData.type || 'X_TWEET',
         }),
       })
 
@@ -556,14 +576,10 @@ function SubtaskModal({
   subtask,
   onSave,
   onClose,
-}: {
-  subtask: SubtaskFormData
-  onSave: (data: SubtaskFormData) => void
-  onClose: () => void
-}) {
+}: SubtaskModalProps) {
   const [formData, setFormData] = useState<SubtaskFormData>(subtask)
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
   }
@@ -572,6 +588,17 @@ function SubtaskModal({
     e.preventDefault()
     onSave(formData)
   }
+
+  const SUB_TASK_TYPE_OPTIONS: { value: SubTaskType; label: string }[] = [
+    { value: 'X_LIKE', label: 'X Like' },
+    { value: 'X_COMMENT', label: 'X Comment' },
+    { value: 'X_SHARE', label: 'X Share' },
+    { value: 'X_SPACE_HOST', label: 'X Space Host' },
+    { value: 'X_QUOTE', label: 'X Quote' },
+    { value: 'X_RETWEET', label: 'X Retweet' },
+    { value: 'X_TWEET', label: 'X Tweet' },
+    { value: 'X_CUSTOM', label: 'X Custom' },
+  ]
 
   return (
     <div className="admin-modal-overlay" onClick={onClose}>
@@ -586,6 +613,26 @@ function SubtaskModal({
         </div>
 
         <form onSubmit={handleSubmit} className="admin-modal-form">
+          <div className="admin-form-field">
+            <label htmlFor="subtask-type" className="admin-form-label">
+              Sub-task Type *
+            </label>
+            <select
+              id="subtask-type"
+              name="type"
+              value={formData.type}
+              onChange={handleChange}
+              className="admin-form-input"
+              required
+            >
+              {SUB_TASK_TYPE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className="admin-form-field">
             <label htmlFor="subtask-title" className="admin-form-label">
               Sub-task Name *

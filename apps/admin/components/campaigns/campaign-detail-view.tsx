@@ -9,16 +9,12 @@ import {
   Coins,
   Edit,
   Trash2,
-  Play,
-  Pause,
-  CheckCircle,
-  XCircle,
   Clock,
-  TrendingUp,
   Award,
   FileText,
 } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import AdminLayout from "../admin-layout"
 import { formatDate } from "@/lib/utils"
@@ -304,9 +300,11 @@ export default function CampaignDetailView({ campaign }: CampaignDetailViewProps
                     <div key={participation.id} className="admin-campaign-list-item">
                       <div className="flex items-center gap-3">
                         {participation.User.image ? (
-                          <img 
+                          <Image 
                             src={participation.User.image} 
                             alt={participation.User.name || "User"} 
+                            width={40}
+                            height={40}
                             className="w-10 h-10 rounded-full"
                           />
                         ) : (

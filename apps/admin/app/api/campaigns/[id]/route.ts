@@ -3,9 +3,9 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 // PATCH - Update campaign
@@ -14,6 +14,8 @@ export async function PATCH(
   { params }: RouteParams
 ) {
   try {
+    const { id } = await params
+    
     // Check authentication
     const session = await auth()
     
@@ -35,7 +37,7 @@ export async function PATCH(
 
     // Check if campaign exists
     const existingCampaign = await prisma.campaign.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
 
     if (!existingCampaign) {
@@ -84,7 +86,7 @@ export async function PATCH(
 
     // Update campaign
     const updatedCampaign = await prisma.campaign.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         name: name.trim(),
         description: description.trim(),
@@ -132,6 +134,8 @@ export async function DELETE(
   { params }: RouteParams
 ) {
   try {
+    const { id } = await params
+    
     // Check authentication
     const session = await auth()
     
@@ -153,7 +157,7 @@ export async function DELETE(
 
     // Check if campaign exists
     const existingCampaign = await prisma.campaign.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         _count: {
           select: {
@@ -188,7 +192,7 @@ export async function DELETE(
 
     // Delete campaign
     await prisma.campaign.delete({
-      where: { id: params.id },
+      where: { id },
     })
 
     return NextResponse.json(
@@ -214,6 +218,8 @@ export async function GET(
   { params }: RouteParams
 ) {
   try {
+    const { id } = await params
+    
     // Check authentication
     const session = await auth()
     
@@ -226,7 +232,7 @@ export async function GET(
 
     // Fetch campaign
     const campaign = await prisma.campaign.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         User: {
           select: {

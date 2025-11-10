@@ -382,12 +382,11 @@ export default function EditTaskForm({ task, campaigns }: EditTaskFormProps) {
                     className="admin-form-select"
                     required
                   >
-                    <option value="SOCIAL_MEDIA">Social Media</option>
+                    <option value="SOCIAL_ENGAGEMENT">Social Engagement</option>
                     <option value="CONTENT_CREATION">Content Creation</option>
-                    <option value="COMMUNITY_ENGAGEMENT">Community Engagement</option>
+                    <option value="COMMUNITY_BUILDING">Community Building</option>
                     <option value="REFERRAL">Referral</option>
-                    <option value="FEEDBACK">Feedback</option>
-                    <option value="GENERAL">General</option>
+                    <option value="CUSTOM">Custom</option>
                   </select>
                 </div>
               </div>

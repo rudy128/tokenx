@@ -8,7 +8,7 @@ export interface CampaignTask {
   id: string
   title: string
   description: string
-  type: 'SOCIAL_MEDIA' | 'CONTENT_CREATION' | 'ENGAGEMENT' | 'REFERRAL' | 'OTHER'
+  type: 'SOCIAL_ENGAGEMENT' | 'CONTENT_CREATION' | 'COMMUNITY_BUILDING' | 'REFERRAL' | 'CUSTOM'
   xpReward: number
   isRequired: boolean
   verificationMethod: 'AUTO' | 'MANUAL' | 'LINK_SUBMISSION'
@@ -109,11 +109,11 @@ export default function TaskCard({
                   onChange={(e) => onUpdate(task.id, 'type', e.target.value)}
                   className="input"
                 >
-                  <option value="SOCIAL_MEDIA">Social Media</option>
+                  <option value="SOCIAL_ENGAGEMENT">Social Engagement</option>
                   <option value="CONTENT_CREATION">Content Creation</option>
-                  <option value="ENGAGEMENT">Engagement</option>
+                  <option value="COMMUNITY_BUILDING">Community Building</option>
                   <option value="REFERRAL">Referral</option>
-                  <option value="OTHER">Other</option>
+                  <option value="CUSTOM">Custom</option>
                 </select>
               </div>
 

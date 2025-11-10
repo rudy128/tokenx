@@ -58,7 +58,7 @@ export default function NewCampaignForm({ userId }: NewCampaignFormProps) {
       id: crypto.randomUUID(),
       title: '',
       description: '',
-      type: 'SOCIAL_MEDIA',
+      type: 'SOCIAL_ENGAGEMENT',
       xpReward: 0,
       isRequired: false,
       verificationMethod: 'MANUAL',

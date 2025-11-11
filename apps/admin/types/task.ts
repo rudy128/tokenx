@@ -3,6 +3,8 @@
  * Used across the admin platform for type safety
  */
 
+import type { SubTaskType } from "@prisma/client"
+
 export interface SubTask {
   id: string
   title: string
@@ -10,6 +12,8 @@ export interface SubTask {
   link: string
   xpReward: number
   order: number
+  type?: SubTaskType
+  isUploadProof?: boolean
 }
 
 export interface CampaignTask {
@@ -46,7 +50,7 @@ export interface Task {
   category: 'SOCIAL_ENGAGEMENT' | 'CONTENT_CREATION' | 'COMMUNITY_BUILDING' | 'REFERRAL' | 'CUSTOM'
   xpReward: number
   verificationMethod: 'AI_AUTO' | 'MANUAL' | 'HYBRID'
-  requirements?: any
+  requirements?: Record<string, unknown>
   status: 'draft' | 'active' | 'archived'
   createdAt: Date
   updatedAt: Date

@@ -1,8 +1,9 @@
 import type { NextConfig } from "next";
+import { join } from "path";
 
 const nextConfig: NextConfig = {
   // Ensure correct root when multiple lockfiles exist
-  outputFileTracingRoot: process.cwd(),
+  outputFileTracingRoot: join(__dirname, '../..'),
   
   // Enable standalone output for Docker
   output: 'standalone',

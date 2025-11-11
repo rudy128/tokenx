@@ -4,9 +4,9 @@ import { prisma } from "@/lib/prisma"
 import EditCampaignForm from "@/components/campaigns/edit-campaign-form"
 
 interface EditCampaignPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export default async function EditCampaignPage({ params }: EditCampaignPageProps) {
@@ -16,9 +16,11 @@ export default async function EditCampaignPage({ params }: EditCampaignPageProps
     redirect("/sign-in")
   }
 
+  const { id } = await params
+
   // Fetch campaign by ID
   const campaign = await prisma.campaign.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       User: {
         select: {

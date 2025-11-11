@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@repo/prisma"
+import { prisma } from "@/lib/prisma"
 
 // PATCH /api/tasks/[id]/subtasks/[subtaskId] - Update a subtask
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string; subtaskId: string } }
+  { params }: { params: Promise<{ id: string; subtaskId: string }> }
 ) {
   try {
-    const { subtaskId } = params
+    const { subtaskId } = await params
     const body = await request.json()
 
     const { title, description, link, xpReward, order, type } = body
@@ -50,10 +50,10 @@ export async function PATCH(
 // DELETE /api/tasks/[id]/subtasks/[subtaskId] - Delete a subtask
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; subtaskId: string } }
+  { params }: { params: Promise<{ id: string; subtaskId: string }> }
 ) {
   try {
-    const { subtaskId } = params
+    const { subtaskId } = await params
 
     // Check if subtask exists
     const existingSubtask = await prisma.taskSubTask.findUnique({

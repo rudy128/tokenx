@@ -4,9 +4,9 @@ import { prisma } from "@/lib/prisma"
 import EditTaskForm from "@/components/tasks/edit-task-form"
 
 interface EditTaskPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export default async function EditTaskPage({ params }: EditTaskPageProps) {
@@ -16,9 +16,11 @@ export default async function EditTaskPage({ params }: EditTaskPageProps) {
     redirect("/sign-in")
   }
 
+  const { id } = await params
+
   // Fetch task with campaign and subtasks
   const task = await prisma.task.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       Campaign: {
         select: {

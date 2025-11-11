@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { SubTaskType } from "@prisma/client"
 
 // GET /api/tasks - Get all tasks
 export async function GET(request: NextRequest) {
@@ -187,7 +188,7 @@ export async function POST(request: NextRequest) {
             order: index,
             isCompleted: false,
             isUploadProof: subTask.isUploadProof || false,
-            type: subTask.type || 'X_TWEET',
+            type: (subTask.type || 'X_TWEET') as SubTaskType,
           }))
         } : undefined,
       },

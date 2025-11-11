@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { SubTaskType } from "@prisma/client"
 
 export async function POST(request: NextRequest) {
   try {
@@ -100,6 +101,7 @@ export async function POST(request: NextRequest) {
             link?: string
             xpReward?: number
             isUploadProof?: boolean
+            type?: string
           }>
         }) => {
           // Map task type to TaskCategory enum
@@ -148,7 +150,7 @@ export async function POST(request: NextRequest) {
                   order: i,
                   isCompleted: false,
                   isUploadProof: subTask.isUploadProof || false,
-                  type: subTask.type || 'X_TWEET',
+                  type: (subTask.type || 'X_TWEET') as SubTaskType,
                   taskId: createdTask.id,
                 },
               })

@@ -3,11 +3,48 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import { ArrowLeft, Edit, CheckCircle, XCircle, Clock, User, Calendar, FileText, Eye } from "lucide-react"
 import AdminLayout from "../admin-layout"
+import type { Prisma } from "@prisma/client"
+
+interface TaskWithSubmissions {
+  id: string
+  campaignId: string
+  name: string
+  description: string
+  category: string
+  xpReward: number
+  verificationMethod: string
+  requirements?: Prisma.JsonValue
+  status: string
+  createdAt: Date
+  updatedAt: Date
+  Campaign: {
+    id: string
+    name: string
+    status: string
+  }
+  TaskSubmission?: Array<{
+    id: string
+    status: string
+    submittedAt: Date
+    verifiedAt?: Date | null
+    description?: string | null
+    proofUrl?: string | null
+    proofImageUrl?: string | null
+    reviewNotes?: string | null
+    User: {
+      id: string
+      name: string | null
+      email: string
+      image?: string | null
+    }
+  }>
+}
 
 interface TaskDetailViewProps {
-  task: any
+  task: TaskWithSubmissions
 }
 
 export default function TaskDetailView({ task }: TaskDetailViewProps) {
@@ -116,9 +153,10 @@ export default function TaskDetailView({ task }: TaskDetailViewProps) {
     )
   }
 
-  const pendingSubmissions = task.TaskSubmission.filter((s: any) => s.status === 'PENDING')
-  const approvedSubmissions = task.TaskSubmission.filter((s: any) => s.status === 'APPROVED')
-  const rejectedSubmissions = task.TaskSubmission.filter((s: any) => s.status === 'REJECTED')
+  const submissions = task.TaskSubmission || []
+  const pendingSubmissions = submissions.filter(s => s.status === 'PENDING')
+  const approvedSubmissions = submissions.filter(s => s.status === 'APPROVED')
+  const rejectedSubmissions = submissions.filter(s => s.status === 'REJECTED')
 
   return (
     <AdminLayout>
@@ -198,7 +236,7 @@ export default function TaskDetailView({ task }: TaskDetailViewProps) {
                   <FileText size={20} style={{ color: 'var(--interactive-primary)' }} />
                 </div>
                 <div>
-                  <div className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{task.TaskSubmission.length}</div>
+                  <div className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{submissions.length}</div>
                   <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Total</div>
                 </div>
               </div>
@@ -244,14 +282,14 @@ export default function TaskDetailView({ task }: TaskDetailViewProps) {
             </div>
 
             <div className="p-6">
-              {task.TaskSubmission.length === 0 ? (
+              {submissions.length === 0 ? (
                 <div className="text-center py-12">
                   <FileText size={48} className="mx-auto mb-4" style={{ color: 'var(--text-tertiary)' }} />
                   <p style={{ color: 'var(--text-secondary)' }}>No submissions yet</p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {task.TaskSubmission.map((submission: any) => (
+                  {submissions.map((submission) => (
                     <div
                       key={submission.id}
                       className="p-4 rounded-lg border"
@@ -264,7 +302,7 @@ export default function TaskDetailView({ task }: TaskDetailViewProps) {
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--interactive-primary)' }}>
                             {submission.User.image ? (
-                              <img src={submission.User.image} alt={submission.User.name || 'User'} className="w-10 h-10 rounded-full" />
+                              <Image src={submission.User.image} alt={submission.User.name || 'User'} width={40} height={40} className="rounded-full" />
                             ) : (
                               <User size={20} style={{ color: 'var(--text-inverse)' }} />
                             )}
@@ -307,9 +345,11 @@ export default function TaskDetailView({ task }: TaskDetailViewProps) {
                       {submission.proofImageUrl && (
                         <div className="mb-3">
                           <div className="text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Proof Image:</div>
-                          <img
+                          <Image
                             src={submission.proofImageUrl}
                             alt="Proof"
+                            width={600}
+                            height={400}
                             className="max-w-md rounded border"
                             style={{ borderColor: 'var(--border-default)' }}
                           />

@@ -27,6 +27,7 @@ interface SubTask {
   xpReward: number
   order: number
   isUploadProof?: boolean
+  type?: string
 }
 
 interface Campaign {
@@ -748,7 +749,7 @@ export default function NewTaskForm({ campaigns }: NewTaskFormProps) {
                         {!subTask.isUploadProof && (
                           <div>
                             <label 
-                              className="block text-sm font-medium mb-1 flex items-center gap-2"
+                              className="text-sm font-medium mb-1 flex items-center gap-2"
                               style={{ color: 'var(--text-primary)' }}
                             >
                               <svg className="h-4 w-4" style={{ color: 'var(--interactive-primary)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">

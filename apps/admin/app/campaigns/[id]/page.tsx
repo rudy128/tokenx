@@ -3,17 +3,19 @@ import { redirect, notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import CampaignDetailView from "@/components/campaigns/campaign-detail-view"
 
-export default async function CampaignViewPage({ params }: { params: { id: string } }) {
+export default async function CampaignViewPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
 
   if (!session?.user) {
     redirect("/sign-in")
   }
 
+  const { id } = await params
+
   // Fetch campaign with all related data
   const campaign = await prisma.campaign.findUnique({
     where: {
-      id: params.id,
+      id,
     },
     include: {
       User: {

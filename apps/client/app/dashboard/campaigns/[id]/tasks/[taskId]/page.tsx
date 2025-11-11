@@ -27,6 +27,7 @@ async function getCampaignTask(campaignId: string, taskId: string) {
       description: task.description || '',
       xpReward: task.xp || task.xpReward || 0,
       status: task.status || 'ACTIVE',
+      verificationMethod: task.verificationMethod || task.verificationMode || 'MANUAL', // ✅ Add verification method
       campaign: {
         id: campaignId,
         name: task.campaign?.name || '',

@@ -150,6 +150,7 @@ interface Task {
   description: string
   xpReward: number
   status: string
+  verificationMethod?: string // ✅ Add verification method
   campaign?: {
     id: string
     name: string
@@ -310,7 +311,16 @@ export default function TaskDetailView({ task, userId }: Props) {
         throw new Error(result.error || 'Failed to submit subtask')
       }
 
-      alert(`Subtask "${subtask.title}" submitted successfully! XP will be credited after review.`)
+      // ✅ Check verification method and show appropriate message
+      const isAIVerified = task.verificationMethod?.includes('AI_AUTO') || task.verificationMethod?.includes('AUTO')
+      
+      if (isAIVerified) {
+        console.log('🤖 AI Verification: Subtask will be automatically verified')
+        alert(`✅ Subtask "${subtask.title}" submitted successfully!\n\n🤖 AI is verifying your submission automatically. XP will be credited shortly.`)
+      } else {
+        console.log('👤 Manual Verification: Subtask requires admin review')
+        alert(`✅ Subtask "${subtask.title}" submitted successfully!\n\n👤 Your submission is pending manual review. XP will be credited after approval (typically within 24-48 hours).`)
+      }
       
       // Mark subtask as completed in UI
       setSubtasks(prev => prev.map(st => 
@@ -384,6 +394,40 @@ export default function TaskDetailView({ task, userId }: Props) {
 
           {/* Divider */}
           <div className="hidden md:block w-px h-6 bg-gray-700"></div>
+
+          {/* ✅ Verification Method Badge */}
+          {task.verificationMethod && (
+            <>
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border" 
+                style={{
+                  backgroundColor: task.verificationMethod.includes('AI_AUTO') || task.verificationMethod.includes('AUTO') 
+                    ? 'rgba(59, 130, 246, 0.1)' 
+                    : 'rgba(168, 85, 247, 0.1)',
+                  borderColor: task.verificationMethod.includes('AI_AUTO') || task.verificationMethod.includes('AUTO')
+                    ? 'rgba(59, 130, 246, 0.3)'
+                    : 'rgba(168, 85, 247, 0.3)'
+                }}
+              >
+                {task.verificationMethod.includes('AI_AUTO') || task.verificationMethod.includes('AUTO') ? (
+                  <>
+                    <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                    </svg>
+                    <span className="text-blue-400 font-medium text-sm">AI Auto-Verified</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <span className="text-purple-400 font-medium text-sm">Manual Review</span>
+                  </>
+                )}
+              </div>
+              {/* Divider */}
+              <div className="hidden md:block w-px h-6 bg-gray-700"></div>
+            </>
+          )}
 
           {/* Participants */}
           <div className="flex items-center gap-2">
@@ -592,11 +636,47 @@ export default function TaskDetailView({ task, userId }: Props) {
           )}
         </div>
 
-        {/* Info message */}
-        <div className="mt-8 bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
-          <p className="text-sm text-blue-300 text-center">
-            💡 Submit each subtask individually to earn XP rewards after admin review
-          </p>
+        {/* Info message - Updated with verification method info */}
+        <div className="mt-8 space-y-4">
+          {task.verificationMethod && (
+            <div className={`border rounded-xl p-4 ${
+              task.verificationMethod.includes('AI_AUTO') || task.verificationMethod.includes('AUTO')
+                ? 'bg-blue-500/10 border-blue-500/30'
+                : 'bg-purple-500/10 border-purple-500/30'
+            }`}>
+              {task.verificationMethod.includes('AI_AUTO') || task.verificationMethod.includes('AUTO') ? (
+                <div className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-semibold text-blue-300 mb-1">🤖 AI Auto-Verification Enabled</p>
+                    <p className="text-sm text-blue-300/80">
+                      Your submissions will be automatically verified by AI. XP rewards will be credited instantly upon successful verification.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-purple-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-semibold text-purple-300 mb-1">👤 Manual Review Required</p>
+                    <p className="text-sm text-purple-300/80">
+                      Your submissions will be reviewed by our team. XP rewards will be credited after approval (typically within 24-48 hours).
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          
+          <div className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-4">
+            <p className="text-sm text-gray-300 text-center">
+              💡 Submit each subtask individually to track your progress and earn XP rewards
+            </p>
+          </div>
         </div>
 
       </div>

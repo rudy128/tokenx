@@ -42,7 +42,8 @@ async function getCampaignTask(campaignId: string, taskId: string) {
         xpReward: st.xpReward || 0,
         order: st.order || 0,
         isCompleted: st.isCompleted || false,
-        isUploadProof: st.isUploadProof || false  // 🔥 CRITICAL: Include this field!
+        isUploadProof: st.isUploadProof || false,  // 🔥 CRITICAL: Include this field!
+        type: st.type || 'X_CUSTOM' // ✅ Add subtask type for Twitter verification
       })),
       _count: {
         submissions: task.submissions?.length || 0

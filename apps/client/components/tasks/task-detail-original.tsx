@@ -142,6 +142,7 @@ interface SubTask {
   order: number
   isCompleted: boolean
   isUploadProof?: boolean
+  type?: string // ✅ Add SubTaskType (X_LIKE, X_COMMENT, X_RETWEET, etc.)
 }
 
 interface Task {

@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma'
 import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { randomUUID } from 'crypto'
+import { runTwitterVerification } from '@/lib/twitter-verification'
+import { mapSubTaskTypeToTaskType, isTwitterVerifiableType } from '@/lib/task-types'
 
 export async function POST(req: NextRequest) {
   try {
@@ -40,7 +42,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // 3. Validate task exists
+    // 3. Validate task exists and get full details including verification method
     const task = await prisma.task.findUnique({
       where: { id: taskId },
       include: {
@@ -54,6 +56,11 @@ export async function POST(req: NextRequest) {
         { status: 404 }
       )
     }
+
+    // 4. Get user's Twitter username for potential verification
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id }
+    })
 
     let proofImageUrl: string | null = null
 
@@ -113,7 +120,7 @@ export async function POST(req: NextRequest) {
         subTaskId: subTaskId || null,
         userId: session.user.id,
         proofImageUrl: proofImageUrl,
-        status: 'PENDING', // Will be reviewed by admin
+        status: 'PENDING', // Will be reviewed by admin or auto-verified
         submittedAt: new Date()
       }
     })
@@ -121,6 +128,65 @@ export async function POST(req: NextRequest) {
     console.log('✅ Task submission created:', submission.id)
     if (subTaskId) {
       console.log('   📋 Subtask ID:', subTaskId)
+    }
+
+    // 8. Trigger Twitter verification for AI-verified tasks ONLY
+    const twitterUsername = (user as any)?.twitterUsername
+    
+    console.log('🔍 Checking verification eligibility:')
+    console.log('   - Task verification method:', task.verificationMethod)
+    console.log('   - Has subtask ID:', !!subTaskId)
+    console.log('   - Twitter username set:', !!twitterUsername)
+    
+    // ⚠️ CRITICAL: Only run auto-verification for AI_AUTO tasks
+    if (task.verificationMethod !== 'AI_AUTO') {
+      console.log('   ✋ SKIPPING auto-verification - Task uses MANUAL verification method')
+      console.log('   → This task will require admin review')
+    } else if (subTaskId && twitterUsername) {
+      const subTask = task.taskSubTasks?.find((st: any) => st.id === subTaskId)
+      
+      if (subTask && isTwitterVerifiableType(subTask.type)) {
+        console.log('🤖 ✅ AI-AUTO verification: All conditions met!')
+        console.log('   SubTask Type:', subTask.type)
+        console.log('   Twitter Username:', twitterUsername)
+        console.log('   SubTask Link:', subTask.link)
+        
+        // Extract Twitter URL from subtask link
+        const twitterUrl = subTask.link
+        
+        if (twitterUrl) {
+          // Map SubTaskType to TaskType for verification API
+          const taskType = mapSubTaskTypeToTaskType(subTask.type)
+          console.log('   Mapped Task Type:', taskType)
+          
+          // Run Twitter verification asynchronously (non-blocking)
+          runTwitterVerification(
+            twitterUrl,
+            twitterUsername,
+            taskType,
+            submission.id
+          ).catch((error) => {
+            console.error('❌ Twitter verification failed:', error)
+            // Don't block submission on verification failure
+          })
+          
+          console.log('   ⏳ Twitter verification started in background')
+        } else {
+          console.log('   ⚠️ No Twitter URL found in subtask link, skipping verification')
+        }
+      } else {
+        if (!subTask) {
+          console.log('   ℹ️ Subtask not found, skipping auto-verification')
+        } else {
+          console.log('   ℹ️ Subtask type not Twitter-verifiable:', subTask?.type)
+        }
+      }
+    } else {
+      if (!subTaskId) {
+        console.log('   ℹ️ Main task submission (not subtask), skipping auto-verification')
+      } else if (!twitterUsername) {
+        console.log('   ⚠️ User has no Twitter username, skipping auto-verification')
+      }
     }
 
     return NextResponse.json(

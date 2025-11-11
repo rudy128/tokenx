@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { runTwitterVerification } from '@/lib/twitter-verification'
+import { mapSubTaskTypeToTaskType, isTwitterVerifiableType } from '@/lib/task-types'
 
 /* ──────────────────────────────────────────
    GET  /api/tasks/daily
@@ -292,6 +294,14 @@ export async function POST(request: NextRequest) {
         )
       }
 
+      // Get full task details with subtasks for verification
+      const taskWithSubtasks = await prisma.task.findUnique({
+        where: { id: taskId },
+        include: {
+          taskSubTasks: true
+        }
+      })
+
       // Create submission for Task
       submission = await prisma.taskSubmission.create({
         data: {
@@ -301,6 +311,64 @@ export async function POST(request: NextRequest) {
           submittedAt: new Date()
         }
       })
+
+      console.log(`✅ Task submission created: ${submission.id} for task ${taskId}`)
+
+      // 🔥 TWITTER VERIFICATION: Check if task uses AI auto-verification ONLY
+      const twitterUsername = (dbUser as any)?.twitterUsername
+      
+      console.log('🔍 Checking verification eligibility:')
+      console.log('   - Task verification method:', taskWithSubtasks?.verificationMethod)
+      console.log('   - Twitter username set:', !!twitterUsername)
+      console.log('   - Subtasks count:', taskWithSubtasks?.taskSubTasks?.length || 0)
+      
+      // ⚠️ CRITICAL: Only run auto-verification for AI_AUTO tasks
+      if (taskWithSubtasks?.verificationMethod !== 'AI_AUTO') {
+        console.log('   ✋ SKIPPING auto-verification - Task uses', taskWithSubtasks?.verificationMethod || 'MANUAL', 'verification')
+        console.log('   → This task will require admin review')
+      } else if (twitterUsername) {
+        console.log('🤖 ✅ AI-AUTO verification: Checking for Twitter tasks...')
+
+        // For now, we'll verify the first Twitter-verifiable subtask
+        // In the future, you might want to track which specific subtask was completed
+        const twitterSubtask = taskWithSubtasks.taskSubTasks?.find((st: any) => 
+          isTwitterVerifiableType(st.type)
+        )
+
+        if (twitterSubtask) {
+          console.log('🐦 Found Twitter subtask:', twitterSubtask.type)
+          console.log('   Title:', twitterSubtask.title)
+          console.log('   Link:', twitterSubtask.link)
+
+          const twitterUrl = twitterSubtask.link
+
+          if (twitterUrl && twitterUsername) {
+            const taskType = mapSubTaskTypeToTaskType(twitterSubtask.type)
+            console.log('   Mapped to TaskType:', taskType)
+            console.log('   User Twitter:', twitterUsername)
+
+            // Run Twitter verification asynchronously
+            runTwitterVerification(
+              twitterUrl,
+              twitterUsername,
+              taskType,
+              submission.id
+            ).catch((error) => {
+              console.error('❌ Twitter verification failed:', error)
+            })
+
+            console.log('   ⏳ Twitter verification started in background')
+          } else {
+            console.log('   ⚠️ Missing Twitter URL or username, skipping verification')
+          }
+        } else {
+          console.log('   ℹ️ No Twitter-verifiable subtasks found')
+          console.log('   → Submission will remain PENDING for manual review')
+        }
+      } else {
+        console.log('   ⚠️ User has no Twitter username, skipping auto-verification')
+        console.log('   → Submission will remain PENDING for manual review')
+      }
     }
 
     console.log(`✅ Task submission created: ${submission.id} for task ${taskId}`)

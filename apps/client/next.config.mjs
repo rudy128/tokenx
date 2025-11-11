@@ -1,7 +1,17 @@
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Ensure correct root when multiple lockfiles exist (prevents wrong tracing root & chunk lookup)
-  outputFileTracingRoot: process.cwd(),
+  // Ensure correct root for monorepo - point to workspace root
+  outputFileTracingRoot: join(__dirname, '../..'),
+  
+  // Enable standalone output for Docker
+  output: 'standalone',
+  
   experimental: {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
   },
@@ -68,11 +78,12 @@ const nextConfig = {
   //   enabled: process.env.ANALYZE === 'true',
   // },
 
+  // TypeScript and ESLint validation enabled during build
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: true,  // ❌ Removed - Now validates during build
   },
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: true,    // ❌ Removed - Now validates during build
   },
 
   // Webpack configuration to handle module resolution issues

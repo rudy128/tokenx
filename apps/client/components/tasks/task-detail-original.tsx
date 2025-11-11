@@ -1,7 +1,57 @@
 'use client'
 
 import { useState } from 'react'
-import { CheckCircle2, Circle, ExternalLink, Upload, X, Check } from 'lucide-react'
+import { CheckCircle2, Circle, ExternalLink, Upload, X, Check, AlertTriangle, ArrowRight } from 'lucide-react'
+
+// Custom Alert Dialog Component
+function TwitterHandleAlert({ onClose, onGoToProfile }: { onClose: () => void; onGoToProfile: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+      <div className="bg-[#1A1F2E] border border-purple-500/30 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-scale-in">
+        {/* Header with gradient */}
+        <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 p-6 border-b border-purple-500/20">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-yellow-500/10 rounded-full">
+              <AlertTriangle className="h-6 w-6 text-yellow-500" />
+            </div>
+            <h3 className="text-xl font-bold text-white">Twitter Handle Required</h3>
+          </div>
+        </div>
+        
+        {/* Body */}
+        <div className="p-6 space-y-4">
+          <p className="text-gray-300 leading-relaxed">
+            You need to add your <span className="text-purple-400 font-semibold">Twitter/X username</span> to your profile before you can submit tasks.
+          </p>
+          
+          <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-4">
+            <p className="text-sm text-purple-300">
+              💡 This is required for task verification and reward distribution.
+            </p>
+          </div>
+        </div>
+        
+        {/* Footer */}
+        <div className="p-6 bg-[#15192A] border-t border-purple-500/20 flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-3 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-800 transition-colors font-medium"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onGoToProfile}
+            className="flex-1 px-4 py-3 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 transition-all font-medium inline-flex items-center justify-center gap-2 shadow-lg shadow-purple-500/20"
+          >
+            Go to Profile
+            <ArrowRight className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 
 // Helper function to get platform-specific logo and color
 function getPlatformLogo(url: string): { icon: string; color: string } {
@@ -135,6 +185,7 @@ export default function TaskDetailView({ task, userId }: Props) {
   const [loading, setLoading] = useState<string | null>(null)
   const [uploadedFiles, setUploadedFiles] = useState<Record<string, File>>({}) // Track uploaded files
   const [uploadPreviews, setUploadPreviews] = useState<Record<string, string>>({}) // Track preview URLs
+  const [showTwitterAlert, setShowTwitterAlert] = useState(false) // Twitter handle alert dialog
 
   // Calculate total XP from all subtasks
   const totalXP = subtasks.reduce((sum, st) => sum + (st.xpReward || 0), 0)
@@ -197,6 +248,28 @@ export default function TaskDetailView({ task, userId }: Props) {
     try {
       setLoading(subtask.id)
 
+      // ✅ Check if Twitter username is set before submission
+      console.log('🔍 Checking Twitter username...')
+      const profileResponse = await fetch('/api/profile')
+      
+      if (!profileResponse.ok) {
+        console.error('❌ Failed to fetch profile')
+        alert('Failed to verify your profile. Please try again.')
+        return
+      }
+      
+      const profile = await profileResponse.json()
+      console.log('👤 Profile data:', profile)
+      
+      if (!profile.twitterUsername) {
+        console.log('⚠️ No Twitter username found, showing alert')
+        // Show custom alert dialog
+        setShowTwitterAlert(true)
+        return
+      }
+      
+      console.log('✅ Twitter username exists:', profile.twitterUsername)
+
       // Check if this subtask requires proof upload and file is missing
       if (subtask.isUploadProof && !uploadedFiles[subtask.id]) {
         alert('Please upload proof before submitting this subtask')
@@ -254,6 +327,16 @@ export default function TaskDetailView({ task, userId }: Props) {
 
   return (
     <div className="min-h-screen bg-[#0A0E1A] text-white">
+      {/* Twitter Handle Alert Dialog */}
+      {showTwitterAlert && (
+        <TwitterHandleAlert
+          onClose={() => setShowTwitterAlert(false)}
+          onGoToProfile={() => {
+            window.location.href = '/profile'
+          }}
+        />
+      )}
+
       <div className="max-w-7xl mx-auto px-6 py-8">
         
         {/* Hero Section with Gradient Background */}

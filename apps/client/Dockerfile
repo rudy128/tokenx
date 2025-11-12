@@ -9,7 +9,7 @@ WORKDIR /app
 
 # Install Node.js 20, pnpm, and required dependencies
 RUN apt-get update && \
-    apt-get install -y curl ca-certificates && \
+    apt-get install -y curl ca-certificates build-essential python3 make g++ && \
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     apt-get install -y nodejs && \
     npm install -g pnpm && \

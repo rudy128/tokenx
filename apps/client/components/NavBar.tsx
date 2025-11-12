@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react"
 import Link from "next/link"
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler"
 import { DashboardProfileMenu } from "@/components/dashboard/dashboard-profile-menu"
-import { Users, LayoutDashboard, Trophy, Zap, Calendar } from "lucide-react"
+import { Users, LayoutDashboard, Trophy, Calendar, Zap } from "lucide-react"
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -87,41 +87,21 @@ export function NavBar() {
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '0.5rem',
             textDecoration: 'none',
             flexShrink: 0,
             marginRight: 'auto',
-            marginLeft: '-1rem'
+            marginLeft: '0'
           }}
         >
-          <div 
+          <img 
+            src="/cubane-logo.png" 
+            alt="Cubane"
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              height: '2rem',
-              width: '2rem',
-              backgroundColor: 'var(--interactive-primary)',
-              borderRadius: '0.5rem'
+              height: '2.5rem',
+              width: 'auto',
+              objectFit: 'contain'
             }}
-          >
-            <Zap 
-              style={{
-                height: '1.25rem',
-                width: '1.25rem',
-                color: 'var(--text-inverse)'
-              }}
-            />
-          </div>
-          <span 
-            style={{
-              fontSize: '1.25rem',
-              fontWeight: 700,
-              color: 'var(--text-primary)'
-            }}
-          >
-            TokenX
-          </span>
+          />
         </Link>
 
         {/* Desktop Navigation */}

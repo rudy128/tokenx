@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
                   order: i,
                   isCompleted: false,
                   isUploadProof: subTask.isUploadProof || false,
-                  type: (subTask.type || 'X_TWEET') as SubTaskType,
+                  type: (subTask.type as SubTaskType) || SubTaskType.X_TWEET,
                   taskId: createdTask.id,
                 },
               })

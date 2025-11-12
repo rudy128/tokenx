@@ -128,5 +128,3 @@ export async function verifyTwitterTask(postUrl: string, twitterHandle: string, 
     console.error(`❌ Twitter verification failed for ${taskType}:`, error)
   }
 }
-
-

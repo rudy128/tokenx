@@ -50,5 +50,36 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
     notFound()
   }
 
-  return <TaskDetailView task={task} />
+  // Map task data to match TaskDetailView interface
+  const taskData = {
+    id: task.id,
+    title: task.name,
+    description: task.description,
+    xpReward: task.xpReward,
+    status: task.status,
+    verificationMethod: task.verificationMethod,
+    Campaign: task.Campaign,
+    TaskSubmission: task.TaskSubmission,
+    campaign: task.Campaign ? {
+      id: task.Campaign.id,
+      name: task.Campaign.name,
+      slug: task.Campaign.id, // Using id as slug since Campaign doesn't have slug
+      status: task.Campaign.status,
+    } : undefined,
+    subTasks: task.taskSubTasks.map(st => ({
+      id: st.id,
+      title: st.title,
+      description: st.description,
+      link: st.link,
+      xpReward: st.xpReward,
+      order: st.order,
+      isCompleted: st.isCompleted,
+      isUploadProof: st.isUploadProof,
+    })),
+    _count: {
+      submissions: task.TaskSubmission.length,
+    },
+  }
+
+  return <TaskDetailView task={taskData} />
 }

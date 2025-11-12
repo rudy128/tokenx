@@ -5,16 +5,20 @@ import { auth } from "@/lib/auth"
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Allow access to sign-in page, unauthorized page, and clear-cookies page
-  if (pathname === "/sign-in" || pathname === "/unauthorized" || pathname === "/clear-cookies") {
+  // Allow access to sign-in page, unauthorized page, clear-cookies page, and API routes
+  if (pathname === "/sign-in" || pathname === "/unauthorized" || pathname === "/clear-cookies" || pathname.startsWith("/api/")) {
     return NextResponse.next()
   }
 
   // Check if there are any client app cookies that shouldn't be here
+  const adminCookieName = process.env.NODE_ENV === "production" 
+    ? "__Secure-admin.session-token"
+    : "admin.session-token"
+  
   const hasClientCookie = request.cookies.has("next-auth.session-token") || 
                           request.cookies.has("__Secure-next-auth.session-token")
   
-  if (hasClientCookie && !request.cookies.has("admin.session-token")) {
+  if (hasClientCookie && !request.cookies.has(adminCookieName)) {
     // Clear client cookies and redirect to sign-in
     console.log("⚠️ Detected client app cookies, clearing...")
     const signInUrl = new URL("/sign-in", request.url)
@@ -35,30 +39,28 @@ export async function middleware(request: NextRequest) {
     // If there's a JWT error (e.g., invalid token), clear cookies and redirect to sign-in
     console.error("❌ Auth error in middleware:", error)
     
-    // Only redirect if we're not already on the sign-in page
-    if (pathname !== "/sign-in") {
-      const signInUrl = new URL("/sign-in", request.url)
-      signInUrl.searchParams.set("callbackUrl", pathname)
-      const response = NextResponse.redirect(signInUrl)
-      
-      // Clear all potential session cookies
-      response.cookies.delete("admin.session-token")
-      response.cookies.delete("next-auth.session-token")
-      response.cookies.delete("__Secure-next-auth.session-token")
-      
-      return response
-    }
+    const signInUrl = new URL("/sign-in", request.url)
+    signInUrl.searchParams.set("callbackUrl", pathname)
+    const response = NextResponse.redirect(signInUrl)
     
-    // If we're already on sign-in, just continue
-    return NextResponse.next()
+    // Clear all potential session cookies
+    response.cookies.delete("admin.session-token")
+    response.cookies.delete("__Secure-admin.session-token")
+    response.cookies.delete("next-auth.session-token")
+    response.cookies.delete("__Secure-next-auth.session-token")
+    
+    return response
   }
 
   if (!session?.user) {
+    console.log(`⚠️ No session found for ${pathname}`)
     // Redirect to sign-in if not authenticated
     const signInUrl = new URL("/sign-in", request.url)
     signInUrl.searchParams.set("callbackUrl", pathname)
     return NextResponse.redirect(signInUrl)
   }
+
+  console.log(`✅ Session found for ${pathname}, user: ${session.user.email}`)
 
   // Check if user is admin
   const user = session.user as { id: string; role?: string }

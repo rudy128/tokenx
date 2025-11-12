@@ -120,7 +120,9 @@ export const authConfig: NextAuthConfig = {
   },
   cookies: {
     sessionToken: {
-      name: `admin.session-token`,
+      name: process.env.NODE_ENV === "production" 
+        ? `__Secure-admin.session-token`
+        : `admin.session-token`,
       options: {
         httpOnly: true,
         sameSite: "lax",
@@ -129,6 +131,7 @@ export const authConfig: NextAuthConfig = {
       },
     },
   },
+  debug: process.env.NODE_ENV === "development",
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth(authConfig)

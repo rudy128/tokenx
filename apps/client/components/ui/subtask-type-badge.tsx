@@ -13,7 +13,8 @@ export function SubTaskTypeBadge({ type, className = '' }: SubTaskTypeBadgeProps
 
   return (
     <Badge 
-      className={`rounded-md px-2 py-0.5 text-xs font-medium border ${colorClass} ${className}`}
+      className={`!px-4 !py-1.5 text-xs font-semibold ${colorClass} ${className}`}
+      style={{ width: 'auto', minWidth: 'fit-content', overflow: 'visible' }}
     >
       {label}
     </Badge>

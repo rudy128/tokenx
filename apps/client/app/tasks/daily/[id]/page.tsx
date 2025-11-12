@@ -402,11 +402,13 @@ function ClaimStatusModal({
 function TaskSubtasks({ 
   subtasks, 
   loading = false,
-  onToggleComplete
+  onToggleComplete,
+  onFileUpload
 }: { 
   subtasks: Subtask[]
   loading?: boolean
   onToggleComplete?: (subtaskId: string, currentStatus: boolean) => void
+  onFileUpload?: () => void
 }) {
   const handleSubtaskClick = (subtask: Subtask) => {
     if (subtask.action.type === 'link' && subtask.action.url) {
@@ -533,29 +535,50 @@ function TaskSubtasks({
                   )}
                 </div>
 
-                {/* Right side: XP Badge + Action */}
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  <Badge className="rounded-full bg-[#222950] text-[#82EC40] font-semibold px-4 py-1.5 text-sm shadow-lg border border-[#82EC40]/20">
-                    {subtask.xp} XP
-                  </Badge>
+                {/* Right side: XP Badge + Action + Upload Button */}
+                <div className="flex flex-col items-end gap-3 flex-shrink-0">
+                  {/* Top row: XP Badge + Arrow Icon */}
+                  <div className="flex items-center gap-3">
+                    <Badge className="inline-flex items-center justify-center rounded-full bg-[#222950] text-[#82EC40] font-bold px-4 py-1.5 text-sm shadow-lg border border-[#82EC40]/20 whitespace-nowrap min-w-[70px]">
+                      {subtask.xp} XP
+                    </Badge>
 
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      if (subtask.link) {
-                        window.open(subtask.link, '_blank', 'noopener,noreferrer')
-                      }
-                    }}
-                    disabled={!subtask.link}
-                    className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-                      subtask.link
-                        ? 'bg-[#8c6cfb]/20 hover:bg-[#8c6cfb]/30 cursor-pointer'
-                        : 'bg-gray-800/20 cursor-not-allowed opacity-50'
-                    }`}
-                    title={subtask.link ? 'Open link' : 'No link available'}
-                  >
-                    <ArrowUpRight className="h-4 w-4 text-[#8c6cfb] group-hover:scale-110 transition-transform" />
-                  </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (subtask.link) {
+                          window.open(subtask.link, '_blank', 'noopener,noreferrer')
+                        }
+                      }}
+                      disabled={!subtask.link}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                        subtask.link
+                          ? 'bg-[#8c6cfb]/20 hover:bg-[#8c6cfb]/30 cursor-pointer'
+                          : 'bg-gray-800/20 cursor-not-allowed opacity-50'
+                      }`}
+                      title={subtask.link ? 'Open link' : 'No link available'}
+                    >
+                      <ArrowUpRight className="h-4 w-4 text-[#8c6cfb] group-hover:scale-110 transition-transform" />
+                    </button>
+                  </div>
+
+                  {/* Bottom row: Upload Proof Button */}
+                  {onFileUpload && (
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onFileUpload()
+                        }}
+                        className="inline-flex items-center justify-center gap-2 rounded-md bg-[#8c6cfb]/10 border border-[#8c6cfb]/30 text-[#8c6cfb] hover:bg-[#8c6cfb]/20 hover:border-[#8c6cfb]/50 transition-all duration-200 text-xs font-semibold whitespace-nowrap"
+                        style={{ padding: '8px 16px', minWidth: 'fit-content' }}
+                      >
+                        <Upload className="h-3.5 w-3.5 flex-shrink-0" />
+                        <span>Upload Proof</span>
+                      </button>
+                      <span className="text-xs text-gray-500 whitespace-nowrap">(optional)</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -784,6 +807,35 @@ export default function TaskDetailPage() {
       // Show info feedback for processing
       showFeedback('info', 'Submitting task...')
       
+      // Convert uploaded files to base64 for storage
+      const fileData: Array<{ name: string; type: string; size: number; data: string }> = []
+      
+      if (uploadedFiles.length > 0) {
+        console.log(`📎 Processing ${uploadedFiles.length} uploaded file(s)...`)
+        
+        for (const file of uploadedFiles) {
+          try {
+            const base64 = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader()
+              reader.onload = () => resolve(reader.result as string)
+              reader.onerror = reject
+              reader.readAsDataURL(file)
+            })
+            
+            fileData.push({
+              name: file.name,
+              type: file.type,
+              size: file.size,
+              data: base64
+            })
+            
+            console.log(`✅ Processed file: ${file.name}`)
+          } catch (error) {
+            console.error(`❌ Failed to process file: ${file.name}`, error)
+          }
+        }
+      }
+      
       // Submit the task to database
       console.log('💾 Submitting task to database...')
       const submitResponse = await fetch('/api/tasks/daily', {
@@ -793,7 +845,9 @@ export default function TaskDetailPage() {
           taskId: taskId,
           evidence: {
             twitterUsername: profile.twitterUsername,
-            completedAt: new Date().toISOString()
+            completedAt: new Date().toISOString(),
+            uploadedFiles: fileData.length > 0 ? fileData : undefined,
+            fileCount: fileData.length
           }
         })
       })
@@ -1078,6 +1132,7 @@ export default function TaskDetailPage() {
               subtasks={task.subtasks || []} 
               loading={loading}
               onToggleComplete={handleSubtaskComplete}
+              onFileUpload={handleFileUpload}
             />
 
             {uploadedFiles.length > 0 && (

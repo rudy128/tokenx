@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { 
   ArrowLeft, 
@@ -16,9 +16,6 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import AdminLayout from "../admin-layout"
-
-// Constants
-const UPLOAD_PROOF_SUBTASK_ID = 'upload-proof-default'
 
 interface SubTask {
   id: string
@@ -61,22 +58,6 @@ export default function NewTaskForm({ campaigns }: NewTaskFormProps) {
   // Subtasks state
   const [subTasks, setSubTasks] = useState<SubTask[]>([])
 
-  // AUTO-ADD Upload Proof Subtask on Mount
-  useEffect(() => {
-    if (subTasks.length === 0) {
-      setSubTasks([
-        {
-          id: UPLOAD_PROOF_SUBTASK_ID,
-          title: 'Upload proof/media for this task',
-          link: '',
-          xpReward: 0,
-          order: 0,
-          isUploadProof: true
-        }
-      ])
-    }
-  }, [subTasks.length]) // Run only once on mount
-
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
@@ -87,54 +68,26 @@ export default function NewTaskForm({ campaigns }: NewTaskFormProps) {
 
   // Subtask management functions
   const addSubTask = () => {
-    // Find the upload proof subtask
-    const uploadProofIndex = subTasks.findIndex(st => st.isUploadProof)
-    
     const newSubTask: SubTask = {
       id: crypto.randomUUID(),
       title: '',
       link: '',
       xpReward: 0,
-      order: subTasks.length - 1, // Insert before upload proof
+      order: subTasks.length,
       isUploadProof: false,
       type: 'X_TWEET'
     }
     
-    if (uploadProofIndex !== -1) {
-      // Insert before upload proof subtask
-      const updatedSubTasks = [...subTasks]
-      updatedSubTasks.splice(uploadProofIndex, 0, newSubTask)
-      
-      // Update order for all subtasks
-      const reorderedSubTasks = updatedSubTasks.map((st, index) => ({
-        ...st,
-        order: index
-      }))
-      
-      setSubTasks(reorderedSubTasks)
-    } else {
-      // If upload proof doesn't exist (shouldn't happen), just add normally
-      setSubTasks([...subTasks, newSubTask])
-    }
+    setSubTasks([...subTasks, newSubTask])
   }
 
   const updateSubTask = (index: number, field: keyof SubTask, value: string | number) => {
-    // Prevent editing upload proof subtask
-    if (subTasks[index].isUploadProof) {
-      return
-    }
     const updatedSubTasks = [...subTasks]
     updatedSubTasks[index] = { ...updatedSubTasks[index], [field]: value }
     setSubTasks(updatedSubTasks)
   }
 
   const removeSubTask = (index: number) => {
-    // Prevent deletion of upload proof subtask
-    if (subTasks[index].isUploadProof) {
-      alert('The upload proof subtask cannot be removed')
-      return
-    }
-    
     const updatedSubTasks = subTasks.filter((_, i) => i !== index)
     
     // Update order
@@ -667,23 +620,23 @@ export default function NewTaskForm({ campaigns }: NewTaskFormProps) {
                       key={subTask.id}
                       className="flex items-start gap-3 p-4 rounded-lg transition-all"
                       style={{
-                        backgroundColor: subTask.isUploadProof ? 'var(--interactive-primary-alpha)' : 'var(--bg-primary)',
-                        border: subTask.isUploadProof ? '1px solid var(--interactive-primary)' : '1px solid var(--border-default)',
+                        backgroundColor: 'var(--bg-primary)',
+                        border: '1px solid var(--border-default)',
                       }}
                     >
                       <div
                         className="flex-shrink-0 w-8 h-8 rounded flex items-center justify-center text-sm font-medium"
                         style={{
-                          backgroundColor: subTask.isUploadProof ? 'var(--interactive-primary)' : 'var(--bg-surface)',
-                          color: subTask.isUploadProof ? 'white' : 'var(--text-secondary)',
+                          backgroundColor: 'var(--bg-surface)',
+                          color: 'var(--text-secondary)',
                         }}
                       >
                         {index + 1}
                       </div>
 
                       <div className="flex-1 space-y-3">
-                        {/* Sub Task Type Selector - Only for regular subtasks */}
-                        {!subTask.isUploadProof && (
+                        {/* Sub Task Type Selector */}
+                        {(
                           <div>
                             <label 
                               className="block text-sm font-medium mb-1"
@@ -721,11 +674,6 @@ export default function NewTaskForm({ campaigns }: NewTaskFormProps) {
                             style={{ color: 'var(--text-primary)' }}
                           >
                             Subtask Title *
-                            {subTask.isUploadProof && (
-                              <span className="ml-2 text-xs" style={{ color: 'var(--interactive-primary)' }}>
-                                (Auto-generated)
-                              </span>
-                            )}
                           </label>
                           <input
                             type="text"
@@ -734,22 +682,21 @@ export default function NewTaskForm({ campaigns }: NewTaskFormProps) {
                             onChange={(e) => updateSubTask(index, 'title', e.target.value)}
                             className="w-full px-3 py-2 rounded-lg text-sm"
                             style={{
-                              backgroundColor: subTask.isUploadProof ? 'var(--bg-elevated)' : 'var(--bg-surface)',
-                              border: subTask.isUploadProof ? '1px solid var(--interactive-primary)' : '1px solid var(--border-default)',
+                              backgroundColor: 'var(--bg-surface)',
+                              border: '1px solid var(--border-default)',
                               color: 'var(--text-primary)',
-                              cursor: subTask.isUploadProof ? 'not-allowed' : 'text',
-                              opacity: subTask.isUploadProof ? 0.7 : 1,
+                              cursor: 'text',
+                              opacity: 1,
                             }}
                             required
-                            readOnly={subTask.isUploadProof}
                           />
                         </div>
 
-                        {/* Link Input - Only for regular subtasks */}
-                        {!subTask.isUploadProof && (
+                        {/* Link Input */}
+                        {(
                           <div>
                             <label 
-                              className="text-sm font-medium mb-1 flex items-center gap-2"
+                              className="block text-sm font-medium mb-1 flex items-center gap-2"
                               style={{ color: 'var(--text-primary)' }}
                             >
                               <svg className="h-4 w-4" style={{ color: 'var(--interactive-primary)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -791,35 +738,27 @@ export default function NewTaskForm({ campaigns }: NewTaskFormProps) {
                             className="w-full px-3 py-2 rounded-lg text-sm"
                             min="0"
                             style={{
-                              backgroundColor: subTask.isUploadProof ? 'var(--bg-elevated)' : 'var(--bg-surface)',
-                              border: subTask.isUploadProof ? '1px solid var(--interactive-primary)' : '1px solid var(--border-default)',
+                              backgroundColor: 'var(--bg-surface)',
+                              border: '1px solid var(--border-default)',
                               color: 'var(--text-primary)',
-                              cursor: subTask.isUploadProof ? 'not-allowed' : 'text',
-                              opacity: subTask.isUploadProof ? 0.7 : 1,
+                              cursor: 'text',
+                              opacity: 1,
                             }}
-                            readOnly={subTask.isUploadProof}
                           />
                         </div>
 
-                        {subTask.isUploadProof && (
-                          <p className="text-xs italic" style={{ color: 'var(--text-tertiary)' }}>
-                            This subtask is automatically added for ambassadors to upload proof of task completion
-                          </p>
-                        )}
                       </div>
 
-                      {/* Delete Button - Hidden for upload proof */}
-                      {!subTask.isUploadProof && (
-                        <button
-                          type="button"
-                          onClick={() => removeSubTask(index)}
-                          className="flex-shrink-0 p-2 rounded hover:opacity-70 transition-opacity"
-                          style={{ color: 'var(--status-error)' }}
-                          title="Remove subtask"
-                        >
-                          <X size={18} />
-                        </button>
-                      )}
+                      {/* Delete Button */}
+                      <button
+                        type="button"
+                        onClick={() => removeSubTask(index)}
+                        className="flex-shrink-0 p-2 rounded hover:opacity-70 transition-opacity"
+                        style={{ color: 'var(--status-error)' }}
+                        title="Remove subtask"
+                      >
+                        <X size={18} />
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -836,10 +775,10 @@ export default function NewTaskForm({ campaigns }: NewTaskFormProps) {
                     style={{ color: 'var(--text-tertiary)', margin: '0 auto 12px' }}
                   />
                   <p style={{ color: 'var(--text-secondary)' }}>
-                    Upload proof subtask added automatically
+                    No subtasks added yet
                   </p>
                   <p className="text-sm mt-1" style={{ color: 'var(--text-tertiary)' }}>
-                    Click &quot;Add Subtask&quot; to add more steps
+                    Click &quot;Add Subtask&quot; to add task steps
                   </p>
                 </div>
               )}

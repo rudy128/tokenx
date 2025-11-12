@@ -545,9 +545,8 @@ export default function DailyTasksPage() {
                 xpReward: task.xp || task.xpReward || 50,
                 rewardToken: task.rewardToken,
                 rewardAmount: task.rewardAmount ? task.rewardAmount.toString() : undefined,
-                status: task.status === 'available' ? 'available' : 
-                        task.status === 'submitted' ? 'pending' : 
-                        task.status === 'approved' ? 'completed' : 'available',
+                // Use the status directly from API - it's already properly mapped
+                status: task.status || 'available',
                 verificationMode: task.verificationMethod || (task.approvalWorkflow === 'auto' ? "AUTO" : "MANUAL"),
                 difficulty: "medium",
                 estimatedTime: task.frequency === 'daily' ? "Daily" : "10 min",

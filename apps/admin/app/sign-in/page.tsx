@@ -36,8 +36,9 @@ function SignInForm() {
       }
 
       if (result?.ok) {
-        router.push(callbackUrl)
-        router.refresh()
+        // Small delay to ensure session is set
+        await new Promise(resolve => setTimeout(resolve, 100))
+        window.location.href = callbackUrl
       }
     } catch (err) {
       console.error("Sign in error:", err)

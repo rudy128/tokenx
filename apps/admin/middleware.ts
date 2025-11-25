@@ -5,8 +5,22 @@ import { auth } from "@/lib/auth"
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Allow access to sign-in page, unauthorized page, clear-cookies page, and API routes
-  if (pathname === "/sign-in" || pathname === "/unauthorized" || pathname === "/clear-cookies" || pathname.startsWith("/api/")) {
+  // Allow access to sign-in page, unauthorized page, clear-cookies page, and ALL API routes (including auth)
+  if (
+    pathname === "/sign-in" || 
+    pathname === "/unauthorized" || 
+    pathname === "/clear-cookies" || 
+    pathname.startsWith("/api/")
+  ) {
+    return NextResponse.next()
+  }
+
+  // Also allow static files and Next.js internals
+  if (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/static") ||
+    pathname.includes("/favicon")
+  ) {
     return NextResponse.next()
   }
 
@@ -54,6 +68,12 @@ export async function middleware(request: NextRequest) {
 
   if (!session?.user) {
     console.log(`⚠️ No session found for ${pathname}`)
+    
+    // Prevent redirect loop - if already going to sign-in, don't redirect again
+    if (pathname === "/sign-in") {
+      return NextResponse.next()
+    }
+    
     // Redirect to sign-in if not authenticated
     const signInUrl = new URL("/sign-in", request.url)
     signInUrl.searchParams.set("callbackUrl", pathname)

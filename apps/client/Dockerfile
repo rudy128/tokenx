@@ -6,10 +6,11 @@ WORKDIR /app
 RUN npm install -g pnpm@9.0.0
 
 # Copy root package files and workspace config
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 
-# Copy all workspace packages and apps
-COPY . .
+# Copy only necessary packages and the client app
+COPY packages ./packages
+COPY apps/client ./apps/client
 
 # Install all dependencies
 RUN pnpm install --frozen-lockfile

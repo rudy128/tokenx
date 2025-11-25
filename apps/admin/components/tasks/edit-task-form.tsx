@@ -24,6 +24,7 @@ interface TaskSubTask {
   xpReward: number
   link: string | null
   order: number
+  type?: string
   createdAt: Date
   updatedAt: Date
 }
@@ -215,7 +216,7 @@ export default function EditTaskForm({ task, campaigns }: EditTaskFormProps) {
       xpReward: subtask.xpReward.toString(),
       link: subtask.link || "",
       order: subtask.order,
-      type: ((subtask as { type?: string }).type || 'X_TWEET') as SubTaskType,
+      type: (subtask.type || 'X_TWEET') as SubTaskType,
     })
     setShowSubtaskModal(true)
   }

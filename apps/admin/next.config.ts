@@ -1,9 +1,13 @@
 import type { NextConfig } from "next";
-import path from 'path';
 
 const nextConfig: NextConfig = {
-  output: 'standalone',
-  outputFileTracingRoot: path.join(__dirname, '../../'),
+  // TypeScript and ESLint validation enabled during build
+  // eslint: {
+  //   ignoreDuringBuilds: true,  // ❌ Removed - Now validates during build
+  // },
+  // typescript: {
+  //   ignoreBuildErrors: true,    // ❌ Removed - Now validates during build
+  // },
 };
 
 export default nextConfig;

@@ -30,7 +30,11 @@ function SignInForm() {
       })
 
       if (result?.error) {
-        setError("Invalid credentials or insufficient permissions")
+        if (result.error === "CredentialsSignin") {
+          setError("Invalid email or password, or you don't have admin access")
+        } else {
+          setError("An error occurred. Please try again.")
+        }
         setIsLoading(false)
         return
       }

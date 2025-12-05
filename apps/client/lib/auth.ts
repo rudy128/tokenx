@@ -31,8 +31,8 @@ if (!AUTH_SECRET_VALUE && process.env.NODE_ENV !== "production") {
 }
 
 export const authConfig: NextAuthConfig = {
-  // Don't use adapter with credentials provider and JWT strategy
-  // adapter: PrismaAdapter(prisma),
+  // Use adapter for OAuth providers but signIn callback prevents auto-creation
+  adapter: PrismaAdapter(prisma),
   // Prefer AUTH_SECRET, fall back to NEXTAUTH_SECRET for compatibility.
   // If neither is present, use a dev fallback to avoid MissingSecret errors during local dev.
   secret:
@@ -119,6 +119,31 @@ export const authConfig: NextAuthConfig = {
     signIn: "/auth/signin",
   },
   callbacks: {
+    async signIn({ user, account }) {
+      // For OAuth providers (Google), check if user exists in database
+      if (account?.provider === "google") {
+        try {
+          const existingUser = await prisma.user.findUnique({
+            where: { email: user.email! },
+          })
+          
+          if (!existingUser) {
+            console.log("❌ User does not exist in database:", user.email)
+            // Return error URL to show error message
+            return "/auth/signin?error=AccountNotFound"
+          }
+          
+          console.log("✅ Existing user found, allowing sign in:", user.email)
+          return true
+        } catch (error) {
+          console.error("❌ Error checking user existence:", error)
+          return "/auth/signin?error=DatabaseError"
+        }
+      }
+      
+      // For credentials provider, authorize already handles validation
+      return true
+    },
     async jwt(params: { token: JWT; user?: any; trigger?: string }) {
       const { token, user, trigger } = params
       

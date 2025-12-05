@@ -16,8 +16,10 @@ export default function SignInPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [localError, setLocalError] = useState("")
   const searchParams = useSearchParams()
-  const error = searchParams.get("error")
+  const urlError = searchParams.get("error")
+  const error = localError || urlError
 
   // Redirect if already logged in
   useEffect(() => {
@@ -38,6 +40,7 @@ export default function SignInPage() {
   const handleCredentialsSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setLocalError("")
 
     try {
       console.log("Attempting sign in...")
@@ -52,6 +55,7 @@ export default function SignInPage() {
       
       if (result?.error) {
         console.error("Sign in error:", result.error)
+        setLocalError("CredentialsSignin")
         setIsLoading(false)
       } else if (result?.ok) {
         // Wait a moment for the session to be established
@@ -61,10 +65,12 @@ export default function SignInPage() {
         // Force a session update
         window.location.href = "/dashboard"
       } else {
+        setLocalError("CredentialsSignin")
         setIsLoading(false)
       }
     } catch (error) {
       console.error("Sign in error:", error)
+      setLocalError("CredentialsSignin")
       setIsLoading(false)
     }
   }
@@ -127,6 +133,10 @@ export default function SignInPage() {
               >
                 {error === "CredentialsSignin"
                   ? "Invalid email or password"
+                  : error === "AccountNotFound"
+                  ? "Account not found. Please contact an administrator to create your account."
+                  : error === "DatabaseError"
+                  ? "Database error. Please try again later."
                   : "An error occurred. Please try again."}
               </p>
             </div>

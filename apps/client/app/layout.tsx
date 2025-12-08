@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next"
 // @ts-ignore - Geist font imports may have type issues
 import { GeistSans, GeistMono } from "geist/font"
 import "./globals.css"
+import "./styles/intract-theme.css"
 import { Providers } from "./providers"
 import { Toaster } from "@/components/ui/toaster"
 import { InstallPrompt } from "@/components/pwa/install-prompt"
@@ -112,7 +113,7 @@ export default async function RootLayout({
             `,
           }}
         />
-        
+
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
         <link rel="icon" type="image/png" sizes="32x32" href="/icon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/icon-16x16.png" />
@@ -124,7 +125,7 @@ export default async function RootLayout({
         <meta name="msapplication-tap-highlight" content="no" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        
+
         {/* CSS Variables Integration */}
         <style>{`
 html {

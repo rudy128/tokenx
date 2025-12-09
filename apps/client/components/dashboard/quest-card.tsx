@@ -25,156 +25,190 @@ interface QuestCardProps {
 export function QuestCard({ quest }: QuestCardProps) {
     return (
         <div
-            className="quest-card"
+            className="group"
             style={{
-                background: 'var(--bg-secondary)',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: '20px',
-                overflow: 'hidden',
+                background: '#151515',
+                border: '1px solid #27272a',
+                borderRadius: '24px',
+                padding: '12px',
                 display: 'flex',
                 flexDirection: 'column',
+                gap: '16px',
                 cursor: 'pointer',
-                transition: 'transform 0.2s, box-shadow 0.2s',
-                position: 'relative'
+                transition: 'transform 0.2s',
+                position: 'relative',
+                fontFamily: 'system-ui, sans-serif'
             }}
         >
-            {/* Image Section */}
+            {/* 1. Purple Thumbnail Container */}
             <div style={{
-                height: '180px',
-                width: '100%',
                 position: 'relative',
-                background: 'var(--bg-tertiary)', // placeholder
+                width: '100%',
+                aspectRatio: '1.1/1', // Slightly taller than video to fit grid nicely
+                background: '#5b21b6', // Violet-800
+                borderRadius: '16px',
+                overflow: 'hidden',
+                // Grid Pattern Overlay
+                backgroundImage: 'radial-gradient(rgba(255,255,255,0.15) 1px, transparent 1px)',
+                backgroundSize: '20px 20px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '16px' // Frame Bezel
             }}>
-                <img
-                    src={quest.image}
-                    alt={quest.title}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-                {/* Overlay Gradient */}
-                <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '100%',
-                    background: 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 50%)'
-                }} />
-
-                {/* Top Tags */}
-                <div style={{
-                    position: 'absolute',
-                    top: '1rem',
-                    left: '1rem',
-                    display: 'flex',
-                    gap: '0.5rem'
-                }}>
-                    <div style={{
-                        background: 'rgba(0,0,0,0.6)',
-                        backdropFilter: 'blur(4px)',
-                        color: '#fff',
-                        padding: '4px 8px',
-                        borderRadius: '6px',
-                        fontSize: '0.75rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px'
-                    }}>
-                        <Users size={12} />
-                        {(quest.participants / 1000).toFixed(1)}k
-                    </div>
+                {/* Bookmark Icon */}
+                <div style={{ position: 'absolute', top: '12px', right: '16px', zIndex: 10 }}>
+                    <Bookmark fill="none" stroke="white" size={22} strokeWidth={2} />
                 </div>
 
-                <button style={{
+                {/* Inner Content Image (The "Video Thumbnail") */}
+                <div style={{
+                    width: '100%',
+                    height: '100%',
+                    background: '#000',
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                    boxShadow: '0 8px 30px rgba(0,0,0,0.5)', // Strong shadow
+                    position: 'relative',
+                    border: '1px solid rgba(255,255,255,0.1)'
+                }}>
+                    <img
+                        src={quest.image}
+                        alt={quest.title}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                </div>
+
+                {/* Participants Bubbles (Moved to Top Left) */}
+                <div style={{
                     position: 'absolute',
-                    top: '1rem',
-                    right: '1rem',
-                    background: 'rgba(0,0,0,0.4)',
-                    border: 'none',
-                    borderRadius: '50%',
-                    width: '32px',
-                    height: '32px',
+                    top: '12px',      // Moved from bottom: 8px
+                    left: '16px',     // Moved from right: 8px
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#fff',
-                    cursor: 'pointer'
+                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))',
+                    zIndex: 20 // Ensure it sits above other elements
                 }}>
-                    <Bookmark size={16} />
-                </button>
+                    {/* Mock Avatars */}
+                    {[1, 2, 3].map((i) => (
+                        <div key={i} style={{
+                            width: '24px',
+                            height: '24px',
+                            borderRadius: '50%',
+                            border: '2px solid #5b21b6', // match bg to blend
+                            background: '#3f3f46',
+                            marginLeft: i > 1 ? '-8px' : 0,
+                            overflow: 'hidden',
+                            zIndex: i
+                        }}>
+                            <img src={`https://i.pravatar.cc/100?img=${10 + i}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        </div>
+                    ))}
+                    {/* Count Badge */}
+                    <div style={{
+                        height: '24px',
+                        padding: '0 8px',
+                        borderRadius: '12px',
+                        background: '#18181b', // zinc-950
+                        border: '2px solid #5b21b6', // match bg
+                        color: 'white',
+                        fontSize: '10px',
+                        fontWeight: 700,
+                        display: 'flex',
+                        alignItems: 'center',
+                        marginLeft: '-8px',
+                        zIndex: 10
+                    }}>
+                        {(quest.participants / 1000).toFixed(1)}K
+                    </div>
+                </div>
             </div>
 
-            {/* Content Section */}
-            <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
+            {/* 2. Info Section */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '0 4px' }}>
                 {/* Company Info */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{
                         width: '24px',
                         height: '24px',
+                        background: '#f97316', // Orange-500 logo bg
                         borderRadius: '50%',
-                        background: '#FF5722', // Mock Brand Color
-                        flexShrink: 0
-                    }} />
-                    <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{quest.companyName}</span>
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    }}>
+                        {/* Generic Logo Icon if none provided */}
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                        </svg>
+                    </div>
+                    <span style={{ fontSize: '0.95rem', color: '#e4e4e7', fontWeight: 600 }}>
+                        {quest.companyName}
+                    </span>
                 </div>
 
                 {/* Title */}
                 <h3 style={{
-                    fontSize: '1.1rem',
+                    fontSize: '1.15rem',
                     fontWeight: 700,
-                    color: 'var(--text-primary)',
-                    marginBottom: 'auto',
-                    lineHeight: 1.4
+                    color: 'white',
+                    lineHeight: '1.3',
+                    marginTop: '4px',
+                    letterSpacing: '-0.01em',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                    minHeight: '48px' // Enforce 2-line height for alignment if needed, or remove
                 }}>
                     {quest.title}
-                    <br />
-                    <span style={{ fontWeight: 400, color: 'var(--text-tertiary)', fontSize: '0.95rem' }}>
-                        {quest.subtitle}
-                    </span>
                 </h3>
 
-                {/* Rewards */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1.5rem' }}>
+                {/* Badges */}
+                <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
+                    {/* XP Badge */}
                     <div style={{
-                        background: 'rgba(234, 179, 8, 0.1)',
-                        color: '#EAB308',
-                        border: '1px solid rgba(234, 179, 8, 0.2)',
-                        borderRadius: '99px',
-                        padding: '4px 12px',
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
+                        background: '#27272a',
+                        borderRadius: '999px',
+                        padding: '6px 14px',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '4px'
+                        gap: '8px',
+                        fontSize: '0.85rem',
+                        color: '#f4f4f5',
+                        fontWeight: 700
                     }}>
-                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#EAB308' }} />
+                        <div style={{ width: '14px', height: '14px', background: '#eab308', borderRadius: '50%', boxShadow: '0 0 8px rgba(234, 179, 8, 0.4)' }} />
                         {quest.rewardAmount} XPs
                     </div>
 
+                    {/* Secondary Reward Badge */}
                     {quest.rewardSecondary && (
                         <div style={{
-                            background: 'rgba(59, 130, 246, 0.1)',
-                            color: '#3B82F6',
-                            border: '1px solid rgba(59, 130, 246, 0.2)',
-                            borderRadius: '99px',
-                            padding: '4px 12px',
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
+                            background: '#27272a',
+                            borderRadius: '999px',
+                            padding: '6px 14px',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '4px'
+                            gap: '8px',
+                            fontSize: '0.85rem',
+                            color: '#f4f4f5',
+                            fontWeight: 700
                         }}>
-                            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3B82F6' }} />
-                            {quest.rewardSecondary}
+                            <div style={{ width: '12px', height: '14px', background: '#22c55e', borderRadius: '2px', boxShadow: '0 0 8px rgba(34, 197, 94, 0.4)' }} />
+                            <span style={{ maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {quest.rewardSecondary}
+                            </span>
                         </div>
                     )}
                 </div>
             </div>
 
             <style jsx>{`
-            .quest-card:hover {
+            .group:hover {
                 transform: translateY(-4px);
-                box-shadow: 0 10px 30px -10px rgba(0,0,0,0.3);
-                border-color: var(--border-default);
+                border-color: #3f3f46;
+                box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5);
             }
         `}</style>
         </div>

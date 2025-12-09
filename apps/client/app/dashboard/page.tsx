@@ -14,6 +14,7 @@ import { DashboardFooter } from "@/components/dashboard/dashboard-footer";
 import { HorizontalScroll } from "@/components/dashboard/horizontal-scroll";
 import { Flame, DollarSign, Hexagon, Zap, Layers, Box, ScrollText, Fingerprint, Timer, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 
 // Mock Data
 const HERO_SLIDES: HeroSlide[] = [
@@ -25,7 +26,7 @@ const HERO_SLIDES: HeroSlide[] = [
     image: "https://images.unsplash.com/photo-1549558549-415fe4c37b60?q=80&w=2619&auto=format&fit=crop",
     ctaText: "Play Now",
     ctaLink: "/campaigns/travala",
-    partners: [{ name: "Travala.com" }, { name: "Intract" }],
+    partners: [{ name: "Travala.com" }, { name: "Cubane" }],
     color: "#7C3AED"
   },
   {
@@ -430,6 +431,7 @@ const LEARN_EARN: LearnEarnItem[] = [
 ]
 
 export default function DashboardPage() {
+  const { data: session } = useSession();
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#09090b', color: '#fff' }}>
       <NavBar />
@@ -451,65 +453,43 @@ export default function DashboardPage() {
           {/* Right Sidebar Stack */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
-            {/* 1. Proof of Humanity Card */}
+            {/* 1. Proof of Humanity Card - "App-Like" Behavior */}
+            {/* 1. Proof of Humanity Card - "Two-Div" Structure */}
             <div style={{
-              background: '#09090b',
-              border: '1px solid #1e1e24',
+              background: '#050505', // Deep black-ish background
+              border: '1px solid #27272a',
               borderRadius: '16px',
-              padding: '1.5rem',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.75rem',
+              padding: '1.5px 2.5px', // Reduced padding by 50% (Black frame thinning)
+              height: '140px', // Fixed height for alignment
               position: 'relative',
-              overflow: 'hidden',
-              height: '160px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+              overflow: 'hidden'
             }}>
-              {/* Scanline Background */}
+              {/* Inner Window (SVG Content) */}
               <div style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
+                position: 'relative',
                 width: '100%',
                 height: '100%',
-                background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(168, 85, 247, 0.03) 3px)',
-                pointerEvents: 'none'
-              }} />
-
-              {/* Purple Glow */}
-              <div style={{
-                position: 'absolute',
-                top: '40%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                width: '120px',
-                height: '80px',
-                background: 'radial-gradient(ellipse at center, rgba(168, 85, 247, 0.3) 0%, transparent 70%)',
-                filter: 'blur(20px)',
-                pointerEvents: 'none'
-              }} />
-
-              {/* Icon Area */}
-              <div style={{ position: 'relative', width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {/* Viewfinder Corners */}
-                <div style={{ position: 'absolute', top: 0, left: 0, width: '8px', height: '8px', borderTop: '2px solid rgba(168, 85, 247, 0.6)', borderLeft: '2px solid rgba(168, 85, 247, 0.6)' }} />
-                <div style={{ position: 'absolute', top: 0, right: 0, width: '8px', height: '8px', borderTop: '2px solid rgba(168, 85, 247, 0.6)', borderRight: '2px solid rgba(168, 85, 247, 0.6)' }} />
-                <div style={{ position: 'absolute', bottom: 0, left: 0, width: '8px', height: '8px', borderBottom: '2px solid rgba(168, 85, 247, 0.6)', borderLeft: '2px solid rgba(168, 85, 247, 0.6)' }} />
-                <div style={{ position: 'absolute', bottom: 0, right: 0, width: '8px', height: '8px', borderBottom: '2px solid rgba(168, 85, 247, 0.6)', borderRight: '2px solid rgba(168, 85, 247, 0.6)' }} />
-
-                <Fingerprint size={28} color="#c084fc" />
-              </div>
-
-              <div style={{
-                fontSize: '1rem',
-                color: '#e9d5ff',
-                fontWeight: 500,
-                letterSpacing: '0.02em',
-                zIndex: 2
+                borderRadius: '14.5px', // Tighter radius to match outer with very low padding
+                overflow: 'hidden',
+                cursor: 'default',
+                userSelect: 'none',
+                WebkitUserSelect: 'none',
+                transform: 'translateZ(0)'
               }}>
-                Proof of Humanity
+                <img
+                  src="/images/poh-card.svg"
+                  alt="Proof of Humanity"
+                  draggable="false"
+                  onContextMenu={(e) => e.preventDefault()}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    pointerEvents: 'none',
+                    display: 'block',
+                    transform: 'scale(1.02)' // Slight zoom to crop out inner edge artifacts/lines
+                  }}
+                />
               </div>
             </div>
 
@@ -517,79 +497,107 @@ export default function DashboardPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               {/* Speedrun */}
               <div style={{
-                background: '#09090b',
-                border: '1px solid #1e1e24',
+                background: '#050505', // Deep black
+                border: '1px solid #27272a',
                 borderRadius: '16px',
-                padding: '1.25rem',
+                padding: '1rem',
                 display: 'flex',
                 flexDirection: 'column',
-                justifyContent: 'center',
+                justifyContent: 'flex-end', // Content at bottom
+                alignItems: 'flex-start',
                 gap: '0.5rem',
-                height: '110px'
+                height: '160px' // Square-ish
               }}>
-                <Timer size={24} className="text-gray-400" />
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <span style={{ fontSize: '0.95rem', fontWeight: 600, color: '#e2e8f0' }}>Speedrun</span>
-                  <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Win assured rewards</span>
+                <img
+                  src="https://static.highongrowth.xyz/enterprise/64a4035a06c59baa561ccee1/d8ddaa0f0f4b4eb39a6fc6ca6f64416a.svg"
+                  alt="Speedrun"
+                  width="24"
+                  height="24"
+                  style={{ marginBottom: '0.25rem' }}
+                />
+                <div style={{ display: 'flex', flexDirection: 'column', minHeight: '54px' }}>
+                  <span style={{ fontSize: '1.1rem', fontWeight: 600, color: '#e2e8f0', lineHeight: '1.2' }}>Speedrun</span>
+                  <span style={{ fontSize: '0.85rem', color: '#a1a1aa', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    Win assured rewards
+                  </span>
                 </div>
               </div>
 
               {/* NFTs */}
               <div style={{
-                background: '#09090b',
-                border: '1px solid #1e1e24',
+                background: '#050505', // Deep black
+                border: '1px solid #27272a',
                 borderRadius: '16px',
-                padding: '1.25rem',
+                padding: '1rem',
                 display: 'flex',
                 flexDirection: 'column',
-                justifyContent: 'center',
+                justifyContent: 'flex-end', // Content at bottom
+                alignItems: 'flex-start',
                 gap: '0.5rem',
-                height: '110px'
+                height: '160px' // Square-ish
               }}>
-                <ImageIcon size={24} className="text-gray-400" />
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <span style={{ fontSize: '0.95rem', fontWeight: 600, color: '#e2e8f0' }}>NFTs</span>
-                  <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Mint Now</span>
+                {/* Custom Cards SVG for NFTs */}
+                <div style={{ position: 'relative', width: '24px', height: '24px', marginBottom: '0.25rem' }}>
+                  {/* Back Card (Purple) */}
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ position: 'absolute', top: 0, left: 0 }}>
+                    <rect x="6" y="2" width="14" height="18" rx="2" transform="rotate(10 13 11)" fill="#8b5cf6" />
+                  </svg>
+                  {/* Front Card (White with Diamond) */}
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ position: 'absolute', top: 0, left: 0 }}>
+                    <rect x="2" y="4" width="14" height="18" rx="2" transform="rotate(-5 9 13)" fill="#e2e8f0" stroke="#050505" strokeWidth="1" />
+                    <path d="M7.5 13L9 11L10.5 13L9 15L7.5 13Z" fill="#0f172a" transform="rotate(-5 9 13) translate(0 0)" />
+                  </svg>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', minHeight: '54px' }}>
+                  <span style={{ fontSize: '1.1rem', fontWeight: 600, color: '#e2e8f0', lineHeight: '1.2' }}>NFTs</span>
+                  {/* Note: Reference implies title focus, keeping 'Mint Now' as description or empty if preferred. User snippet showed description for Speedrun only. */}
+                  {/* Using 'Mint Now' to maintain parity with previous functionality */}
+                  {/* <span style={{ fontSize: '0.85rem', color: '#a1a1aa' }}>Mint Now</span> */}
+                  {/* Actually, looking at the layout, description might be hidden or specific. I'll add 'Mint Now' but comment out if it looks crowded, or just keep it. */}
+                  <span style={{ fontSize: '0.85rem', color: '#a1a1aa', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>Mint Now</span>
                 </div>
               </div>
             </div>
 
             {/* 3. Unlock Rewards Card */}
-            <div style={{
-              background: '#09090b',
-              border: '1px solid #1e1e24',
-              borderRadius: '16px',
-              padding: '1.5rem',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '1rem'
-            }}>
-              <div>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#fff', marginBottom: '0.25rem' }}>
-                  Unlock Incredible Rewards
-                </h3>
-                <p style={{ fontSize: '0.875rem', color: '#94a3b8', lineHeight: '1.4' }}>
-                  Explore, learn and start earning today
-                </p>
-              </div>
+            {/* 3. Unlock Rewards Card - Only show if NOT signed in */}
+            {!session?.user && (
+              <div style={{
+                background: '#09090b',
+                border: '1px solid #1e1e24',
+                borderRadius: '16px',
+                padding: '1.5rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1rem'
+              }}>
+                <div>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#fff', marginBottom: '0.25rem' }}>
+                    Unlock Incredible Rewards
+                  </h3>
+                  <p style={{ fontSize: '0.875rem', color: '#94a3b8', lineHeight: '1.4' }}>
+                    Explore, learn and start earning today
+                  </p>
+                </div>
 
-              <Link href="/auth/signin">
-                <button className="btn" style={{
-                  width: '100%',
-                  background: '#7c3aed', // Violet-600
-                  color: 'white',
-                  fontWeight: 600,
-                  padding: '0.75rem',
-                  borderRadius: '8px',
-                  border: 'none',
-                  fontSize: '0.95rem',
-                  cursor: 'pointer',
-                  transition: 'background 0.2s'
-                }}>
-                  Sign In
-                </button>
-              </Link>
-            </div>
+                <Link href="/auth/signin">
+                  <button className="btn" style={{
+                    width: '100%',
+                    background: '#7c3aed', // Violet-600
+                    color: 'white',
+                    fontWeight: 600,
+                    padding: '0.75rem',
+                    borderRadius: '8px',
+                    border: 'none',
+                    fontSize: '0.95rem',
+                    cursor: 'pointer',
+                    transition: 'background 0.2s'
+                  }}>
+                    Sign In
+                  </button>
+                </Link>
+              </div>
+            )}
 
           </div >
         </div >

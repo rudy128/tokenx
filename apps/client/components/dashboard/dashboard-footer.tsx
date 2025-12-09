@@ -26,7 +26,7 @@ export function DashboardFooter() {
                         marginBottom: '1rem',
                         fontFamily: 'var(--font-family-heading)'
                     }}>
-                        Intract.
+                        Cubane.
                     </h2>
                     <p style={{
                         maxWidth: '300px',
@@ -40,7 +40,7 @@ export function DashboardFooter() {
 
                 {/* Links Columns */}
                 <div className="footer-links">
-                    <h4>INTRACT</h4>
+                    <h4>CUBANE</h4>
                     <a href="#">Explore Quests</a>
                     <a href="#">Communities</a>
                     <a href="#">Alpha Hub</a>
@@ -79,13 +79,15 @@ export function DashboardFooter() {
                 lineHeight: 1.6,
                 color: 'var(--text-tertiary)'
             }}>
-                <p style={{ marginBottom: '1rem' }}>
-                    <strong style={{ color: 'var(--text-secondary)' }}>Disclaimer:</strong> Crypto Products, Virtual Digital Assets, and NFTs are unregulated and can be highly risky. There may be no regulatory recourse for any loss from such transactions. We advise the viewer to proceed with caution. Nothing in this website or any communication published by us amounts to, is intended to be, or should be construed as investment or purchase advice of any kind or financial advice or promotion under any applicable laws. Any decision made based on the content provided on this website or any communication published by us shall not be attributable to us.
-                </p>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span>Created by Intract</span>
-                    <div style={{ display: 'flex', gap: '1rem' }}>
-                        {/* Social Icons could go here */}
+                <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
+                    <p style={{ marginBottom: '1rem', textAlign: 'justify' }}>
+                        <strong style={{ color: 'var(--text-secondary)' }}>Disclaimer:</strong> Crypto Products, Virtual Digital Assets, and NFTs are unregulated and can be highly risky. There may be no regulatory recourse for any loss from such transactions. We advise the viewer to proceed with caution. Nothing in this website or any communication published by us amounts to, is intended to be, or should be construed as investment or purchase advice of any kind or financial advice or promotion under any applicable laws. Any decision made based on the content provided on this website or any communication published by us shall not be attributable to us.
+                    </p>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>Created by Cubane</span>
+                        <div style={{ display: 'flex', gap: '1rem' }}>
+                            {/* Social Icons could go here */}
+                        </div>
                     </div>
                 </div>
             </div>

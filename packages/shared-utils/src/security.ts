@@ -12,12 +12,12 @@ export function addSecurityHeaders(response: NextResponse): NextResponse {
   response.headers.set('X-Frame-Options', 'DENY')
   response.headers.set('X-XSS-Protection', '1; mode=block')
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-  
+
   // HTTPS enforcement
   if (process.env.NODE_ENV === 'production') {
     response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload')
   }
-  
+
   // Content Security Policy
   response.headers.set('Content-Security-Policy', [
     "default-src 'self'",
@@ -41,21 +41,21 @@ export function rateLimitMiddleware(
     const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown'
     const now = Date.now()
     const key = `rate_limit:${ip}`
-    
+
     const current = rateLimit.get(key)
-    
+
     if (!current || now > current.resetTime) {
       rateLimit.set(key, { count: 1, resetTime: now + windowMs })
       return null
     }
-    
+
     if (current.count >= maxRequests) {
       return NextResponse.json(
         { error: 'Rate limit exceeded. Please try again later.' },
         { status: 429, headers: { 'Retry-After': Math.ceil((current.resetTime - now) / 1000).toString() } }
       )
     }
-    
+
     current.count++
     return null
   }
@@ -66,26 +66,26 @@ export async function requireAdmin(req: NextRequest): Promise<NextResponse | nul
   try {
     const session = await auth();
     const { userId } = session;
-    
+
     if (!userId) {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 })
     }
-    
+
     // First check if user has admin role in Clerk metadata
     const user = await currentUser();
     if (user?.publicMetadata?.role === "admin") {
       return null;
     }
-    
+
     // If not in Clerk metadata, check the database
     const dbUser = await prisma.user.findUnique({
       where: { clerkId: userId }
     });
-    
+
     if (dbUser?.role !== "ADMIN") {
       return NextResponse.json({ error: "Admin privileges required" }, { status: 403 })
     }
-    
+
     return null
   } catch (error) {
     console.error("Auth middleware error:", error)
@@ -96,7 +96,7 @@ export async function requireAdmin(req: NextRequest): Promise<NextResponse | nul
 // Input sanitization
 export function sanitizeInput(input: string): string {
   if (typeof input !== 'string') return ''
-  
+
   return input
     .trim()
     .replace(/[<>]/g, '') // Remove potential HTML tags
@@ -122,37 +122,37 @@ export function verifyCSRFToken(token: string, sessionToken: string): boolean {
 // Password strength validation
 export function isStrongPassword(password: string): { isValid: boolean; errors: string[] } {
   const errors: string[] = []
-  
+
   if (password.length < 8) {
     errors.push('Password must be at least 8 characters long')
   }
-  
+
   if (!/[A-Z]/.test(password)) {
     errors.push('Password must contain at least one uppercase letter')
   }
-  
+
   if (!/[a-z]/.test(password)) {
     errors.push('Password must contain at least one lowercase letter')
   }
-  
+
   if (!/\d/.test(password)) {
     errors.push('Password must contain at least one number')
   }
-  
+
   if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
     errors.push('Password must contain at least one special character')
   }
-  
+
   // Check for common weak passwords
   const commonPasswords = [
-    'password', '123456', 'password123', 'admin', 'qwerty', 
+    'password', '123456', 'password123', 'admin', 'qwerty',
     'letmein', 'welcome', 'monkey', '1234567890'
   ]
-  
+
   if (commonPasswords.includes(password.toLowerCase())) {
     errors.push('Password is too common, please choose a stronger password')
   }
-  
+
   return {
     isValid: errors.length === 0,
     errors

@@ -9,7 +9,7 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
   },
-  
+
   // PWA configuration
   async headers() {
     return [
@@ -66,19 +66,13 @@ const nextConfig = {
   // Compression
   compress: true,
 
-  
+
   // Bundle analyzer (uncomment for analysis)
   // bundleAnalyzer: {
   //   enabled: process.env.ANALYZE === 'true',
   // },
 
-  // TypeScript and ESLint validation enabled during build
-  eslint: {
-    ignoreDuringBuilds: true,  // ❌ Removed - Now validates during build
-  },
-  typescript: {
-    ignoreBuildErrors: true,    // ❌ Removed - Now validates during build
-  },
+
 
   // Webpack configuration to handle module resolution issues
   webpack: (config, { isServer }) => {

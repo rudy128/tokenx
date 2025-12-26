@@ -31,7 +31,7 @@ export async function GET(
         description: task.description,
         instructions: task.instructions || task.description,
         xp: task.xp,
-        taskType: task.category || "GENERAL",
+        taskType: task.taskType || "GENERAL",
         frequency: task.frequency || "once",
         evidenceMode: task.evidenceMode || "MANUAL",
         approvalWorkflow: task.approvalWorkflow || "manual",

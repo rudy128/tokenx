@@ -7,7 +7,7 @@ import { NavBar } from "@/components/NavBar"
 import { Button } from "@/components/ui/button"
 
 import { useToast } from "@/components/ui/use-toast"
-import { 
+import {
   ArrowLeft, CheckCircle, Zap, Target, X
 } from "lucide-react"
 import React from "react"
@@ -113,7 +113,7 @@ export default function CampaignTasksPage() {
       'var(--color-success-500)',    // Growth tasks - Green  
       'var(--color-warning-500)'     // Info/Warning tasks - Amber
     ];
-    
+
     // Use task type or fallback to index cycling
     if (task.taskType) {
       const taskType = task.taskType.toLowerCase();
@@ -122,7 +122,7 @@ export default function CampaignTasksPage() {
       if (taskType.includes('community') || taskType.includes('referral')) return colors[2]!;
       if (taskType.includes('custom') || taskType.includes('technical')) return colors[3]!;
     }
-    
+
     // Fallback to cycling colors by index
     return colors[(index ?? 0) % colors.length]!;
   };
@@ -131,10 +131,10 @@ export default function CampaignTasksPage() {
   const TaskImageFallback = ({ task, index }: { task: Task; index?: number }) => {
     const themeColor = getTaskThemeColor(task, index);
     const taskTitle = task.name;
-    
+
     return (
-      <div 
-        className="task-image-container-fallback" 
+      <div
+        className="task-image-container-fallback"
         style={{ backgroundColor: themeColor }}
       >
         <div className="grid-bg"></div>
@@ -159,7 +159,7 @@ export default function CampaignTasksPage() {
           </div>
         </div>
       </div>
-      
+
       {/* Content Area - matching campaign card structure */}
       <div className="campaign-card-content">
         {/* Header */}
@@ -171,7 +171,7 @@ export default function CampaignTasksPage() {
             {task.description}
           </p>
         </div>
-        
+
         {/* Stats - using same structure as campaign card */}
         <div className="campaign-card-stats">
           <div className="campaign-card-stat">
@@ -188,23 +188,23 @@ export default function CampaignTasksPage() {
               <Target className="campaign-card-stat-icon" />
             </div>
             <div className="campaign-card-stat-content">
-              <div className="campaign-card-stat-value">{task.verificationMethod || (task.approvalWorkflow === 'auto' ? 'AUTO' : 'MANUAL')}</div>
+              <div className="campaign-card-stat-value">{task.approvalWorkflow === 'auto' ? 'AUTO' : 'MANUAL'}</div>
               <div className="campaign-card-stat-label">Verification</div>
             </div>
           </div>
         </div>
-        
+
         {/* Program info */}
         <div className="campaign-card-dates">
           <div className="campaign-card-date">
             <span>{campaign?.name || 'TokenX Ambassador Program'} · {task.taskType || 'CAMPAIGN_TASK'}</span>
           </div>
         </div>
-        
+
         {/* Footer with button */}
         <div className="campaign-card-footer">
           <div className="campaign-card-divider"></div>
-          <button 
+          <button
             onClick={(e) => { e.stopPropagation(); onViewDetails(task); }}
             className="campaign-card-button joined"
           >
@@ -217,10 +217,10 @@ export default function CampaignTasksPage() {
   );
 
   // Task Details Modal (same as daily tasks page)
-  const TaskDetailsModal = ({ task, isOpen, onClose, onStartTask }: { 
-    task: Task | null; 
-    isOpen: boolean; 
-    onClose: () => void; 
+  const TaskDetailsModal = ({ task, isOpen, onClose, onStartTask }: {
+    task: Task | null;
+    isOpen: boolean;
+    onClose: () => void;
     onStartTask: (taskId: string) => void;
   }) => {
     // Handle escape key and outside click
@@ -246,7 +246,7 @@ export default function CampaignTasksPage() {
     if (!isOpen || !task) return null;
 
     return (
-      <div 
+      <div
         className="task-modal-overlay"
         onClick={handleBackdropClick}
         role="dialog"
@@ -255,7 +255,7 @@ export default function CampaignTasksPage() {
       >
         <div className="task-modal-container">
           {/* Close button */}
-          <button 
+          <button
             className="task-modal-close"
             onClick={onClose}
             aria-label="Close task details"
@@ -283,10 +283,10 @@ export default function CampaignTasksPage() {
                 <span className="badge badge-success">XP</span>
               </div>
               <span className="badge badge-secondary">
-                {task.verificationMethod || (task.approvalWorkflow === 'auto' ? 'AUTO' : 'MANUAL')}
+                {task.approvalWorkflow === 'auto' ? 'AUTO' : 'MANUAL'}
               </span>
               <span className="badge badge-info">
-                {(task.verificationMethod || task.approvalWorkflow)?.toUpperCase().includes('AUTO') ? "AUTO-VERIFIED" : "MANUAL REVIEW"}
+                {task.approvalWorkflow?.toUpperCase().includes('AUTO') ? "AUTO-VERIFIED" : "MANUAL REVIEW"}
               </span>
             </div>
 
@@ -310,7 +310,7 @@ export default function CampaignTasksPage() {
             <div className="task-modal-verification">
               <h3 className="task-modal-section-title">Verification Process</h3>
               <div className="task-modal-verification-content">
-                {(task.verificationMethod || task.approvalWorkflow)?.toUpperCase().includes('AUTO') ? (
+                {task.approvalWorkflow?.toUpperCase().includes('AUTO') ? (
                   <>
                     <span className="task-modal-verification-type">Auto-Verified Task</span>
                     <p className="task-modal-verification-desc">
@@ -355,113 +355,113 @@ export default function CampaignTasksPage() {
         {/* Banner Section - exact same structure as TaskCard */}
         <div className="campaign-card-banner-container">
           <div className="task-modal-banner">
-            <div 
-              className="task-modal-banner-fallback" 
+            <div
+              className="task-modal-banner-fallback"
               style={{ backgroundColor: 'var(--bg-tertiary)' }}
             />
           </div>
         </div>
-        
+
         {/* Content Area - exact same structure as TaskCard */}
         <div className="campaign-card-content">
           {/* Header */}
           <div className="campaign-card-header">
-            <div 
-              className="h-6 rounded" 
-              style={{ 
-                backgroundColor: 'var(--bg-tertiary)', 
+            <div
+              className="h-6 rounded"
+              style={{
+                backgroundColor: 'var(--bg-tertiary)',
                 width: '70%',
                 marginBottom: 'var(--space-2)'
-              }} 
+              }}
             />
-            <div 
-              className="h-4 rounded" 
-              style={{ 
+            <div
+              className="h-4 rounded"
+              style={{
                 backgroundColor: 'var(--bg-tertiary)',
                 marginBottom: 'var(--space-1)'
-              }} 
+              }}
             />
-            <div 
-              className="h-4 rounded" 
-              style={{ 
-                backgroundColor: 'var(--bg-tertiary)', 
+            <div
+              className="h-4 rounded"
+              style={{
+                backgroundColor: 'var(--bg-tertiary)',
                 width: '80%'
-              }} 
+              }}
             />
           </div>
-          
+
           {/* Stats - exact same structure as TaskCard */}
           <div className="campaign-card-stats">
             <div className="campaign-card-stat">
-              <div 
-                className="campaign-card-stat-icon-wrapper participants" 
+              <div
+                className="campaign-card-stat-icon-wrapper participants"
                 style={{ backgroundColor: 'var(--bg-tertiary)' }}
               />
               <div className="campaign-card-stat-content">
-                <div 
-                  className="h-5 rounded" 
-                  style={{ 
-                    backgroundColor: 'var(--bg-tertiary)', 
+                <div
+                  className="h-5 rounded"
+                  style={{
+                    backgroundColor: 'var(--bg-tertiary)',
                     width: '40px',
                     marginBottom: 'var(--space-1)'
-                  }} 
+                  }}
                 />
-                <div 
-                  className="h-3 rounded" 
-                  style={{ 
-                    backgroundColor: 'var(--bg-tertiary)', 
+                <div
+                  className="h-3 rounded"
+                  style={{
+                    backgroundColor: 'var(--bg-tertiary)',
                     width: '60px'
-                  }} 
+                  }}
                 />
               </div>
             </div>
             <div className="campaign-card-stat">
-              <div 
-                className="campaign-card-stat-icon-wrapper tokens" 
+              <div
+                className="campaign-card-stat-icon-wrapper tokens"
                 style={{ backgroundColor: 'var(--bg-tertiary)' }}
               />
               <div className="campaign-card-stat-content">
-                <div 
-                  className="h-5 rounded" 
-                  style={{ 
-                    backgroundColor: 'var(--bg-tertiary)', 
+                <div
+                  className="h-5 rounded"
+                  style={{
+                    backgroundColor: 'var(--bg-tertiary)',
                     width: '50px',
                     marginBottom: 'var(--space-1)'
-                  }} 
+                  }}
                 />
-                <div 
-                  className="h-3 rounded" 
-                  style={{ 
-                    backgroundColor: 'var(--bg-tertiary)', 
+                <div
+                  className="h-3 rounded"
+                  style={{
+                    backgroundColor: 'var(--bg-tertiary)',
                     width: '55px'
-                  }} 
+                  }}
                 />
               </div>
             </div>
           </div>
-          
+
           {/* Program info - exact same structure as TaskCard */}
           <div className="campaign-card-dates">
             <div className="campaign-card-date">
-              <div 
-                className="h-4 rounded" 
-                style={{ 
-                  backgroundColor: 'var(--bg-tertiary)', 
+              <div
+                className="h-4 rounded"
+                style={{
+                  backgroundColor: 'var(--bg-tertiary)',
                   width: '250px'
-                }} 
+                }}
               />
             </div>
           </div>
-          
+
           {/* Footer - exact same structure as TaskCard */}
           <div className="campaign-card-footer">
             <div className="campaign-card-divider" />
-            <div 
-              className="h-10 rounded" 
-              style={{ 
+            <div
+              className="h-10 rounded"
+              style={{
                 backgroundColor: 'var(--bg-tertiary)',
                 width: '100%'
-              }} 
+              }}
             />
           </div>
         </div>
@@ -486,12 +486,12 @@ export default function CampaignTasksPage() {
                   <div className="w-28 h-4 bg-gray-700 rounded animate-pulse"></div>
                 </div>
               </div>
-              
+
               {/* Title skeleton - using same class structure as real content */}
               <div className="campaigns-main-title">
                 <div className="bg-gray-700 rounded animate-pulse" style={{ height: '1em', width: '70%', margin: '0 auto' }}></div>
               </div>
-              
+
               {/* Subtitle skeleton - using same class structure as real content */}
               <div className="campaigns-main-subtitle">
                 <div className="bg-gray-700 rounded animate-pulse" style={{ height: '1em', width: '85%', margin: '0 auto' }}></div>
@@ -567,8 +567,8 @@ export default function CampaignTasksPage() {
         <div className="campaigns-header-section">
           <div className="campaigns-hero-content">
             <div className="flex items-center gap-4 mb-4">
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 onClick={() => router.push(`/dashboard/campaigns/${campaignId}`)}
                 className="text-gray-400 hover:text-white"
               >
@@ -649,7 +649,7 @@ export default function CampaignTasksPage() {
               <div className="empty-tasks-card">
                 <span className="empty-title">No tasks found</span>
                 <span className="empty-desc">No tasks available for this campaign yet. Check back later!</span>
-                <button 
+                <button
                   className="btn-primary"
                   onClick={() => router.push('/dashboard/campaigns')}
                 >
@@ -659,14 +659,14 @@ export default function CampaignTasksPage() {
             ) : (
               <div className="tasks-list">
                 {tasks.map((task, index) => (
-                  <TaskCard 
-                    key={task.id} 
-                    task={task} 
+                  <TaskCard
+                    key={task.id}
+                    task={task}
                     index={index}
-                    onViewDetails={(task) => { 
-                      setModalTask(task); 
-                      setModalOpen(true); 
-                    }} 
+                    onViewDetails={(task) => {
+                      setModalTask(task);
+                      setModalOpen(true);
+                    }}
                   />
                 ))}
               </div>
@@ -675,10 +675,10 @@ export default function CampaignTasksPage() {
         </div>
 
         {/* Task Details Modal */}
-        <TaskDetailsModal 
-          task={modalTask} 
-          isOpen={modalOpen} 
-          onClose={() => setModalOpen(false)} 
+        <TaskDetailsModal
+          task={modalTask}
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
           onStartTask={(taskId) => {
             setModalOpen(false);
             handleStartTask(taskId);

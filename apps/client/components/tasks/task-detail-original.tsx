@@ -17,20 +17,20 @@ function TwitterHandleAlert({ onClose, onGoToProfile }: { onClose: () => void; o
             <h3 className="text-xl font-bold text-white">Twitter Handle Required</h3>
           </div>
         </div>
-        
+
         {/* Body */}
         <div className="p-6 space-y-4">
           <p className="text-gray-300 leading-relaxed">
             You need to add your <span className="text-purple-400 font-semibold">Twitter/X username</span> to your profile before you can submit tasks.
           </p>
-          
+
           <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-4">
             <p className="text-sm text-purple-300">
               💡 This is required for task verification and reward distribution.
             </p>
           </div>
         </div>
-        
+
         {/* Footer */}
         <div className="p-6 bg-[#15192A] border-t border-purple-500/20 flex gap-3">
           <button
@@ -57,7 +57,7 @@ function TwitterHandleAlert({ onClose, onGoToProfile }: { onClose: () => void; o
 function getPlatformLogo(url: string): { icon: string; color: string } {
   try {
     const hostname = new URL(url).hostname.toLowerCase()
-    
+
     // Social Media Platforms
     if (hostname.includes('twitter.com') || hostname.includes('x.com')) {
       return {
@@ -119,7 +119,7 @@ function getPlatformLogo(url: string): { icon: string; color: string } {
         color: 'from-gray-800 to-black'
       }
     }
-    
+
     // Default fallback
     return {
       icon: `https://www.google.com/s2/favicons?domain=${hostname}&sz=128`,
@@ -253,23 +253,23 @@ export default function TaskDetailView({ task, userId }: Props) {
       // ✅ Check if Twitter username is set before submission
       console.log('🔍 Checking Twitter username...')
       const profileResponse = await fetch('/api/profile')
-      
+
       if (!profileResponse.ok) {
         console.error('❌ Failed to fetch profile')
         alert('Failed to verify your profile. Please try again.')
         return
       }
-      
+
       const profile = await profileResponse.json()
       console.log('👤 Profile data:', profile)
-      
+
       if (!profile.twitterUsername) {
         console.log('⚠️ No Twitter username found, showing alert')
         // Show custom alert dialog
         setShowTwitterAlert(true)
         return
       }
-      
+
       console.log('✅ Twitter username exists:', profile.twitterUsername)
 
       // Check if this subtask requires proof upload and file is missing
@@ -282,14 +282,15 @@ export default function TaskDetailView({ task, userId }: Props) {
       const formData = new FormData()
       formData.append('taskId', task.id)
       formData.append('userId', userId)
-      
+
       // ✅ ALWAYS include subTaskId for individual subtask submissions
       formData.append('subTaskId', subtask.id)
       console.log('🔵 Frontend - Submitting subtask:', subtask.id, subtask.title)
 
       // Add uploaded file if exists
-      if (uploadedFiles[subtask.id]) {
-        formData.append('proofFile', uploadedFiles[subtask.id])
+      const file = uploadedFiles[subtask.id]
+      if (file) {
+        formData.append('proofFile', file)
         console.log('📎 Frontend - Including uploaded file')
       }
 
@@ -314,7 +315,7 @@ export default function TaskDetailView({ task, userId }: Props) {
 
       // ✅ Check verification method and show appropriate message
       const isAIVerified = task.verificationMethod?.includes('AI_AUTO') || task.verificationMethod?.includes('AUTO')
-      
+
       if (isAIVerified) {
         console.log('🤖 AI Verification: Subtask will be automatically verified')
         alert(`✅ Subtask "${subtask.title}" submitted successfully!\n\n🤖 AI is verifying your submission automatically. XP will be credited shortly.`)
@@ -322,9 +323,9 @@ export default function TaskDetailView({ task, userId }: Props) {
         console.log('👤 Manual Verification: Subtask requires admin review')
         alert(`✅ Subtask "${subtask.title}" submitted successfully!\n\n👤 Your submission is pending manual review. XP will be credited after approval (typically within 24-48 hours).`)
       }
-      
+
       // Mark subtask as completed in UI
-      setSubtasks(prev => prev.map(st => 
+      setSubtasks(prev => prev.map(st =>
         st.id === subtask.id ? { ...st, isCompleted: true } : st
       ))
 
@@ -349,7 +350,7 @@ export default function TaskDetailView({ task, userId }: Props) {
       )}
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-        
+
         {/* Hero Section with Gradient Background */}
         <div className="relative mb-8 rounded-3xl overflow-hidden bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-8 md:p-12">
           {/* Decorative Pattern Overlay */}
@@ -359,7 +360,7 @@ export default function TaskDetailView({ task, userId }: Props) {
               backgroundSize: '40px 40px'
             }}></div>
           </div>
-          
+
           {/* Content */}
           <div className="relative z-10">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
@@ -373,7 +374,7 @@ export default function TaskDetailView({ task, userId }: Props) {
 
         {/* Info Bar */}
         <div className="flex flex-wrap items-center gap-4 md:gap-6 bg-gray-900/50 backdrop-blur-sm rounded-2xl px-6 py-4 mb-8 border border-gray-800/50">
-          
+
           {/* Status Badge */}
           <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 border border-green-500/30 rounded-full">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
@@ -399,10 +400,10 @@ export default function TaskDetailView({ task, userId }: Props) {
           {/* ✅ Verification Method Badge */}
           {task.verificationMethod && (
             <>
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border" 
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border"
                 style={{
-                  backgroundColor: task.verificationMethod.includes('AI_AUTO') || task.verificationMethod.includes('AUTO') 
-                    ? 'rgba(59, 130, 246, 0.1)' 
+                  backgroundColor: task.verificationMethod.includes('AI_AUTO') || task.verificationMethod.includes('AUTO')
+                    ? 'rgba(59, 130, 246, 0.1)'
                     : 'rgba(168, 85, 247, 0.1)',
                   borderColor: task.verificationMethod.includes('AI_AUTO') || task.verificationMethod.includes('AUTO')
                     ? 'rgba(59, 130, 246, 0.3)'
@@ -449,24 +450,24 @@ export default function TaskDetailView({ task, userId }: Props) {
               Complete all tasks to unlock rewards
             </div>
           </div>
-          
+
           {subtasks.length > 0 ? (
             <div className="grid gap-8">
               {subtasks.map((subtask, index) => {
                 const platformInfo = subtask.link ? getPlatformLogo(subtask.link) : null
                 const isUploadProof = subtask.isUploadProof || subtask.title.toLowerCase().includes('upload proof')
                 const hasUploadedFile = uploadedFiles[subtask.id]
-                
+
                 return (
                   <div
                     key={subtask.id}
                     className="group relative bg-gradient-to-r from-gray-900 to-gray-900/50 backdrop-blur-sm rounded-2xl border border-gray-800/50 hover:border-purple-500/50 transition-all duration-300 overflow-hidden mb-6 last:mb-0"
                   >
                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-cyan-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    
+
                     <div className="relative p-6">
                       <div className="flex items-center gap-6">
-                        
+
                         {/* Left: Icon */}
                         <div className="flex-shrink-0">
                           {isUploadProof ? (
@@ -503,7 +504,7 @@ export default function TaskDetailView({ task, userId }: Props) {
                             </div>
                           )}
                         </div>
-                        
+
                         {/* Middle: Task Info */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-3 mb-2">
@@ -511,11 +512,11 @@ export default function TaskDetailView({ task, userId }: Props) {
                               Task {index + 1}
                             </span>
                           </div>
-                          
+
                           <h3 className="text-xl md:text-2xl font-bold text-white mb-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-cyan-400 group-hover:to-purple-400 transition-all duration-300">
                             {subtask.title}
                           </h3>
-                          
+
                           {/* Link for non-upload subtasks */}
                           {!isUploadProof && subtask.link && (
                             <a
@@ -544,10 +545,10 @@ export default function TaskDetailView({ task, userId }: Props) {
                                   />
                                   <div className="flex-1">
                                     <p className="text-sm text-green-400 font-medium">
-                                      {uploadedFiles[subtask.id].name}
+                                      {uploadedFiles[subtask.id]?.name}
                                     </p>
                                     <p className="text-xs text-gray-500">
-                                      {(uploadedFiles[subtask.id].size / 1024).toFixed(1)} KB
+                                      {((uploadedFiles[subtask.id]?.size || 0) / 1024).toFixed(1)} KB
                                     </p>
                                   </div>
                                   <button
@@ -574,7 +575,7 @@ export default function TaskDetailView({ task, userId }: Props) {
                             </div>
                           )}
                         </div>
-                        
+
                         {/* Right: XP Badge and Action */}
                         <div className="flex-shrink-0 flex items-center gap-4">
                           <div className="text-right">
@@ -588,7 +589,7 @@ export default function TaskDetailView({ task, userId }: Props) {
                               XP
                             </div>
                           </div>
-                          
+
                           {/* Submit Button for Each Subtask */}
                           {subtask.isCompleted ? (
                             <div className="px-6 py-3 rounded-xl bg-green-500/20 border border-green-500/50 flex items-center gap-2">
@@ -640,11 +641,10 @@ export default function TaskDetailView({ task, userId }: Props) {
         {/* Info message - Updated with verification method info */}
         <div className="mt-8 space-y-4">
           {task.verificationMethod && (
-            <div className={`border rounded-xl p-4 ${
-              task.verificationMethod.includes('AI_AUTO') || task.verificationMethod.includes('AUTO')
-                ? 'bg-blue-500/10 border-blue-500/30'
-                : 'bg-purple-500/10 border-purple-500/30'
-            }`}>
+            <div className={`border rounded-xl p-4 ${task.verificationMethod.includes('AI_AUTO') || task.verificationMethod.includes('AUTO')
+              ? 'bg-blue-500/10 border-blue-500/30'
+              : 'bg-purple-500/10 border-purple-500/30'
+              }`}>
               {task.verificationMethod.includes('AI_AUTO') || task.verificationMethod.includes('AUTO') ? (
                 <div className="flex items-start gap-3">
                   <svg className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -672,7 +672,7 @@ export default function TaskDetailView({ task, userId }: Props) {
               )}
             </div>
           )}
-          
+
           <div className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-4">
             <p className="text-sm text-gray-300 text-center">
               💡 Submit each subtask individually to track your progress and earn XP rewards

@@ -32,7 +32,7 @@ export async function GET(
       // Check if user is a participant (for joined campaigns) or if campaign is public
       const userParticipation = campaign.CampaignParticipation[0]
       const isParticipant = userParticipation?.status === 'APPROVED'
-      
+
       if (!isParticipant && campaign.status !== 'ACTIVE') {
         return NextResponse.json(
           { error: "Access denied. You must join this campaign to view tasks." },
@@ -42,7 +42,7 @@ export async function GET(
 
       // Fetch tasks for this campaign
       const tasks = await prisma.task.findMany({
-        where: { 
+        where: {
           campaignId: campaignId,
           status: 'active'
         },
@@ -51,7 +51,7 @@ export async function GET(
 
       // If user is a participant, get their submission status for each task
       let tasksWithStatus = tasks
-      
+
       if (isParticipant) {
         const userSubmissions = await prisma.taskSubmission.findMany({
           where: {
@@ -87,6 +87,7 @@ export async function GET(
             evidenceMode: 'manual', // Default
             approvalWorkflow: task.verificationMethod?.includes('AUTO') ? 'auto' : 'manual',
             status: task.status, // Use the actual task status from database
+            isActive: task.isActive,
             submissionStatus: submission?.status,
             submittedAt: submission?.submittedAt?.toISOString(),
             rejectionReason: undefined, // Not available in current schema
@@ -115,6 +116,7 @@ export async function GET(
           evidenceMode: 'manual',
           approvalWorkflow: task.verificationMethod?.includes('AUTO') ? 'auto' : 'manual',
           status: task.status, // Use the actual task status from database
+          isActive: task.isActive,
           // Add missing required properties
           createdAt: task.createdAt,
           updatedAt: task.updatedAt,

@@ -28,7 +28,7 @@ export default async function EditTaskPage({ params }: EditTaskPageProps) {
           name: true,
         },
       },
-      taskSubTasks: {
+      SubTasks: {
         orderBy: {
           order: 'asc',
         },
@@ -57,7 +57,7 @@ export default async function EditTaskPage({ params }: EditTaskPageProps) {
     ...task,
     createdAt: task.createdAt,
     updatedAt: task.updatedAt,
-    taskSubTasks: task.taskSubTasks.map(subtask => ({
+    SubTasks: task.SubTasks.map(subtask => ({
       ...subtask,
       createdAt: subtask.createdAt,
       updatedAt: subtask.updatedAt,

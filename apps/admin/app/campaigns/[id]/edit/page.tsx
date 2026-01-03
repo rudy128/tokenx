@@ -22,7 +22,7 @@ export default async function EditCampaignPage({ params }: EditCampaignPageProps
   const campaign = await prisma.campaign.findUnique({
     where: { id },
     include: {
-      User: {
+      Creator: {
         select: {
           id: true,
           name: true,

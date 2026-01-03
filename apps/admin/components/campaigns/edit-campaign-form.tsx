@@ -28,7 +28,7 @@ interface Campaign {
   status: "DRAFT" | "ACTIVE" | "PAUSED" | "COMPLETED" | "CANCELLED"
   createdAt: Date
   updatedAt: Date
-  User: {
+  Creator: {
     id: string
     name: string | null
     email: string

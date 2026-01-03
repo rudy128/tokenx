@@ -23,14 +23,13 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData()
     const taskId = formData.get('taskId') as string
     const subTaskId = formData.get('subTaskId') as string | null  // Optional: for subtask submission
-    const userId = formData.get('userId') as string
     const proofFile = formData.get('proofFile') as File | null
 
     // 🔍 DEBUG: Log what we received
     console.log('📥 API Route - Received FormData:')
     console.log('   Task ID:', taskId)
     console.log('   Subtask ID:', subTaskId)
-    console.log('   User ID:', userId)
+    console.log('   User ID:', session.user.id)
     console.log('   Has Proof File:', !!proofFile)
     console.log('   All FormData keys:', Array.from(formData.keys()))
     console.log('   All FormData entries:', Array.from(formData.entries()).map(([key, value]) => [key, typeof value === 'object' ? '[File]' : value]))
@@ -46,7 +45,8 @@ export async function POST(req: NextRequest) {
     const task = await prisma.task.findUnique({
       where: { id: taskId },
       include: {
-        taskSubTasks: true
+        SubTasks: true,
+        Campaign: true,
       }
     })
 
@@ -61,6 +61,36 @@ export async function POST(req: NextRequest) {
     const user = await prisma.user.findUnique({
       where: { id: session.user.id }
     })
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    if (user.isBanned) {
+      return NextResponse.json({ error: 'Account banned' }, { status: 403 })
+    }
+
+    if (user.role === 'AMBASSADOR' && !user.twitterUsername) {
+      return NextResponse.json(
+        { error: 'Twitter username required. Update your profile before submitting.' },
+        { status: 400 }
+      )
+    }
+
+    const participation = await prisma.campaignParticipation.findFirst({
+      where: {
+        userId: user.id,
+        campaignId: task.campaignId,
+        status: 'APPROVED',
+      },
+    })
+
+    if (!participation) {
+      return NextResponse.json(
+        { error: 'You must join this campaign before submitting tasks.' },
+        { status: 403 }
+      )
+    }
 
     let proofImageUrl: string | null = null
 
@@ -103,7 +133,7 @@ export async function POST(req: NextRequest) {
 
     // 6. If submitting a subtask, validate it exists
     if (subTaskId) {
-      const subTask = task.taskSubTasks?.find((st: any) => st.id === subTaskId)
+      const subTask = task.SubTasks?.find((st: any) => st.id === subTaskId)
       if (!subTask) {
         return NextResponse.json(
           { error: 'Subtask not found' },
@@ -115,7 +145,6 @@ export async function POST(req: NextRequest) {
     // 7. Create task submission
     const submission = await prisma.taskSubmission.create({
       data: {
-        id: randomUUID(),
         taskId: taskId,
         subTaskId: subTaskId || null,
         userId: session.user.id,
@@ -143,7 +172,7 @@ export async function POST(req: NextRequest) {
       console.log('   ✋ SKIPPING auto-verification - Task uses MANUAL verification method')
       console.log('   → This task will require admin review')
     } else if (subTaskId && twitterUsername) {
-      const subTask = task.taskSubTasks?.find((st: any) => st.id === subTaskId)
+      const subTask = task.SubTasks?.find((st: any) => st.id === subTaskId)
       
       if (subTask && isTwitterVerifiableType(subTask.type)) {
         console.log('🤖 ✅ AI-AUTO verification: All conditions met!')

@@ -19,6 +19,20 @@ export async function POST(request: NextRequest) {
 
       console.log("✅ Join Campaign: Valid user found:", dbUser.email)
 
+      if (dbUser.role === "AMBASSADOR" && !dbUser.twitterUsername) {
+        return NextResponse.json({
+          error: "Twitter username required",
+          message: "Add your Twitter/X username in your profile before joining campaigns."
+        }, { status: 400 })
+      }
+
+      if (dbUser.isBanned) {
+        return NextResponse.json({
+          error: "Account banned",
+          message: "Your account is banned. Contact support for assistance."
+        }, { status: 403 })
+      }
+
       const body = await request.json()
       const { campaignId } = body
 

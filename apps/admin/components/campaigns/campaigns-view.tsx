@@ -27,14 +27,14 @@ type Campaign = {
   status: "DRAFT" | "ACTIVE" | "PAUSED" | "COMPLETED" | "CANCELLED"
   createdAt: Date
   updatedAt: Date
-  User: {
+  Creator: {
     id: string
     name: string | null
     email: string
   }
   _count: {
     CampaignParticipation: number
-    Task: number
+    Tasks: number
   }
 }
 
@@ -262,7 +262,7 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
 
       {/* Creator */}
       <div className="admin-campaign-card-creator">
-        <span>By {campaign.User.name || campaign.User.email}</span>
+        <span>By {campaign.Creator.name || campaign.Creator.email}</span>
       </div>
 
       {/* Actions */}

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { auth } from "@/lib/auth"
+import { UserRole } from "@prisma/client"
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -83,8 +84,8 @@ export async function middleware(request: NextRequest) {
   console.log(`✅ Session found for ${pathname}, user: ${session.user.email}`)
 
   // Check if user is admin
-  const user = session.user as { id: string; role?: string }
-  if (user.role !== "ADMIN") {
+  const user = session.user as { id: string; role?: UserRole }
+  if (user.role !== UserRole.ADMIN) {
     // Redirect to unauthorized page or client app
     return NextResponse.redirect(new URL("/unauthorized", request.url))
   }

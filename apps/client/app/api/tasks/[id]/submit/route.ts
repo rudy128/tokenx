@@ -16,9 +16,7 @@ export async function POST(
     }
 
     // Find or create user in database
-    let dbUser = await prisma.user.findUnique({
-      where: { clerkId: user.id }
-    })
+    let dbUser = await prisma.user.findUnique({ where: { clerkId: user.id } })
 
     if (!dbUser) {
       dbUser = await prisma.user.create({
@@ -27,14 +25,24 @@ export async function POST(
           clerkId: user.id,
           email: user.emailAddresses[0]?.emailAddress || 'unknown@example.com',
           name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Unknown User',
-          role: 'AMBASSADOR'
-        }
+          role: 'AMBASSADOR',
+        },
       })
+    }
+
+    if (dbUser.isBanned) {
+      return NextResponse.json({ error: 'Account banned' }, { status: 403 })
+    }
+
+    if (dbUser.role === 'AMBASSADOR' && !dbUser.twitterUsername) {
+      return NextResponse.json(
+        { error: 'Twitter username required. Update your profile before submitting.' },
+        { status: 400 }
+      )
     }
 
     const { twitterHandle, postUrl } = await request.json()
 
-    // Simple validation
     if (!twitterHandle || !postUrl) {
       return NextResponse.json(
         { error: 'Twitter handle and post URL are required' },
@@ -42,12 +50,38 @@ export async function POST(
       )
     }
 
-    // Check if user already submitted this task
-    const existingSubmission = await prisma.newTaskSubmission.findFirst({
+    const task = await prisma.task.findUnique({
+      where: { id: taskId },
+      include: {
+        SubTasks: true,
+        Campaign: true,
+      },
+    })
+
+    if (!task) {
+      return NextResponse.json({ error: 'Task not found' }, { status: 404 })
+    }
+
+    const participation = await prisma.campaignParticipation.findFirst({
+      where: {
+        userId: dbUser.id,
+        campaignId: task.campaignId,
+        status: 'APPROVED',
+      },
+    })
+
+    if (!participation) {
+      return NextResponse.json(
+        { error: 'You must join this campaign before submitting tasks.' },
+        { status: 403 }
+      )
+    }
+
+    const existingSubmission = await prisma.taskSubmission.findFirst({
       where: {
         taskId,
-        userId: dbUser.id
-      }
+        userId: dbUser.id,
+      },
     })
 
     if (existingSubmission) {
@@ -57,28 +91,20 @@ export async function POST(
       )
     }
 
-    // Get task details for verification
-    const task = await prisma.newTask.findUnique({
-      where: { id: taskId }
-    })
-
-    // Save submission to database
-    const submission = await prisma.newTaskSubmission.create({
+    const submission = await prisma.taskSubmission.create({
       data: {
         taskId,
         userId: dbUser.id,
-        status: 'submitted',
+        status: 'PENDING',
         evidence: {
           twitterHandle,
-          postUrl
-        }
-      }
+          postUrl,
+        },
+      },
     })
 
-    // Start Twitter verification in background (non-blocking)
     if (task) {
       console.log(`📝 Starting verification for task: ${task.name}, submission ID: ${submission.id}`)
-      // Determine task type from task name (you can improve this logic)
       const taskType = task.name.toLowerCase().includes('like') ? 'LIKE' as TaskType :
                       task.name.toLowerCase().includes('retweet') ? 'RT' as TaskType :
                       task.name.toLowerCase().includes('comment') ? 'CMNT' as TaskType :
@@ -97,8 +123,8 @@ export async function POST(
         taskId,
         twitterHandle,
         postUrl,
-        status: 'submitted'
-      }
+        status: submission.status,
+      },
     })
 
   } catch (error) {
@@ -122,29 +148,29 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const dbUser = await prisma.user.findUnique({
-      where: { clerkId: user.id }
-    })
+    const dbUser = await prisma.user.findUnique({ where: { clerkId: user.id } })
 
     if (!dbUser) {
       return NextResponse.json({ data: null })
     }
 
-    const submission = await prisma.newTaskSubmission.findFirst({
+    const submission = await prisma.taskSubmission.findFirst({
       where: {
         taskId,
-        userId: dbUser.id
-      }
+        userId: dbUser.id,
+      },
     })
 
     return NextResponse.json({
       success: true,
-      data: submission ? {
-        id: submission.id,
-        status: submission.status,
-        evidence: submission.evidence,
-        submittedAt: submission.createdAt
-      } : null
+      data: submission
+        ? {
+            id: submission.id,
+            status: submission.status,
+            evidence: submission.evidence,
+            submittedAt: submission.createdAt,
+          }
+        : null,
     })
 
   } catch (error) {

@@ -1,0 +1,462 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ORGANIZATION MODELS
+// ============================================
+
+model Organization {
+  id               String              @id @default(cuid())
+  name             String
+  description      String?
+  website          String?
+  logo             String?
+  status           OrganizationStatus  @default(ACTIVE)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  members          OrganizationMember[]
+  campaigns        Campaign[]
+  tasks            Task[]
+
+  @@map("organizations")
+}
+
+model OrganizationMember {
+  id             String           @id @default(cuid())
+  userId         String
+  organizationId String
+  role           OrganizationRole @default(ORG_MEMBER)
+  joinedAt       DateTime         @default(now())
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@index([organizationId])
+  @@index([userId])
+  @@map("organization_members")
+}
+
+// ============================================
+// AUTHENTICATION MODELS
+// ============================================
+
+model Account {
+  id                String          @id
+  userId            String
+  type              String
+  provider          AuthProvider
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  User              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  User         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Session {
+  id           String   @id
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  User         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// USER MODEL
+// ============================================
+
+model User {
+  id                    String                  @id
+  clerkId               String?                 @unique
+  name                  String?
+  email                 String                  @unique
+  emailVerified         DateTime?
+  image                 String?
+  role                  UserRole                @default(AMBASSADOR)
+  walletAddress         String?                 @unique
+  twitterUsername       String?
+  tier                  Tier                    @default(BRONZE)
+  xp                    Int                     @default(0)
+  tokenBalance          Float                   @default(0)
+  usdtBalance           Float                   @default(0)
+  lastSignedIn          DateTime?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  Account               Account[]
+  Session               Session[]
+  CampaignParticipation CampaignParticipation[]
+  TaskSubmission        TaskSubmission[]
+  VerificationAction    VerificationAction[]
+  PinnedTasks           UserPinnedTask[]
+  OrganizationMember    OrganizationMember[]
+  CreatedCampaigns      Campaign[]              @relation("CampaignCreator")
+  CreatedTasks          Task[]                  @relation("TaskCreator")
+}
+
+// ============================================
+// CAMPAIGN MODELS
+// ============================================
+
+model Campaign {
+  id                    String                  @id @default(cuid())
+  name                  String
+  description           String
+  startDate             DateTime
+  endDate               DateTime
+  participantLimit      Int?
+  eligibilityCriteria   String?
+  rewardPool            Float
+  rewardToken           RewardToken             @default(USDT)
+  status                CampaignStatus          @default(DRAFT)
+  createdById           String
+  createdByRole         CreatorRole             @default(ADMIN)
+  organizationId        String?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  Creator               User                    @relation("CampaignCreator", fields: [createdById], references: [id])
+  Organization          Organization?           @relation(fields: [organizationId], references: [id])
+  CampaignParticipation CampaignParticipation[]
+  Tasks                 Task[]
+
+  @@index([createdAt], map: "idx_campaign_createdAt")
+  @@index([status], map: "idx_campaign_status")
+  @@index([status, createdAt], map: "idx_campaign_status_createdAt")
+  @@index([organizationId])
+}
+
+  @@index([createdAt], map: "idx_campaign_createdAt")
+  @@index([status], map: "idx_campaign_status")
+  @@index([status, createdAt], map: "idx_campaign_status_createdAt")
+  @@index([organizationId])
+}
+
+model CampaignParticipation {
+  id         String              @id @default(cuid())
+  userId     String
+  campaignId String
+  status     ParticipationStatus @default(PENDING)
+  joinedAt   DateTime            @default(now())
+  Campaign   Campaign            @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  User       User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, campaignId])
+  @@index([campaignId])
+  @@index([userId])
+}
+
+// ============================================
+// TASK MODELS (Consolidated)
+// ============================================
+
+model Task {
+  id                 String             @id @default(uuid()) @db.Uuid
+  campaignId         String
+  name               String
+  description        String?
+  instructions       String?
+  category           TaskCategory       @default(CUSTOM)
+  taskType           TaskType           @default(GENERAL)
+  xpReward           Int
+  rewardOverride     Boolean            @default(false)
+  rewardToken        RewardToken?
+  rewardAmount       Decimal?           @db.Decimal(18, 6)
+  verificationMethod VerificationMethod @default(MANUAL)
+  evidenceMode       EvidenceMode       @default(manual)
+  approvalWorkflow   ApprovalWorkflow   @default(manual)
+  requirements       Json?
+  requiredFields     Json?
+  exampleProofUrls   Json?
+  status             TaskStatus         @default(draft)
+  frequency          TaskFrequency      @default(one_time)
+  perUserCap         Int?
+  globalCap          Int?
+  availableFrom      DateTime?          @db.Timestamptz(6)
+  availableTo        DateTime?          @db.Timestamptz(6)
+  submissionCutoff   DateTime?          @db.Timestamptz(6)
+  gracePeriodHours   Int?
+  uniqueContent      Boolean            @default(true)
+  minAccountAgeDays  Int?
+  minFollowers       Int?
+  ipAnomalyCheck     Boolean            @default(false)
+  deviceAnomalyCheck Boolean            @default(false)
+  isActive           Boolean            @default(true)
+  createdById        String
+  createdByRole      CreatorRole        @default(ADMIN)
+  organizationId     String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  Campaign           Campaign           @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  Creator            User               @relation("TaskCreator", fields: [createdById], references: [id])
+  Organization       Organization?      @relation(fields: [organizationId], references: [id])
+  TaskSubmissions    TaskSubmission[]
+  SubTasks           SubTask[]
+  PinnedByUsers      UserPinnedTask[]
+
+  @@index([campaignId])
+  @@index([status])
+  @@index([organizationId])
+  @@map("tasks")
+}
+
+model SubTask {
+  id            String      @id @default(cuid())
+  taskId        String      @db.Uuid
+  title         String
+  description   String?
+  link          String?
+  xpReward      Int         @default(0)
+  order         Int         @default(0)
+  isCompleted   Boolean     @default(false)
+  isUploadProof Boolean     @default(false)
+  type          SubTaskType @default(X_TWEET)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  Task          Task        @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@map("subtasks")
+}
+
+model TaskSubmission {
+  id                 String               @id @default(cuid())
+  userId             String
+  taskId             String               @db.Uuid
+  subTaskId          String?
+  status             SubmissionStatus     @default(PENDING)
+  evidence           Json?
+  proofUrl           String?
+  proofImageUrl      String?
+  screenshot         String?
+  description        String?
+  xpAwarded          Int?
+  bonusAwarded       Decimal?             @db.Decimal(18, 6)
+  rejectionReason    String?
+  submittedAt        DateTime?
+  processedAt        DateTime?
+  reviewedAt         DateTime?
+  reviewedBy         String?
+  reviewNotes        String?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  Task               Task                 @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  User               User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  VerificationAction VerificationAction[]
+
+  @@unique([taskId, userId, subTaskId])
+  @@index([taskId])
+  @@index([userId])
+  @@index([status])
+  @@index([subTaskId])
+  @@map("task_submissions")
+}
+
+model UserPinnedTask {
+  userId   String
+  taskId   String   @db.Uuid
+  pinnedAt DateTime @default(now())
+  Task     Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  User     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, taskId])
+  @@map("user_pinned_tasks")
+}
+
+model VerificationAction {
+  id             String         @id @default(cuid())
+  submissionId   String
+  reviewerId     String
+  action         ReviewAction
+  comment        String?
+  reviewedAt     DateTime       @default(now())
+  User           User           @relation(fields: [reviewerId], references: [id])
+  TaskSubmission TaskSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@index([submissionId])
+  @@index([reviewerId])
+}
+
+  @@index([submissionId])
+  @@index([reviewerId])
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+// Organization Enums
+enum OrganizationStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum OrganizationRole {
+  ORG_OWNER
+  ORG_ADMIN
+  ORG_MANAGER
+  ORG_MEMBER
+}
+
+// User & Authentication Enums
+enum UserRole {
+  ADMIN
+  AMBASSADOR
+  ORGANIZATION
+}
+
+enum AuthProvider {
+  google
+  twitter
+  discord
+  github
+  credentials
+}
+
+enum Tier {
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+  DIAMOND
+}
+
+// Campaign Enums
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum ParticipationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum RewardToken {
+  USDT
+  USDC
+  ETH
+  MATIC
+  BNB
+  SOL
+  AVAX
+  ARB
+}
+
+enum CreatorRole {
+  ADMIN
+  ORGANIZATION
+}
+
+// Task Enums
+enum TaskStatus {
+  draft
+  active
+  archived
+  completed
+  cancelled
+}
+
+enum TaskCategory {
+  SOCIAL_ENGAGEMENT
+  CONTENT_CREATION
+  COMMUNITY_BUILDING
+  REFERRAL
+  CUSTOM
+}
+
+enum TaskType {
+  GENERAL
+  SOCIAL_MEDIA
+  CONTENT_CREATION
+  TECHNICAL
+  FEEDBACK
+  BUSINESS_DEVELOPMENT
+  COMMUNITY_MANAGEMENT
+  EVENT_MANAGEMENT
+  REFERRAL
+  CUSTOM
+}
+
+enum TaskFrequency {
+  one_time
+  daily
+  weekly
+  monthly
+  recurring
+}
+
+enum VerificationMethod {
+  AI_AUTO
+  MANUAL
+  HYBRID
+}
+
+enum EvidenceMode {
+  auto
+  manual
+}
+
+enum ApprovalWorkflow {
+  auto
+  manual
+}
+
+// Submission Enums
+enum SubmissionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  NEEDS_CLARIFICATION
+  IN_PROGRESS
+}
+
+enum ReviewAction {
+  APPROVE
+  REJECT
+  REQUEST_CLARIFICATION
+}
+
+// SubTask Enums
+enum SubTaskType {
+  X_LIKE
+  X_COMMENT
+  X_SHARE
+  X_SPACE_HOST
+  X_QUOTE
+  X_RETWEET
+  X_TWEET
+  X_FOLLOW
+  X_CUSTOM
+  DISCORD_JOIN
+  DISCORD_MESSAGE
+  TELEGRAM_JOIN
+  TELEGRAM_MESSAGE
+  YOUTUBE_SUBSCRIBE
+  YOUTUBE_LIKE
+  YOUTUBE_COMMENT
+  CUSTOM
+}

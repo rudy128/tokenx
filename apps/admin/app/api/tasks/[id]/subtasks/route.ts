@@ -33,7 +33,7 @@ export async function POST(
     }
 
     // Create subtask
-    const subtask = await prisma.taskSubTask.create({
+    const subtask = await prisma.subTask.create({
       data: {
         taskId,
         title: title.trim(),

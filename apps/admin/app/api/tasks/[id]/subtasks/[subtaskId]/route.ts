@@ -13,7 +13,7 @@ export async function PATCH(
     const { title, description, link, xpReward, order, type } = body
 
     // Check if subtask exists
-    const existingSubtask = await prisma.taskSubTask.findUnique({
+    const existingSubtask = await prisma.subTask.findUnique({
       where: { id: subtaskId },
     })
 
@@ -25,7 +25,7 @@ export async function PATCH(
     }
 
     // Update subtask
-    const updatedSubtask = await prisma.taskSubTask.update({
+    const updatedSubtask = await prisma.subTask.update({
       where: { id: subtaskId },
       data: {
         ...(title !== undefined && { title: title.trim() }),
@@ -56,7 +56,7 @@ export async function DELETE(
     const { subtaskId } = await params
 
     // Check if subtask exists
-    const existingSubtask = await prisma.taskSubTask.findUnique({
+    const existingSubtask = await prisma.subTask.findUnique({
       where: { id: subtaskId },
     })
 
@@ -68,7 +68,7 @@ export async function DELETE(
     }
 
     // Delete subtask
-    await prisma.taskSubTask.delete({
+    await prisma.subTask.delete({
       where: { id: subtaskId },
     })
 

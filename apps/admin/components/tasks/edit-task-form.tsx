@@ -45,7 +45,7 @@ interface Task {
     id: string
     name: string
   }
-  taskSubTasks: TaskSubTask[]
+  SubTasks: TaskSubTask[]
 }
 
 interface Campaign {

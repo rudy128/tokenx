@@ -13,7 +13,7 @@ export default async function CampaignsPage() {
   // Fetch all campaigns with creator info and counts
   const campaignsData = await prisma.campaign.findMany({
     include: {
-      User: {
+      Creator: {
         select: {
           id: true,
           name: true,
@@ -23,7 +23,7 @@ export default async function CampaignsPage() {
       _count: {
         select: {
           CampaignParticipation: true,
-          Task: true,
+          Tasks: true,
         },
       },
     },

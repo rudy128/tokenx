@@ -18,18 +18,18 @@ export default async function CampaignViewPage({ params }: { params: Promise<{ i
       id,
     },
     include: {
-      User: {
+      Creator: {
         select: {
           id: true,
           name: true,
           email: true,
         },
       },
-      Task: {
+      Tasks: {
         include: {
           _count: {
             select: {
-              TaskSubmission: true,
+              TaskSubmissions: true,
             },
           },
         },
@@ -55,7 +55,7 @@ export default async function CampaignViewPage({ params }: { params: Promise<{ i
       _count: {
         select: {
           CampaignParticipation: true,
-          Task: true,
+          Tasks: true,
         },
       },
     },
@@ -72,7 +72,7 @@ export default async function CampaignViewPage({ params }: { params: Promise<{ i
     endDate: campaign.endDate,
     createdAt: campaign.createdAt,
     updatedAt: campaign.updatedAt,
-    Task: campaign.Task.map(task => ({
+    Tasks: campaign.Tasks.map(task => ({
       ...task,
       createdAt: task.createdAt,
       updatedAt: task.updatedAt,

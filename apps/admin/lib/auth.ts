@@ -4,6 +4,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "./prisma"
 import CredentialsProvider from "next-auth/providers/credentials"
 import bcrypt from "bcryptjs"
+import { UserRole } from "@prisma/client"
 
 // Extend the session type to include role
 declare module "next-auth" {
@@ -13,7 +14,7 @@ declare module "next-auth" {
       name?: string | null
       email?: string | null
       image?: string | null
-      role?: string
+      role?: UserRole
     }
   }
 }
@@ -66,7 +67,7 @@ export const authConfig: NextAuthConfig = {
           }
 
           // Check if user is admin
-          if (user.role !== "ADMIN") {
+          if (user.role !== UserRole.ADMIN) {
             console.log("❌ User is not an admin")
             return null
           }
@@ -98,14 +99,14 @@ export const authConfig: NextAuthConfig = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
-        token.role = (user as { id: string; role?: string }).role
+        token.role = (user as { id: string; role?: UserRole }).role
       }
       return token
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string
-        session.user.role = token.role as string
+        session.user.role = token.role as UserRole
       }
       return session
     },

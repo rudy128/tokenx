@@ -22,13 +22,13 @@ import { formatDate } from "@/lib/utils"
 type Task = {
   id: string
   name: string
-  description: string
+  description: string | null
   xpReward: number
   category: string
   status: string
   createdAt: Date
   _count: {
-    TaskSubmission: number
+    TaskSubmissions: number
   }
 }
 
@@ -57,16 +57,16 @@ type Campaign = {
   status: "DRAFT" | "ACTIVE" | "PAUSED" | "COMPLETED" | "CANCELLED"
   createdAt: Date
   updatedAt: Date
-  User: {
+  Creator: {
     id: string
     name: string | null
     email: string
   }
-  Task: Task[]
+  Tasks: Task[]
   CampaignParticipation: Participant[]
   _count: {
     CampaignParticipation: number
-    Task: number
+    Tasks: number
   }
 }
 
@@ -339,7 +339,7 @@ export default function CampaignDetailView({ campaign }: CampaignDetailViewProps
             <div className="admin-campaign-info-item">
               <span className="admin-campaign-info-label">Created By</span>
               <span className="admin-campaign-info-value">
-                {campaign.User.name || campaign.User.email}
+                {campaign.Creator.name || campaign.Creator.email}
               </span>
             </div>
             <div className="admin-campaign-info-item">

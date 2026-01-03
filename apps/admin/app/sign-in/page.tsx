@@ -2,12 +2,11 @@
 
 import { useState, Suspense } from "react"
 import { signIn } from "next-auth/react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import { Shield, Eye, EyeOff, Loader2 } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 
 function SignInForm() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard"
 

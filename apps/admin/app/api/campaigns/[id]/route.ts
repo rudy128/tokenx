@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { UserRole } from "@prisma/client"
 
 interface RouteParams {
   params: Promise<{
@@ -27,8 +28,8 @@ export async function PATCH(
     }
 
     // Check if user is admin
-    const user = session.user as { id: string; role?: string }
-    if (user.role !== "ADMIN") {
+    const user = session.user as { id: string; role?: UserRole }
+    if (user.role !== UserRole.ADMIN) {
       return NextResponse.json(
         { error: "Forbidden - Admin access required" },
         { status: 403 }
@@ -100,7 +101,7 @@ export async function PATCH(
         updatedAt: new Date(),
       },
       include: {
-        User: {
+        Creator: {
           select: {
             id: true,
             name: true,
@@ -147,8 +148,8 @@ export async function DELETE(
     }
 
     // Check if user is admin
-    const user = session.user as { id: string; role?: string }
-    if (user.role !== "ADMIN") {
+    const user = session.user as { id: string; role?: UserRole }
+    if (user.role !== UserRole.ADMIN) {
       return NextResponse.json(
         { error: "Forbidden - Admin access required" },
         { status: 403 }
@@ -162,7 +163,7 @@ export async function DELETE(
         _count: {
           select: {
             CampaignParticipation: true,
-            Task: true,
+            Tasks: true,
           },
         },
       },
@@ -183,7 +184,7 @@ export async function DELETE(
       )
     }
 
-    if (existingCampaign._count.Task > 0) {
+    if (existingCampaign._count.Tasks > 0) {
       return NextResponse.json(
         { error: "Cannot delete campaign with tasks. Consider marking it as cancelled instead." },
         { status: 400 }
@@ -234,7 +235,7 @@ export async function GET(
     const campaign = await prisma.campaign.findUnique({
       where: { id },
       include: {
-        User: {
+        Creator: {
           select: {
             id: true,
             name: true,
@@ -244,7 +245,7 @@ export async function GET(
         _count: {
           select: {
             CampaignParticipation: true,
-            Task: true,
+            Tasks: true,
           },
         },
       },

@@ -157,12 +157,20 @@ export default async function CampaignsPage() {
                         {campaign.rewardPool.toLocaleString()} {campaign.rewardToken}
                       </td>
                       <td className="px-6 py-4">
-                        <Link 
-                          href={`/dashboard/campaigns/${campaign.id}`}
-                          className="text-primary hover:underline text-sm font-medium"
-                        >
-                          View
-                        </Link>
+                        <div className="flex items-center gap-3">
+                          <Link 
+                            href={`/dashboard/campaigns/${campaign.id}`}
+                            className="text-primary hover:underline text-sm font-medium"
+                          >
+                            View
+                          </Link>
+                          <Link 
+                            href={`/dashboard/campaigns/${campaign.id}/edit`}
+                            className="text-blue-600 hover:underline text-sm font-medium dark:text-blue-400"
+                          >
+                            Edit
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   ))}

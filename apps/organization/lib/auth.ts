@@ -108,7 +108,7 @@ export const authOptions: NextAuthOptions = {
           console.log("✅ Organization member authenticated successfully");
 
           return {
-            id: member.id,
+            id: member.user.id, // Use user.id for foreign key compatibility
             email: member.user.email,
             organizationId: member.organizationId,
             role: member.role,

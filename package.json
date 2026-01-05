@@ -51,7 +51,7 @@
     "radix-ui": "^1.4.3",
     "react-dialog": "^1.0.2",
     "react-icons": "^5.5.0",
-    "tailwind-merge": "^2.5.5",
+    "tailwind-merge": "^2.6.0",
     "tailwindcss": "^4.1.14",
     "types": "link:next-auth/core/types"
   },

@@ -1,8 +1,8 @@
-import type { NextConfig } from 'next'
+import type { NextConfig } from "next";
 
-const config: NextConfig = {
-  reactStrictMode: true,
-  transpilePackages: ['@repo/ui', '@repo/prisma'],
-}
+const nextConfig: NextConfig = {
+  /* config options here */
+  reactCompiler: true,
+};
 
-export default config
+export default nextConfig;

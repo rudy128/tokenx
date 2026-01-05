@@ -1,8 +1,7 @@
-import { postcss } from 'next/dist/compiled/postcss'
-
-module.exports = {
+const config = {
   plugins: {
-    tailwindcss: {},
-    autoprefixer: {},
+    "@tailwindcss/postcss": {},
   },
-}
+};
+
+export default config;

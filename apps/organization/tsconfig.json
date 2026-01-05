@@ -19,7 +19,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@repo/prisma": ["../../packages/prisma/src"]
     }
   },
   "include": [

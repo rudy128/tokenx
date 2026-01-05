@@ -41,6 +41,7 @@ model OrganizationMember {
   organizationId String
   role           String       @default("member") // Dynamic role name set by organization
   permissions    Json?
+  passwordHash   String?      // For organization app authentication
   joinedAt       DateTime     @default(now())
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -92,6 +93,7 @@ model User {
   email                 String                  @unique
   emailVerified         DateTime?
   image                 String?
+  password              String?                 // For credentials-based authentication
   role                  UserRole                @default(AMBASSADOR)
   walletAddress         String?                 @unique
   twitterUsername       String?

@@ -1,91 +1,28 @@
-import { redirect } from "next/navigation";
-import { getOrganizationSession } from "@/lib/session";
-import { DashboardLayout } from "@/components/dashboard-layout";
-import { prisma } from "@repo/prisma";
-import { ReviewDialog } from "@/components/submissions/review-dialog";
+"use client";
 
-export default async function SubmissionsPage() {
-  const session = await getOrganizationSession();
-  
-  if (!session) {
-    redirect("/sign-in");
-  }
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@repo/ui/dialog";
+import { Button } from "@repo/ui/button";
+import { Separator } from "@repo/ui/separator";
 
-  const organization = await prisma.organization.findUnique({
-    where: { id: session.user.organizationId },
-  });
+interface Props {
+  submissions: any[]; // Using any for now to match the complex prisma return type quickly, ideally should be defined type
+}
 
-  // Fetch submissions related to tasks created by this organization
-  const submissions = await prisma.taskSubmission.findMany({
-    where: {
-      Task: {
-        organizationId: session.user.organizationId
-      }
-    },
-    include: {
-      Task: {
-        select: {
-          id: true,
-          name: true,
-          taskType: true,
-          xpReward: true,
-          campaignId: true,
-          Campaign: {
-            select: {
-              id: true,
-              name: true,
-              description: true,
-              status: true
-            }
-          },
-          SubTasks: {
-            select: {
-              id: true,
-              title: true,
-              xpReward: true,
-              type: true
-            }
-          }
-        }
-      },
-      User: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          image: true,
-          twitterUsername: true,
-          xp: true,
-          createdAt: true
-        }
-      }
-    },
-    orderBy: {
-      submittedAt: 'desc'
-    },
-    take: 50 // Limit for now
-  });
-
-  // Calculate status counts
-  const statusCounts = await prisma.taskSubmission.groupBy({
-    by: ['status'],
-    where: {
-      Task: {
-        organizationId: session.user.organizationId
-      }
-    },
-    _count: true
-  });
+export function SubmissionsClient({ submissions }: Props) {
+  const [selectedSubmission, setSelectedSubmission] = useState<any>(null);
 
   const getStatusCount = (status: string) => 
-    statusCounts.find(c => c.status === status)?._count || 0;
+    submissions.filter(s => s.status === status).length;
 
   return (
-    <DashboardLayout 
-      organizationName={organization?.name}
-      userEmail={session.user.email || undefined}
-    >
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Submissions</h1>
@@ -171,28 +108,6 @@ export default async function SubmissionsPage() {
           </div>
         </div>
 
-        {/* Tabs for filtering */}
-        <div className="border-b">
-          <nav className="flex space-x-8" aria-label="Tabs">
-            <button className="border-b-2 border-primary py-4 px-1 text-sm font-medium text-primary">
-              All
-              <span className="ml-2 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs">0</span>
-            </button>
-            <button className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-border">
-              Pending
-              <span className="ml-2 rounded-full bg-muted px-2.5 py-0.5 text-xs">0</span>
-            </button>
-            <button className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-border">
-              Approved
-              <span className="ml-2 rounded-full bg-muted px-2.5 py-0.5 text-xs">0</span>
-            </button>
-            <button className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-border">
-              Rejected
-              <span className="ml-2 rounded-full bg-muted px-2.5 py-0.5 text-xs">0</span>
-            </button>
-          </nav>
-        </div>
-
         {/* Submissions Table Section */}
         <div className="rounded-lg border bg-card">
           <div className="p-6 border-b">
@@ -261,7 +176,13 @@ export default async function SubmissionsPage() {
                          </div>
                       </td>
                       <td className="p-4 align-middle text-right">
-                         <ReviewDialog submission={item} />
+                         <Button 
+                           variant="outline"
+                           size="sm"
+                           onClick={() => setSelectedSubmission(item)}
+                         >
+                           Review
+                         </Button>
                       </td>
                     </tr>
                   ))
@@ -276,7 +197,113 @@ export default async function SubmissionsPage() {
             </table>
           </div>
         </div>
-      </div>
-    </DashboardLayout>
-  );
+
+      <Dialog open={!!selectedSubmission} onOpenChange={(open) => !open && setSelectedSubmission(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
+          <div className="flex h-full max-h-[90vh]">
+            {/* Left Panel: Submission Details */}
+            <div className="flex-1 p-6 border-r overflow-y-auto">
+              <DialogHeader className="mb-6">
+                <DialogTitle className="text-xl">Submission Review</DialogTitle>
+                <DialogDescription>
+                   Review the details of this specific submission.
+                </DialogDescription>
+              </DialogHeader>
+
+              {selectedSubmission && (
+                <div className="space-y-6">
+                  {/* Task Info */}
+                  <div className="space-y-2">
+                    <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">Task Details</h3>
+                    <div className="rounded-lg bg-muted/50 p-4 space-y-2">
+                       <div>
+                         <span className="text-xs text-muted-foreground">Task Name</span>
+                         <p className="font-medium">{selectedSubmission.Task.name}</p>
+                       </div>
+                       <div>
+                         <span className="text-xs text-muted-foreground">Type</span>
+                         <p className="font-medium capitalize">{selectedSubmission.Task.taskType?.toLowerCase().replace('_', ' ') || 'General'}</p>
+                       </div>
+                       <div>
+                         <span className="text-xs text-muted-foreground">Submitted At</span>
+                         <p className="font-medium">
+                            {new Date(selectedSubmission.submittedAt).toLocaleString()}
+                         </p>
+                       </div>
+                    </div>
+                  </div>
+                  
+                  {/* Submission Evidence */}
+                  <div className="space-y-2">
+                    <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">Evidence</h3>
+                    <div className="rounded-lg border bg-background p-4 min-h-25 flex items-center justify-center text-muted-foreground text-sm italic">
+                       {/* This would be populated with actual evidence like screenshots/links if we had them in the include query or mocked data */}
+                       No evidence text or files attached (Mock Data Only)
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 pt-4">
+                     <Button className="flex-1 bg-green-600 hover:bg-green-700">Approve Submission</Button>
+                     <Button variant="destructive" className="flex-1">Reject</Button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Right Panel: User Profile */}
+            <div className="w-75 bg-muted/20 p-6 space-y-6">
+              {selectedSubmission && (
+                <>
+                   <div className="flex flex-col items-center text-center space-y-3">
+                      <div className="h-24 w-24 rounded-full bg-slate-200 overflow-hidden border-4 border-background shadow-sm">
+                         {selectedSubmission.User.image ? (
+                             // eslint-disable-next-line @next/next/no-img-element
+                             <img src={selectedSubmission.User.image} alt={selectedSubmission.User.name} className="h-full w-full object-cover" />
+                         ) : (
+                             <div className="h-full w-full flex items-center justify-center bg-slate-700 text-white text-3xl font-bold">
+                                 {selectedSubmission.User.name?.charAt(0) || 'U'}
+                             </div>
+                         )}
+                      </div>
+                      <div>
+                         <h2 className="font-bold text-lg">{selectedSubmission.User.name}</h2>
+                         <p className="text-sm text-muted-foreground">{selectedSubmission.User.email}</p>
+                      </div>
+                   </div>
+
+                   <Separator />
+
+                   <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                         <span className="text-sm text-muted-foreground">Level</span>
+                         <span className="font-bold">5</span> {/* Mock Level - Need to calc from XP */}
+                      </div>
+                      <div className="flex justify-between items-center">
+                         <span className="text-sm text-muted-foreground">XP</span>
+                         <span className="font-bold text-blue-600">1,250 XP</span> {/* Mock XP */}
+                      </div>
+                      <div className="flex justify-between items-center">
+                         <span className="text-sm text-muted-foreground">Joined</span>
+                         <span className="text-sm font-medium">Jan 2024</span>
+                      </div>
+                   </div>
+
+                   <Separator />
+
+                   {selectedSubmission.User.twitterUsername && (
+                     <div className="rounded-lg bg-blue-500/10 border border-blue-500/20 p-3 flex items-center gap-3">
+                        <svg className="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                        </svg>
+                        <span className="text-sm font-medium text-blue-600">@{selectedSubmission.User.twitterUsername ?? 'none'}</span>
+                     </div>
+                   )}
+                </>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
 }

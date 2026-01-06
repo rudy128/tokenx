@@ -84,76 +84,15 @@ export async function POST(request: NextRequest) {
     })
 
     // Create sample daily tasks
-    const dailyTask1 = await prisma.newTask.upsert({
-      where: { id: '550e8400-e29b-41d4-a716-446655440001' },
-      update: {},
-      create: {
-        id: '550e8400-e29b-41d4-a716-446655440001',
-        name: 'Daily Check-in',
-        taskType: 'SOCIAL_MEDIA',
-        description: 'Complete your daily check-in to earn XP',
-        instructions: 'Simply click the check-in button to complete this task',
-        status: 'active',
-        xp: 10,
-        frequency: 'daily',
-        evidenceMode: 'auto',
-        approvalWorkflow: 'auto',
-        availableFrom: new Date(),
-        availableTo: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-    })
-
-    const dailyTask2 = await prisma.newTask.upsert({
-      where: { id: '550e8400-e29b-41d4-a716-446655440002' },
-      update: {},
-      create: {
-        id: '550e8400-e29b-41d4-a716-446655440002',
-        name: 'Follow TokenX on Twitter',
-        taskType: 'SOCIAL_MEDIA',
-        description: 'Follow @TokenX on Twitter to stay updated',
-        instructions: 'Follow @TokenX on Twitter and provide a screenshot as proof',
-        status: 'active',
-        xp: 50,
-        frequency: 'one_time',
-        evidenceMode: 'manual',
-        approvalWorkflow: 'manual',
-        availableFrom: new Date(),
-        availableTo: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-    })
-
-    const dailyTask3 = await prisma.newTask.upsert({
-      where: { id: '550e8400-e29b-41d4-a716-446655440003' },
-      update: {},
-      create: {
-        id: '550e8400-e29b-41d4-a716-446655440003',
-        name: 'Share TokenX Post',
-        taskType: 'CONTENT_CREATION',
-        description: 'Share a TokenX post on your social media',
-        instructions: 'Share any TokenX post on Twitter, Facebook, or LinkedIn with proper attribution',
-        status: 'active',
-        xp: 75,
-        frequency: 'daily',
-        evidenceMode: 'manual',
-        approvalWorkflow: 'manual',
-        perUserCap: 1,
-        availableFrom: new Date(),
-        availableTo: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-    })
-
+    // Note: Disabled as Task model requires campaignId
+    // const dailyTask1 = await prisma.task.create({ ... })
+    
     return NextResponse.json({
       success: true,
       message: 'Sample data seeded successfully!',
       data: {
         campaigns: [campaign1.name, campaign2.name],
-        dailyTasks: [dailyTask1.name, dailyTask2.name, dailyTask3.name]
+        note: 'Task seeding disabled - create tasks through the organization dashboard'
       }
     })
 

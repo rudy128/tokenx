@@ -13,7 +13,7 @@ export async function GET(
     let task = null
     try {
       const { prisma } = await import('@/lib/prisma')
-      task = await prisma.newTask.findFirst({
+      task = await prisma.task.findFirst({
         where: {
           id: taskId,
           campaignId: campaignId
@@ -30,7 +30,7 @@ export async function GET(
         name: task.name,
         description: task.description,
         instructions: task.instructions || task.description,
-        xp: task.xp,
+        xp: task.xpReward,
         taskType: task.taskType || "GENERAL",
         frequency: task.frequency || "once",
         evidenceMode: task.evidenceMode || "MANUAL",

@@ -98,7 +98,7 @@ export async function GET(
             category: task.category,
             verificationMethod: task.verificationMethod,
             requirements: task.requirements
-          }
+          } as any
         })
       } else {
         // For non-participants, just return basic task info
@@ -124,7 +124,7 @@ export async function GET(
           category: task.category,
           verificationMethod: task.verificationMethod,
           requirements: task.requirements
-        }))
+        } as any))
       }
 
       return NextResponse.json(tasksWithStatus)

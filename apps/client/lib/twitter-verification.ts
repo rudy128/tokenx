@@ -4,33 +4,15 @@ import { prisma } from "./prisma"
 
 async function updateSubmissionStatus(submissionId: string, isApproved: boolean, reason?: string) {
   try {
-    // Try to find submission in TaskSubmission table first (old table)
-    const taskSubmission = await prisma.taskSubmission.findUnique({
-      where: { id: submissionId }
+    // Update TaskSubmission with the new status
+    await prisma.taskSubmission.update({
+      where: { id: submissionId },
+      data: {
+        status: isApproved ? 'APPROVED' : 'REJECTED',
+        // Note: TaskSubmission doesn't have rejectionReason or processedAt fields
+      }
     })
-
-    if (taskSubmission) {
-      // Update TaskSubmission (old table)
-      await prisma.taskSubmission.update({
-        where: { id: submissionId },
-        data: {
-          status: isApproved ? 'APPROVED' : 'REJECTED',
-          // Note: TaskSubmission doesn't have rejectionReason field
-        }
-      })
-      console.log(`💾 Updated TaskSubmission ${submissionId}: ${isApproved ? 'APPROVED' : 'REJECTED'}${reason ? ` - ${reason}` : ''}`)
-    } else {
-      // Try NewTaskSubmission (new table)
-      await prisma.newTaskSubmission.update({
-        where: { id: submissionId },
-        data: {
-          status: isApproved ? 'approved' : 'rejected',
-          rejectionReason: isApproved ? null : reason,
-          processedAt: new Date()
-        }
-      })
-      console.log(`💾 Updated NewTaskSubmission ${submissionId}: ${isApproved ? 'APPROVED' : 'REJECTED'}${reason ? ` - ${reason}` : ''}`)
-    }
+    console.log(`💾 Updated TaskSubmission ${submissionId}: ${isApproved ? 'APPROVED' : 'REJECTED'}${reason ? ` - ${reason}` : ''}`)
   } catch (error) {
     console.error(`❌ Failed to update submission ${submissionId}:`, error)
   }

@@ -50,10 +50,10 @@ export async function GET(_: NextRequest) {
         }
       },
       include: {
-        Task: {
+        Tasks: {
           where: { status: "active" },
           include: {
-            TaskSubmission: {
+            TaskSubmissions: {
               where: { userId: dbUser.id },
               select: { 
                 id: true, 
@@ -238,137 +238,106 @@ export async function POST(request: NextRequest) {
     }
 
     // Check which table the task exists in
-    const newTask = await prisma.newTask.findUnique({
+    const task = await prisma.task.findUnique({
       where: { id: taskId }
     })
 
-    const oldTask = !newTask ? await prisma.task.findUnique({
-      where: { id: taskId }
-    }) : null
-
-    if (!newTask && !oldTask) {
+    if (!task) {
       return NextResponse.json({ error: "Task not found" }, { status: 404 })
     }
 
     let submission: any
 
-    if (newTask) {
-      // Check if user already submitted this task (NewTask)
-      const existingSubmission = await prisma.newTaskSubmission.findFirst({
-        where: {
-          taskId,
-          userId: dbUser.id
-        }
-      })
-
-      if (existingSubmission) {
-        return NextResponse.json(
-          { error: 'You have already submitted this task' },
-          { status: 400 }
-        )
+    // Check if user already submitted this task
+    const existingSubmission = await prisma.taskSubmission.findFirst({
+      where: {
+        taskId,
+        userId: dbUser.id
       }
+    })
 
-      // Create submission for NewTask
-      submission = await prisma.newTaskSubmission.create({
-        data: {
-          taskId: taskId,
-          userId: dbUser.id,
-          status: 'submitted',
-          evidence: evidence || {},
-          createdAt: new Date()
-        }
-      })
-    } else if (oldTask) {
-      // Check if user already submitted this task (Task)
-      const existingSubmission = await prisma.taskSubmission.findFirst({
-        where: {
-          taskId,
-          userId: dbUser.id
-        }
-      })
+    if (existingSubmission) {
+      return NextResponse.json(
+        { error: 'You have already submitted this task' },
+        { status: 400 }
+      )
+    }
 
-      if (existingSubmission) {
-        return NextResponse.json(
-          { error: 'You have already submitted this task' },
-          { status: 400 }
-        )
+    // Get full task details with subtasks for verification
+    const taskWithSubtasks = await prisma.task.findUnique({
+      where: { id: taskId },
+      include: {
+        SubTasks: true
       }
+    })
 
-      // Get full task details with subtasks for verification
-      const taskWithSubtasks = await prisma.task.findUnique({
-        where: { id: taskId },
-        include: {
-          taskSubTasks: true
-        }
-      })
+    // Create submission for Task
+    submission = await prisma.taskSubmission.create({
+      data: {
+        taskId: taskId,
+        userId: dbUser.id,
+        status: 'PENDING',
+        evidence: evidence || {},
+        submittedAt: new Date()
+      }
+    })
 
-      // Create submission for Task
-      submission = await prisma.taskSubmission.create({
-        data: {
-          taskId: taskId,
-          userId: dbUser.id,
-          status: 'PENDING',
-          submittedAt: new Date()
-        }
-      })
+    console.log(`✅ Task submission created: ${submission.id} for task ${taskId}`)
 
-      console.log(`✅ Task submission created: ${submission.id} for task ${taskId}`)
+    // 🔥 TWITTER VERIFICATION: Check if task uses AI auto-verification ONLY
+    const twitterUsername = (dbUser as any)?.twitterUsername
+    
+    console.log('🔍 Checking verification eligibility:')
+    console.log('   - Task verification method:', taskWithSubtasks?.verificationMethod)
+    console.log('   - Twitter username set:', !!twitterUsername)
+    console.log('   - Subtasks count:', taskWithSubtasks?.SubTasks?.length || 0)
+    
+    // ⚠️ CRITICAL: Only run auto-verification for AI_AUTO tasks
+    if (taskWithSubtasks?.verificationMethod !== 'AI_AUTO') {
+      console.log('   ✋ SKIPPING auto-verification - Task uses', taskWithSubtasks?.verificationMethod || 'MANUAL', 'verification')
+      console.log('   → This task will require admin review')
+    } else if (twitterUsername) {
+      console.log('🤖 ✅ AI-AUTO verification: Checking for Twitter tasks...')
 
-      // 🔥 TWITTER VERIFICATION: Check if task uses AI auto-verification ONLY
-      const twitterUsername = (dbUser as any)?.twitterUsername
-      
-      console.log('🔍 Checking verification eligibility:')
-      console.log('   - Task verification method:', taskWithSubtasks?.verificationMethod)
-      console.log('   - Twitter username set:', !!twitterUsername)
-      console.log('   - Subtasks count:', taskWithSubtasks?.taskSubTasks?.length || 0)
-      
-      // ⚠️ CRITICAL: Only run auto-verification for AI_AUTO tasks
-      if (taskWithSubtasks?.verificationMethod !== 'AI_AUTO') {
-        console.log('   ✋ SKIPPING auto-verification - Task uses', taskWithSubtasks?.verificationMethod || 'MANUAL', 'verification')
-        console.log('   → This task will require admin review')
-      } else if (twitterUsername) {
-        console.log('🤖 ✅ AI-AUTO verification: Checking for Twitter tasks...')
+      // For now, we'll verify the first Twitter-verifiable subtask
+      // In the future, you might want to track which specific subtask was completed
+      const twitterSubtask = taskWithSubtasks.SubTasks?.find((st: any) => 
+        isTwitterVerifiableType(st.type)
+      )
 
-        // For now, we'll verify the first Twitter-verifiable subtask
-        // In the future, you might want to track which specific subtask was completed
-        const twitterSubtask = taskWithSubtasks.taskSubTasks?.find((st: any) => 
-          isTwitterVerifiableType(st.type)
-        )
+      if (twitterSubtask) {
+        console.log('🐦 Found Twitter subtask:', twitterSubtask.type)
+        console.log('   Title:', twitterSubtask.title)
+        console.log('   Link:', twitterSubtask.link)
 
-        if (twitterSubtask) {
-          console.log('🐦 Found Twitter subtask:', twitterSubtask.type)
-          console.log('   Title:', twitterSubtask.title)
-          console.log('   Link:', twitterSubtask.link)
+        const twitterUrl = twitterSubtask.link
 
-          const twitterUrl = twitterSubtask.link
+        if (twitterUrl && twitterUsername) {
+          const taskType = mapSubTaskTypeToTaskType(twitterSubtask.type)
+          console.log('   Mapped to TaskType:', taskType)
+          console.log('   User Twitter:', twitterUsername)
 
-          if (twitterUrl && twitterUsername) {
-            const taskType = mapSubTaskTypeToTaskType(twitterSubtask.type)
-            console.log('   Mapped to TaskType:', taskType)
-            console.log('   User Twitter:', twitterUsername)
+          // Run Twitter verification asynchronously
+          runTwitterVerification(
+            twitterUrl,
+            twitterUsername,
+            taskType,
+            submission.id
+          ).catch((error) => {
+            console.error('❌ Twitter verification failed:', error)
+          })
 
-            // Run Twitter verification asynchronously
-            runTwitterVerification(
-              twitterUrl,
-              twitterUsername,
-              taskType,
-              submission.id
-            ).catch((error) => {
-              console.error('❌ Twitter verification failed:', error)
-            })
-
-            console.log('   ⏳ Twitter verification started in background')
-          } else {
-            console.log('   ⚠️ Missing Twitter URL or username, skipping verification')
-          }
+          console.log('   ⏳ Twitter verification started in background')
         } else {
-          console.log('   ℹ️ No Twitter-verifiable subtasks found')
-          console.log('   → Submission will remain PENDING for manual review')
+          console.log('   ⚠️ Missing Twitter URL or username, skipping verification')
         }
       } else {
-        console.log('   ⚠️ User has no Twitter username, skipping auto-verification')
+        console.log('   ℹ️ No Twitter-verifiable subtasks found')
         console.log('   → Submission will remain PENDING for manual review')
       }
+    } else {
+      console.log('   ⚠️ User has no Twitter username, skipping auto-verification')
+      console.log('   → Submission will remain PENDING for manual review')
     }
 
     console.log(`✅ Task submission created: ${submission.id} for task ${taskId}`)

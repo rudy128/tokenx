@@ -31,16 +31,6 @@ export async function GET(
 
     console.log('🔍 Checking submission for task:', taskId, 'user:', user.id)
 
-    // Check for existing submission in NewTaskSubmission
-    const newTaskSubmission = await prisma.newTaskSubmission.findFirst({
-      where: {
-        taskId,
-        userId: user.id
-      }
-    })
-
-    console.log('📋 NewTaskSubmission:', newTaskSubmission)
-
     // Check for existing submission in TaskSubmission
     const taskSubmission = await prisma.taskSubmission.findFirst({
       where: {
@@ -51,7 +41,7 @@ export async function GET(
 
     console.log('📋 TaskSubmission:', taskSubmission)
 
-    const hasSubmitted = !!(newTaskSubmission || taskSubmission)
+    const hasSubmitted = !!taskSubmission
 
     console.log('✅ Has submitted:', hasSubmitted)
 

@@ -436,7 +436,8 @@ export async function POST(request: NextRequest) {
           verificationMethod: taskData.approvalWorkflow?.includes('auto') ? 'AI_AUTO' : 'MANUAL',
           requirements: [taskData.instructions],
           status: 'active',
-          campaignId: taskData.campaignId
+          campaignId: taskData.campaignId,
+          createdById: adminUser.id
         }
       })
     }

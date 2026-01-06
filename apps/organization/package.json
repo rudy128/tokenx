@@ -14,7 +14,8 @@
     "next": "16.1.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "@repo/prisma": "workspace:*"
+    "@repo/prisma": "workspace:*",
+    "@repo/ui": "workspace:*"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

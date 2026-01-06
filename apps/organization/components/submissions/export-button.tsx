@@ -4,8 +4,10 @@ interface Submission {
   id: string;
   status: string;
   submittedAt: Date | null;
-  evidenceText: string | null;
-  evidenceUrl: string | null;
+  proofUrl: string | null;
+  proofImageUrl: string | null;
+  screenshot: string | null;
+  description: string | null;
   subTaskId: string | null;
   User: {
     name: string | null;
@@ -52,8 +54,10 @@ export function ExportButton({ submissions }: ExportButtonProps) {
       "Sub-Task XP Reward",
       "Status",
       "Submitted At",
-      "Evidence Text",
-      "Evidence URL"
+      "Description",
+      "Proof URL",
+      "Proof Image URL",
+      "Screenshot"
     ];
 
     // Convert submissions to CSV rows
@@ -78,8 +82,10 @@ export function ExportButton({ submissions }: ExportButtonProps) {
         subTask?.xpReward.toString() || "N/A",
         submission.status,
         submission.submittedAt ? new Date(submission.submittedAt).toLocaleString() : "N/A",
-        submission.evidenceText || "N/A",
-        submission.evidenceUrl || "N/A"
+        submission.description || "N/A",
+        submission.proofUrl || "N/A",
+        submission.proofImageUrl || "N/A",
+        submission.screenshot || "N/A"
       ];
     });
 

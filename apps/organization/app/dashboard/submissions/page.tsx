@@ -23,7 +23,17 @@ export default async function SubmissionsPage() {
         organizationId: session.user.organizationId
       }
     },
-    include: {
+    select: {
+      id: true,
+      status: true,
+      submittedAt: true,
+      proofUrl: true,
+      proofImageUrl: true,
+      screenshot: true,
+      description: true,
+      subTaskId: true,
+      taskId: true,
+      userId: true,
       Task: {
         select: {
           id: true,

@@ -7,7 +7,7 @@ export async function getOrganizations() {
     include: {
       _count: {
         select: {
-          users: true,
+          members: true,
           campaigns: true,
         },
       },
@@ -15,11 +15,11 @@ export async function getOrganizations() {
   });
 }
 
-export async function getOrganizationBySlug(slug: string) {
+export async function getOrganizationById(id: string) {
   return await prisma.organization.findUnique({
-    where: { slug },
+    where: { id },
     include: {
-      users: true,
+      members: true,
       campaigns: true,
     },
   });

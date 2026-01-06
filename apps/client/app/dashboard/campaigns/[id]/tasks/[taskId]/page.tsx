@@ -158,10 +158,11 @@ async function getTask(id: string) {
               type: 'link' as const, 
               url: subTask.link || task.actionUrl || task.instructions || '#'
             },
-            completed: subTask.isCompleted || false,
+            completed: subTask.completed || false,
             description: subTask.description,
             link: subTask.link || null,
-            type: subTask.type || 'X_TWEET'
+            type: subTask.type || 'X_TWEET',
+            submissionStatus: subTask.submissionStatus || null
           }))
         : [
             // Fallback: Generate one fixed subtask if none exist
@@ -174,7 +175,8 @@ async function getTask(id: string) {
                 type: 'link' as const, 
                 url: task.actionUrl || task.instructions || '#'
               },
-              completed: false
+              completed: false,
+              submissionStatus: null
             }
           ] as Subtask[]
     }
@@ -234,6 +236,7 @@ type Subtask = {
   description?: string
   link?: string | null
   type?: string
+  submissionStatus?: 'PENDING' | 'APPROVED' | 'REJECTED' | null
 }
 
 // Function to determine task icon based on platform and instructions
@@ -344,7 +347,9 @@ function TaskSubtasks({
             "bg-linear-to-br from-[#191B24] to-[#181B28] border border-[#23263B] shadow-xl rounded-xl p-6",
             "transition-all duration-200 hover:scale-[1.02] hover:ring-2 hover:ring-[#8c6cfb]/40 hover:shadow-2xl",
             "group relative overflow-hidden",
-            subtask.completed && "opacity-90 bg-linear-to-br from-[#1a2e1a]/30 to-[#162416]/30 border-blue-500/30"
+            subtask.submissionStatus === 'APPROVED' && "opacity-90 bg-linear-to-br from-[#1a2e1a]/30 to-[#162416]/30 border-green-500/30",
+            subtask.submissionStatus === 'PENDING' && "opacity-95 border-blue-500/30",
+            subtask.submissionStatus === 'REJECTED' && "border-red-500/30"
           )}
         >
           {/* Subtle glow effect on hover */}
@@ -416,10 +421,23 @@ function TaskSubtasks({
                       <SubTaskTypeBadge type={subtask.type} />
                     </div>
                   )}
-                  {subtask.completed && (
+                  {/* Show status badge based on submission status */}
+                  {subtask.submissionStatus === 'PENDING' && (
                     <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20">
                       <Clock className="w-3 h-3 text-blue-400" />
                       <span className="text-xs font-medium text-blue-400">Under Review</span>
+                    </div>
+                  )}
+                  {subtask.submissionStatus === 'APPROVED' && (
+                    <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-green-500/10 border border-green-500/20">
+                      <CheckCircle className="w-3 h-3 text-green-400" />
+                      <span className="text-xs font-medium text-green-400">Approved</span>
+                    </div>
+                  )}
+                  {subtask.submissionStatus === 'REJECTED' && (
+                    <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-red-500/10 border border-red-500/20">
+                      <XCircle className="w-3 h-3 text-red-400" />
+                      <span className="text-xs font-medium text-red-400">Rejected - Resubmit</span>
                     </div>
                   )}
                 </div>
@@ -450,33 +468,61 @@ function TaskSubtasks({
 
                   {/* Bottom row: Submit Button */}
                   <div className="flex items-center gap-3">
-                    {!subtask.completed ? (
+                    {/* Show submit button if not submitted or if rejected (allow resubmit) */}
+                    {(!subtask.submissionStatus || subtask.submissionStatus === 'REJECTED') ? (
                       <button
                         onClick={(e) => handleSubmit(e, subtask.id)}
-                        className="inline-flex items-center justify-center gap-2 rounded-md bg-[#8c6cfb] hover:bg-[#7c5cfb] text-white transition-all duration-200 text-xs font-bold shadow-lg shadow-[#8c6cfb]/20"
+                        className={cn(
+                          "inline-flex items-center justify-center gap-2 rounded-md text-white transition-all duration-200 text-xs font-bold shadow-lg",
+                          subtask.submissionStatus === 'REJECTED'
+                            ? "bg-orange-600 hover:bg-orange-700 shadow-orange-600/20"
+                            : "bg-[#8c6cfb] hover:bg-[#7c5cfb] shadow-[#8c6cfb]/20"
+                        )}
                         style={{ padding: '8px 24px', minWidth: 'fit-content' }}
                       >
-                        <span>Submit</span>
+                        {subtask.submissionStatus === 'REJECTED' ? (
+                          <>
+                            <RefreshCw className="h-3.5 w-3.5" />
+                            <span>Resubmit</span>
+                          </>
+                        ) : (
+                          <span>Submit</span>
+                        )}
                       </button>
-                    ) : (
-                       <button
+                    ) : subtask.submissionStatus === 'PENDING' ? (
+                      <button
                         disabled
-                        className="inline-flex items-center justify-center gap-2 rounded-md bg-zinc-800 border border-zinc-700 text-zinc-500 cursor-not-allowed text-xs font-medium"
+                        className="inline-flex items-center justify-center gap-2 rounded-md bg-blue-900/30 border border-blue-500/30 text-blue-400 cursor-not-allowed text-xs font-medium"
                         style={{ padding: '8px 16px', minWidth: 'fit-content' }}
                       >
-                        <Check className="h-3.5 w-3.5" />
+                        <Clock className="h-3.5 w-3.5" />
                         <span>Submitted</span>
                       </button>
-                    )}
+                    ) : subtask.submissionStatus === 'APPROVED' ? (
+                      <button
+                        disabled
+                        className="inline-flex items-center justify-center gap-2 rounded-md bg-green-900/30 border border-green-500/30 text-green-400 cursor-not-allowed text-xs font-medium"
+                        style={{ padding: '8px 16px', minWidth: 'fit-content' }}
+                      >
+                        <CheckCircle className="h-3.5 w-3.5" />
+                        <span>Approved</span>
+                      </button>
+                    ) : null}
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Completion indicator */}
-          {subtask.completed && (
+          {/* Completion/Status indicator */}
+          {subtask.submissionStatus === 'PENDING' && (
             <div className="absolute top-0 left-0 w-1 h-full bg-blue-500 rounded-l-xl" />
+          )}
+          {subtask.submissionStatus === 'APPROVED' && (
+            <div className="absolute top-0 left-0 w-1 h-full bg-green-500 rounded-l-xl" />
+          )}
+          {subtask.submissionStatus === 'REJECTED' && (
+            <div className="absolute top-0 left-0 w-1 h-full bg-red-500 rounded-l-xl" />
           )}
         </div>
       ))}

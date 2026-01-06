@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { auth } from "@/lib/auth"
 
 export async function GET(
   request: NextRequest,
@@ -10,7 +11,11 @@ export async function GET(
     const resolvedParams = await params
     const taskId = resolvedParams.id
 
-    console.log('📥 Fetching task:', taskId)
+    // Get the current user's session
+    const session = await auth()
+    const userId = session?.user?.id
+
+    console.log('📥 Fetching task:', taskId, 'for user:', userId)
 
     // Try to fetch actual task from database
     let task = null
@@ -22,12 +27,16 @@ export async function GET(
       task = await prisma.task.findUnique({
         where: { id: taskId },
         include: {
-          TaskSubmissions: {
+          TaskSubmissions: userId ? {
+            where: {
+              userId: userId
+            },
             select: {
               status: true,
-              userId: true
+              userId: true,
+              subTaskId: true
             }
-          },
+          } : false,
           SubTasks: {
             orderBy: {
               order: 'asc'
@@ -85,13 +94,24 @@ export async function GET(
 
     // If actual task found, return it
     if (task) {
-      // transform task if necessary or just use it. 
-      // The frontend likely expects specific field names like 'subTasks' instead of 'SubTasks'.
-      // and 'submissions' instead of 'TaskSubmissions'.
+      // Create a map of subtask submissions for quick lookup
+      const submissionMap = new Map(
+        ((task as any).TaskSubmissions || []).map((sub: any) => [
+          sub.subTaskId, 
+          sub.status
+        ])
+      )
       
+      // Transform task and enrich subtasks with submission status
       const transformedTask = {
         ...task,
-        subTasks: (task as any).SubTasks || [],
+        subTasks: ((task as any).SubTasks || []).map((subtask: any) => ({
+          ...subtask,
+          submissionStatus: submissionMap.get(subtask.id) || null,
+          completed: submissionMap.has(subtask.id) && 
+                     (submissionMap.get(subtask.id) === 'PENDING' || 
+                      submissionMap.get(subtask.id) === 'APPROVED')
+        })),
         submissions: (task as any).TaskSubmissions || []
       }
 

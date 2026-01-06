@@ -3,6 +3,7 @@ import { getOrganizationSession } from "@/lib/session";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { prisma } from "@repo/prisma";
 import { ReviewDialog } from "@/components/submissions/review-dialog";
+import { ExportButton } from "@/components/submissions/export-button";
 
 export default async function SubmissionsPage() {
   const session = await getOrganizationSession();
@@ -97,9 +98,7 @@ export default async function SubmissionsPage() {
             <button className="px-4 py-2 border border-input rounded-lg hover:bg-accent transition-colors">
               Filter
             </button>
-            <button className="px-4 py-2 border border-input rounded-lg hover:bg-accent transition-colors">
-              Export
-            </button>
+            <ExportButton submissions={submissions} />
           </div>
         </div>
 

@@ -6,7 +6,7 @@ import { notFound, useParams } from 'next/navigation'
 import {
   ChevronLeft, Clock, Users, Calendar, CheckCircle, AlertCircle, XCircle, Zap, ArrowRight, Gift, Copy,
   Twitter, MessageSquare, FileText, Upload, ArrowUpRight, Play, Share2, ShieldCheck, Star, X, AlertTriangle, 
-  RefreshCw, Mail, ArrowLeft, Search
+  RefreshCw, Mail, ArrowLeft, Search, Check
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -164,37 +164,15 @@ async function getTask(id: string) {
             type: subTask.type || 'X_TWEET'
           }))
         : [
-            // Fallback: Generate two fixed subtasks if none exist in database
+            // Fallback: Generate one fixed subtask if none exist
             {
               id: 'main-action',
               title: task.name,
-              xp: Math.floor((task.xp || 50) * 0.7),
+              xp: task.xp || 50,
               icon: determineTaskIcon(task.platform, task.instructions),
               action: { 
                 type: 'link' as const, 
                 url: task.actionUrl || task.instructions || '#'
-              },
-              completed: false
-            },
-            {
-              id: 'upload-proof',
-              title: 'Upload proof/media for this task',
-              xp: Math.floor((task.xp || 50) * 0.3),
-              icon: 'upload' as const,
-              action: { 
-                type: 'upload' as const, 
-                uploadHandler: () => {
-                  const input = document.createElement('input')
-                  input.type = 'file'
-                  input.accept = 'image/*,video/*,.pdf,.doc,.docx'
-                  input.onchange = (e) => {
-                    const file = (e.target as HTMLInputElement).files?.[0]
-                    if (file) {
-                      console.log('File selected for upload:', file.name)
-                    }
-                  }
-                  input.click()
-                }
               },
               completed: false
             }
@@ -242,9 +220,8 @@ const getTaskThemeColor = (task: any, index?: number): string => {
 
 // Sub-task types
 type SubtaskAction = {
-  type: 'link' | 'upload'
+  type: 'link'
   url?: string
-  uploadHandler?: () => void
 }
 
 type Subtask = {
@@ -302,126 +279,28 @@ function getSubtaskIcon(iconType: string, className: string = "") {
   }
 }
 
-// Premium Claim Status Modal Component
-function ClaimStatusModal({ 
-  open, 
-  mode, 
-  xpAmount, 
-  rewardToken, 
-  rewardAmount, 
-  onClose 
-}: { 
-  open: boolean
-  mode: 'AUTO' | 'MANUAL'
-  xpAmount?: number
-  rewardToken?: string
-  rewardAmount?: string
-  onClose: () => void 
-}) {
-  React.useEffect(() => {
-    if (open) {
-      const timer = setTimeout(() => {
-        onClose()
-      }, 3000) // Auto-close after 3 seconds
-      
-      return () => clearTimeout(timer)
-    }
-  }, [open, onClose])
-
-  // Handle keyboard events for accessibility
-  React.useEffect(() => {
-    if (!open) return
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onClose()
-      }
-    }
-
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [open, onClose])
-
-  if (!open) return null
-
-  return (
-    <>
-      {/* Backdrop overlay */}
-      <div 
-        className="claim-modal-backdrop" 
-        onClick={onClose}
-        role="button"
-        tabIndex={-1}
-        aria-label="Close modal"
-      />
-      
-      {/* Perfectly centered modal container */}
-      <div className="claim-modal-container">
-        <div 
-          className="claim-modal-content"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="claim-modal-title"
-        >
-          {mode?.includes('AUTO') || mode?.includes('AI_AUTO') ? (
-            <>
-              <div className="claim-modal-icon claim-modal-icon-success">
-                <CheckCircle className="text-green-400 h-8 w-8" />
-              </div>
-              <div id="claim-modal-title" className="claim-modal-title">AI Verified Successfully!</div>
-              <div className="claim-modal-description">
-                Your submission was automatically verified by AI. {xpAmount} XP{rewardToken && rewardAmount ? ` and ${rewardAmount} ${rewardToken}` : ''} will be credited shortly.
-              </div>
-              <div className="claim-modal-badge claim-modal-badge-success">
-                <Star className="text-green-400 h-4 w-4" />
-                <span className="text-sm font-semibold text-green-400">AI Verified</span>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="claim-modal-icon claim-modal-icon-pending">
-                <ShieldCheck className="text-blue-400 h-8 w-8" />
-              </div>
-              <div id="claim-modal-title" className="claim-modal-title">Review Pending</div>
-              <div className="claim-modal-description">
-                Reward will be credited after review.
-              </div>
-              <div className="claim-modal-badge claim-modal-badge-pending">
-                <Clock className="text-blue-400 h-4 w-4" />
-                <span className="text-sm font-semibold text-blue-400">Under Review</span>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    </>
-  )
-}
-
 // TaskSubtasks Component
 function TaskSubtasks({ 
   subtasks, 
   loading = false,
-  onToggleComplete,
-  onFileUpload
+  onToggleComplete
 }: { 
   subtasks: Subtask[]
   loading?: boolean
   onToggleComplete?: (subtaskId: string, currentStatus: boolean) => void
-  onFileUpload?: () => void
 }) {
   const handleSubtaskClick = (subtask: Subtask) => {
     if (subtask.action.type === 'link' && subtask.action.url) {
       window.open(subtask.action.url, '_blank', 'noopener,noreferrer')
-    } else if (subtask.action.type === 'upload' && subtask.action.uploadHandler) {
-      subtask.action.uploadHandler()
     }
   }
 
-  const handleCheckboxClick = (e: React.MouseEvent, subtaskId: string, currentStatus: boolean) => {
+  // Handle submit button click
+  const handleSubmit = (e: React.MouseEvent, subtaskId: string) => {
     e.stopPropagation()
     if (onToggleComplete) {
-      onToggleComplete(subtaskId, currentStatus)
+      // Always set to true (submitted)
+      onToggleComplete(subtaskId, false) // passing currentStatus as false so it toggles to true
     }
   }
 
@@ -430,10 +309,10 @@ function TaskSubtasks({
       <div className="subtasks-container">
         <h2 className="text-xl font-bold text-white mb-6">Sub-tasks</h2>
         {[1, 2, 3].map((i) => (
-          <div key={i} className="animate-pulse bg-gradient-to-br from-[#191B24] to-[#181B28] border border-[#23263B] shadow-xl rounded-xl p-6">
+          <div key={i} className="animate-pulse bg-linear-to-br from-[#191B24] to-[#181B28] border border-[#23263B] shadow-xl rounded-xl p-6">
             <div className="flex items-center gap-4">
               {/* Platform Logo Skeleton */}
-              <div className="w-12 h-12 bg-zinc-700/50 rounded-xl flex-shrink-0" />
+              <div className="w-12 h-12 bg-zinc-700/50 rounded-xl shrink-0" />
               
               {/* Title Skeleton */}
               <div className="flex-1 min-w-0">
@@ -441,10 +320,10 @@ function TaskSubtasks({
               </div>
               
               {/* XP Badge Skeleton */}
-              <div className="h-7 w-16 bg-zinc-700/50 rounded-full flex-shrink-0" />
+              <div className="h-7 w-16 bg-zinc-700/50 rounded-full shrink-0" />
               
               {/* Action Button Skeleton */}
-              <div className="w-8 h-8 bg-zinc-700/50 rounded-full flex-shrink-0" />
+              <div className="w-8 h-8 bg-zinc-700/50 rounded-full shrink-0" />
             </div>
           </div>
         ))}
@@ -462,23 +341,28 @@ function TaskSubtasks({
           key={subtask.id}
           data-subtask-id={subtask.id}
           className={cn(
-            "bg-gradient-to-br from-[#191B24] to-[#181B28] border border-[#23263B] shadow-xl rounded-xl p-6",
+            "bg-linear-to-br from-[#191B24] to-[#181B28] border border-[#23263B] shadow-xl rounded-xl p-6",
             "transition-all duration-200 hover:scale-[1.02] hover:ring-2 hover:ring-[#8c6cfb]/40 hover:shadow-2xl",
             "group relative overflow-hidden",
-            subtask.completed && "opacity-75 bg-gradient-to-br from-[#1a2e1a] to-[#162416]"
+            subtask.completed && "opacity-90 bg-linear-to-br from-[#1a2e1a]/30 to-[#162416]/30 border-blue-500/30"
           )}
         >
           {/* Subtle glow effect on hover */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#8c6cfb]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+          <div className="absolute inset-0 bg-linear-to-r from-[#8c6cfb]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
           
           <div className="flex items-start gap-4 relative z-10">
             {/* Platform Logo/Favicon */}
-            <div className="flex-shrink-0">
+            <div className="shrink-0">
               {subtask.link ? (
                 (() => {
+                  {/* Note: The color variable comes from getPlatformLogo which returns 'from-X to-Y' strings. 
+                      Since those are likely legacy gradient classes, we might need to update that helper too if strict. 
+                      However for now we fix the visible lint errors in THIS file. */}
                   const { icon, color } = getPlatformLogo(subtask.link)
+                  // Replace legacy gradient syntax in the color string if possible, or just use it ensuring it renders
+                  // But the container below uses `bg-linear-to-br`
                   return (
-                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${color} border border-gray-700 flex items-center justify-center overflow-hidden p-1.5`}>
+                    <div className={`w-12 h-12 rounded-xl bg-linear-to-br ${color} border border-gray-700 flex items-center justify-center overflow-hidden p-1.5`}>
                       {icon ? (
                         <img
                           src={icon}
@@ -515,15 +399,14 @@ function TaskSubtasks({
 
             {/* Content - Title and Type Badge */}
             <div 
-              onClick={() => handleSubtaskClick(subtask)}
-              className="flex-1 cursor-pointer"
+              className="flex-1"
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className={cn(
-                      "font-semibold text-base md:text-lg group-hover:text-[#8c6cfb] transition-colors",
-                      subtask.completed ? "text-gray-400 line-through" : "text-white"
+                      "font-semibold text-base md:text-lg transition-colors",
+                      subtask.completed ? "text-gray-300" : "text-white"
                     )}>
                       {subtask.title}
                     </h3>
@@ -533,52 +416,59 @@ function TaskSubtasks({
                       <SubTaskTypeBadge type={subtask.type} />
                     </div>
                   )}
+                  {subtask.completed && (
+                    <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20">
+                      <Clock className="w-3 h-3 text-blue-400" />
+                      <span className="text-xs font-medium text-blue-400">Under Review</span>
+                    </div>
+                  )}
                 </div>
 
-                {/* Right side: XP Badge + Action + Upload Button */}
-                <div className="flex flex-col items-end gap-3 flex-shrink-0">
-                  {/* Top row: XP Badge + Arrow Icon */}
+                {/* Right side: XP Badge + Action + Submit Button */}
+                <div className="flex flex-col items-end gap-3 shrink-0">
+                  {/* Top row: XP Badge + Link Icon */}
                   <div className="flex items-center gap-3">
-                    <Badge className="inline-flex items-center justify-center rounded-full bg-[#222950] text-[#82EC40] font-bold px-4 py-1.5 text-sm shadow-lg border border-[#82EC40]/20 whitespace-nowrap min-w-[70px]">
+                    <Badge className="inline-flex items-center justify-center rounded-full bg-[#222950] text-[#82EC40] font-bold px-4 py-1.5 text-sm shadow-lg border border-[#82EC40]/20 whitespace-nowrap min-w-17.5">
                       {subtask.xp} XP
                     </Badge>
 
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        if (subtask.link) {
-                          window.open(subtask.link, '_blank', 'noopener,noreferrer')
-                        }
-                      }}
-                      disabled={!subtask.link}
-                      className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-                        subtask.link
-                          ? 'bg-[#8c6cfb]/20 hover:bg-[#8c6cfb]/30 cursor-pointer'
-                          : 'bg-gray-800/20 cursor-not-allowed opacity-50'
-                      }`}
-                      title={subtask.link ? 'Open link' : 'No link available'}
-                    >
-                      <ArrowUpRight className="h-4 w-4 text-[#8c6cfb] group-hover:scale-110 transition-transform" />
-                    </button>
-                  </div>
-
-                  {/* Bottom row: Upload Proof Button */}
-                  {onFileUpload && (
-                    <div className="flex items-center gap-3">
+                    {subtask.link && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
-                          onFileUpload()
+                          if (subtask.link) {
+                            window.open(subtask.link, '_blank', 'noopener,noreferrer')
+                          }
                         }}
-                        className="inline-flex items-center justify-center gap-2 rounded-md bg-[#8c6cfb]/10 border border-[#8c6cfb]/30 text-[#8c6cfb] hover:bg-[#8c6cfb]/20 hover:border-[#8c6cfb]/50 transition-all duration-200 text-xs font-semibold whitespace-nowrap"
+                        className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors bg-[#8c6cfb]/20 hover:bg-[#8c6cfb]/30 cursor-pointer`}
+                        title="Open link"
+                      >
+                        <ArrowUpRight className="h-4 w-4 text-[#8c6cfb]" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Bottom row: Submit Button */}
+                  <div className="flex items-center gap-3">
+                    {!subtask.completed ? (
+                      <button
+                        onClick={(e) => handleSubmit(e, subtask.id)}
+                        className="inline-flex items-center justify-center gap-2 rounded-md bg-[#8c6cfb] hover:bg-[#7c5cfb] text-white transition-all duration-200 text-xs font-bold shadow-lg shadow-[#8c6cfb]/20"
+                        style={{ padding: '8px 24px', minWidth: 'fit-content' }}
+                      >
+                        <span>Submit</span>
+                      </button>
+                    ) : (
+                       <button
+                        disabled
+                        className="inline-flex items-center justify-center gap-2 rounded-md bg-zinc-800 border border-zinc-700 text-zinc-500 cursor-not-allowed text-xs font-medium"
                         style={{ padding: '8px 16px', minWidth: 'fit-content' }}
                       >
-                        <Upload className="h-3.5 w-3.5 flex-shrink-0" />
-                        <span>Upload Proof</span>
+                        <Check className="h-3.5 w-3.5" />
+                        <span>Submitted</span>
                       </button>
-                      <span className="text-xs text-gray-500 whitespace-nowrap">(optional)</span>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -586,7 +476,7 @@ function TaskSubtasks({
 
           {/* Completion indicator */}
           {subtask.completed && (
-            <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-green-400 to-green-600 rounded-l-xl" />
+            <div className="absolute top-0 left-0 w-1 h-full bg-blue-500 rounded-l-xl" />
           )}
         </div>
       ))}
@@ -599,9 +489,6 @@ export default function CampaignTaskDetailPage() {
   const [task, setTask] = React.useState<any>(null)
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
-  const [showClaimModal, setShowClaimModal] = React.useState(false)
-  const [uploadedFiles, setUploadedFiles] = React.useState<File[]>([])
-  const [uploadStatus, setUploadStatus] = React.useState<'idle' | 'uploading' | 'success' | 'error'>('idle')
   const [feedbackMessage, setFeedbackMessage] = React.useState<{ type: 'success' | 'error' | 'info', message: string } | null>(null)
   const { toast } = useToast()
   
@@ -707,200 +594,11 @@ export default function CampaignTaskDetailPage() {
     retryFetch()
   }
 
-  // File upload handler with comprehensive error handling
-  const handleFileUpload = () => {
-    try {
-      const input = document.createElement('input')
-      input.type = 'file'
-      input.accept = 'image/*,video/*,.pdf,.doc,.docx'
-      input.multiple = true
-      input.onchange = (e) => {
-        try {
-          const files = Array.from((e.target as HTMLInputElement).files || [])
-          if (files.length > 0) {
-            // Validate file sizes (10MB limit per file)
-            const invalidFiles = files.filter(file => file.size > 10 * 1024 * 1024)
-            if (invalidFiles.length > 0) {
-              showFeedback('error', 'Some files are too large. Maximum size is 10MB per file.')
-              return
-            }
-
-            setUploadedFiles(prev => [...prev, ...files])
-            setUploadStatus('success')
-            showFeedback('success', `${files.length} file(s) uploaded successfully`)
-            toast({
-              title: "Files uploaded successfully",
-              description: `${files.length} file(s) added to your submission`,
-            })
-          }
-        } catch (uploadError) {
-          console.error('Upload error:', uploadError)
-          showFeedback('error', 'Failed to upload files. Please try again.')
-          setUploadStatus('error')
-        }
-      }
-      input.onerror = () => {
-        showFeedback('error', 'File selection failed. Please try again.')
-        setUploadStatus('error')
-      }
-      input.click()
-    } catch (error) {
-      console.error('File upload handler error:', error)
-      showFeedback('error', 'Unable to open file selector. Please refresh and try again.')
-    }
-  }
-
-  // Enhanced claim logic with comprehensive error handling
-  const handleClaimReward = async () => {
-    console.log('🎯 Claim button clicked')
-    
-    if (!task) {
-      showFeedback('error', 'Task data not available. Please refresh the page.')
-      return
-    }
-    
-    try {
-      // Check if user has Twitter username
-      console.log('📡 Fetching profile...')
-      const profileResponse = await fetch('/api/profile')
-      console.log('📡 Profile response status:', profileResponse.status)
-      
-      if (!profileResponse.ok) {
-        console.error('❌ Profile fetch failed:', profileResponse.status)
-        showFeedback('error', 'Failed to fetch profile. Please try again.')
-        return
-      }
-
-      const profile = await profileResponse.json()
-      console.log('👤 Profile data:', profile)
-      
-      if (!profile.twitterUsername) {
-        console.log('⚠️ No Twitter username found, showing alert')
-        // Show alert and redirect to profile
-        const shouldRedirect = window.confirm(
-          'Please add your Twitter/X username to your profile before claiming rewards.\n\nClick OK to go to your profile page.'
-        )
-        
-        console.log('🔄 User chose to redirect:', shouldRedirect)
-        
-        if (shouldRedirect) {
-          window.location.href = '/profile'
-        }
-        return
-      }
-      
-      console.log('✅ Twitter username exists:', profile.twitterUsername)
-      
-      // Check if user already submitted this task
-      console.log('📡 Checking for existing submission...')
-      const submissionCheckResponse = await fetch(`/api/tasks/${taskId}/check-submission`)
-      
-      if (submissionCheckResponse.ok) {
-        const { hasSubmitted } = await submissionCheckResponse.json()
-        console.log('📋 Has submitted:', hasSubmitted)
-        
-        if (hasSubmitted) {
-          alert('You have already submitted this task. You can only submit once.')
-          return
-        }
-      }
-      
-      // Show info feedback for processing
-      showFeedback('info', 'Submitting task...')
-      
-      // Convert uploaded files to base64 for storage
-      const fileData: Array<{ name: string; type: string; size: number; data: string }> = []
-      
-      if (uploadedFiles.length > 0) {
-        console.log(`📎 Processing ${uploadedFiles.length} uploaded file(s)...`)
-        
-        for (const file of uploadedFiles) {
-          try {
-            const base64 = await new Promise<string>((resolve, reject) => {
-              const reader = new FileReader()
-              reader.onload = () => resolve(reader.result as string)
-              reader.onerror = reject
-              reader.readAsDataURL(file)
-            })
-            
-            fileData.push({
-              name: file.name,
-              type: file.type,
-              size: file.size,
-              data: base64
-            })
-            
-            console.log(`✅ Processed file: ${file.name}`)
-          } catch (error) {
-            console.error(`❌ Failed to process file: ${file.name}`, error)
-          }
-        }
-      }
-      
-      // Submit the task to database
-      console.log('💾 Submitting task to database...')
-      const submitResponse = await fetch('/api/tasks/daily', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          taskId: taskId,
-          evidence: {
-            twitterUsername: profile.twitterUsername,
-            completedAt: new Date().toISOString(),
-            uploadedFiles: fileData.length > 0 ? fileData : undefined,
-            fileCount: fileData.length
-          }
-        })
-      })
-      
-      console.log('📡 Submit response status:', submitResponse.status)
-      
-      if (!submitResponse.ok) {
-        const errorData = await submitResponse.json()
-        console.error('❌ Submit failed:', errorData)
-        showFeedback('error', errorData.error || 'Failed to submit task')
-        return
-      }
-      
-      const submitData = await submitResponse.json()
-      console.log('✅ Task submitted successfully:', submitData)
-      
-      // Check verification method and show appropriate message
-      console.log('🔍 Task verification details:', {
-        verificationMethod: task.verificationMethod,
-        verificationMode: task.verificationMode,
-        approvalWorkflow: task.approvalWorkflow,
-        fullTask: task
-      })
-      
-      const verificationMethod = task.verificationMethod || task.verificationMode
-      const isAIVerified = verificationMethod?.includes('AI_AUTO') || verificationMethod?.includes('AUTO')
-      
-      console.log('📊 Verification check:', {
-        verificationMethod,
-        isAIVerified,
-        includes_AI_AUTO: verificationMethod?.includes('AI_AUTO'),
-        includes_AUTO: verificationMethod?.includes('AUTO')
-      })
-      
-      if (isAIVerified) {
-        console.log('🤖 AI Verification: Task automatically verified by AI')
-        showFeedback('success', 'AI verified successfully! Reward will be credited automatically.')
-      } else {
-        console.log('👤 Manual Verification: Task submitted for admin review')
-        showFeedback('success', 'Task submitted successfully! Pending admin review.')
-      }
-      
-      // Show the centered modal
-      setShowClaimModal(true)
-    } catch (error) {
-      console.error('Reward claim error:', error)
-      showFeedback('error', 'Failed to claim reward. Please try again or contact support.')
-    }
-  }
-
   // Handle subtask completion with animations and API update
   const handleSubtaskComplete = async (subtaskId: string, currentStatus: boolean) => {
+    // If already completed, don't toggle back
+    if (currentStatus) return;
+
     try {
       // Optimistically update UI
       setTask((prevTask: any) => {
@@ -908,7 +606,7 @@ export default function CampaignTaskDetailPage() {
         return {
           ...prevTask,
           subtasks: prevTask.subtasks.map((st: any) =>
-            st.id === subtaskId ? { ...st, completed: !currentStatus } : st
+            st.id === subtaskId ? { ...st, completed: true } : st
           )
         }
       })
@@ -918,7 +616,7 @@ export default function CampaignTaskDetailPage() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          isCompleted: !currentStatus
+          isCompleted: true
         })
       })
 
@@ -926,22 +624,8 @@ export default function CampaignTaskDetailPage() {
         throw new Error('Failed to update subtask')
       }
 
-      // Animate completion
-      const subtaskElement = document.querySelector(`[data-subtask-id="${subtaskId}"]`)
-      const xpElement = subtaskElement?.querySelector('.task-subtask-xp')
-      
-      if (subtaskElement) {
-        subtaskElement.classList.add('completed')
-        
-        if (xpElement) {
-          xpElement.classList.add('animate-xp-award')
-          setTimeout(() => {
-            xpElement.classList.remove('animate-xp-award')
-          }, 600)
-        }
-      }
-      
-      showFeedback('success', 'Sub-task updated successfully!')
+      // Animate and show feedback
+      showFeedback('success', 'Sub-task submitted for review!')
     } catch (error) {
       console.error('Failed to update subtask:', error)
       // Revert optimistic update
@@ -950,22 +634,14 @@ export default function CampaignTaskDetailPage() {
         return {
           ...prevTask,
           subtasks: prevTask.subtasks.map((st: any) =>
-            st.id === subtaskId ? { ...st, completed: currentStatus } : st
+            st.id === subtaskId ? { ...st, completed: false } : st
           )
         }
       })
-      showFeedback('error', 'Failed to update sub-task. Please try again.')
+      showFeedback('error', 'Failed to submit sub-task. Please try again.')
     }
   }
 
-  // Handle keyboard interactions for subtasks
-  const handleSubtaskKeyDown = (event: React.KeyboardEvent, subtaskId: string, currentStatus: boolean) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault()
-      handleSubtaskComplete(subtaskId, currentStatus)
-    }
-  }
-  
   // Skeleton loading state
   if (loading) {
     return (
@@ -1076,6 +752,9 @@ export default function CampaignTaskDetailPage() {
   const mockUser = { id: 'demo-user-1' }
   const completionRate = task.submissions > 0 ? Math.round((task.approvedSubmissions / task.submissions) * 100) : 0
   const globalProgress = task.globalCap ? (task.submissions / task.globalCap) * 100 : 0
+  
+  // Calculate if all subtasks are completed (under review)
+  const allSubtasksCompleted = task.subtasks && task.subtasks.length > 0 && task.subtasks.every((st: any) => st.completed);
 
   return (
     <div className="min-h-screen task-details-page" style={{ background: 'var(--bg-primary)' }}>
@@ -1103,10 +782,17 @@ export default function CampaignTaskDetailPage() {
 
           {/* Status Strip Row */}
           <div className="status-strip-row">
-            <div className="status-chip ongoing">
-              <span className="status-dot"></span>
-              Ongoing
-            </div>
+            {allSubtasksCompleted ? (
+              <div className="status-chip bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                <ShieldCheck className="h-4 w-4 mr-2" />
+                Under Review
+              </div>
+            ) : (
+              <div className="status-chip ongoing">
+                <span className="status-dot"></span>
+                Ongoing
+              </div>
+            )}
             
             <div className="status-info">
               {task.timer && (
@@ -1133,26 +819,8 @@ export default function CampaignTaskDetailPage() {
               subtasks={task.subtasks || []} 
               loading={loading}
               onToggleComplete={handleSubtaskComplete}
-              onFileUpload={handleFileUpload}
             />
-
-            {uploadedFiles.length > 0 && (
-              <div className="uploaded-files-indicator animate-fade-in" role="status" aria-live="polite">
-                <CheckCircle className="h-4 w-4 text-green-500" aria-hidden="true" />
-                <span>{uploadedFiles.length} file(s) uploaded successfully</span>
-              </div>
-            )}
           </section>
-
-          {/* Claim Now Block */}
-          <div className="claim-block-section">
-            <button 
-              onClick={handleClaimReward}
-              className="claim-now-card"
-            >
-              {task.xp || 0} XP - Claim Now
-            </button>
-          </div>
 
         </div>
 
@@ -1168,16 +836,6 @@ export default function CampaignTaskDetailPage() {
 
 
       </main>
-
-      {/* Claim Status Modal */}
-      <ClaimStatusModal
-        open={showClaimModal}
-        mode={task?.verificationMethod || task?.verificationMode || task?.approvalWorkflow?.toUpperCase() || 'MANUAL'}
-        xpAmount={task?.xp}
-        rewardToken={task?.rewardToken}
-        rewardAmount={task?.rewardAmount?.toString()}
-        onClose={() => setShowClaimModal(false)}
-      />
     </div>
   )
 }

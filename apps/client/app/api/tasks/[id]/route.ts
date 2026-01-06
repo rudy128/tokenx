@@ -17,17 +17,18 @@ export async function GET(
     let taskSubTasks: any[] = []
     
     try {
-      // First try NewTask model (UUID-based)
-      task = await prisma.newTask.findUnique({
+      // First try NewTask model (UUID-based) using the Task model definition from prisma schema
+      // Since newTask is not in schema.prisma, we should use the 'task' model which is mapped to 'tasks' table
+      task = await prisma.task.findUnique({
         where: { id: taskId },
         include: {
-          submissions: {
+          TaskSubmissions: {
             select: {
               status: true,
               userId: true
             }
           },
-          subTasks: {
+          SubTasks: {
             orderBy: {
               order: 'asc'
             },
@@ -42,149 +43,63 @@ export async function GET(
               isUploadProof: true,
               type: true
             }
+          },
+          Campaign: {
+             select: {
+                id: true,
+                name: true,
+                status: true
+             }
           }
         }
       })
       
       if (task) {
-        taskSubTasks = task.subTasks || []
-        console.log('✅ Found NewTask with', taskSubTasks.length, 'subtasks')
+        taskSubTasks = task.SubTasks || []
+        console.log('✅ Found Task with', taskSubTasks.length, 'subtasks')
       }
     } catch (dbError) {
-      console.log('NewTask query failed, trying Task model:', dbError)
+      console.log('Task query failed:', dbError)
     }
 
     // If not found, try regular Task model (String-based)
+    // The previous block already queried prisma.task, so this redundant block is likely confused legacy code. 
+    // Since 'task' is already the result of prisma.task.findUnique, we can just proceed.
+    // However, if the first query failed due to UUID mismatch or something, we might have needed fallback, 
+    // but the schema says ID is UUID.
+    
+    // Logic: If 'task' is null from the first block, it didn't find it.
+    // The second block tries 'prisma.task.findUnique' AGAIN with the exact same ID.
+    // This is redundant and error-prone if the includes are wrong (which they were in the logs).
+    // I will comment out this redundant block to avoid confusion and errors.
+
+    /* 
     if (!task) {
       try {
-        const regularTask = await prisma.task.findUnique({
-          where: { id: taskId },
-          include: {
-            Campaign: {
-              select: {
-                id: true,
-                name: true,
-                status: true
-              }
-            },
-            TaskSubmission: {
-              select: {
-                status: true,
-                userId: true
-              }
-            },
-            taskSubTasks: {
-              orderBy: {
-                order: 'asc'
-              },
-              select: {
-                id: true,
-                title: true,
-                description: true,
-                link: true,
-                xpReward: true,
-                order: true,
-                isCompleted: true,
-                isUploadProof: true,
-                type: true
-              }
-            }
-          }
-        })
-
-        if (regularTask) {
-          // Transform regular Task to match NewTask structure
-          task = {
-            id: regularTask.id,
-            name: regularTask.name,
-            description: regularTask.description,
-            instructions: regularTask.instructions,
-            xp: regularTask.xpReward,
-            frequency: 'one_time',
-            status: regularTask.status,
-            rewardOverride: false,
-            rewardToken: null,
-            rewardAmount: null,
-            perUserCap: null,
-            globalCap: null,
-            availableFrom: null,
-            availableTo: null,
-            submissionCutoff: null,
-            evidenceMode: 'manual',
-            approvalWorkflow: regularTask.verificationMethod?.includes('AUTO') ? 'auto' : 'manual',
-            verificationMethod: regularTask.verificationMethod,
-            uniqueContent: false,
-            minAccountAgeDays: null,
-            minFollowers: null,
-            createdAt: regularTask.createdAt,
-            updatedAt: regularTask.updatedAt,
-            taskType: regularTask.category,
-            submissions: regularTask.TaskSubmission,
-            subTasks: regularTask.taskSubTasks
-          } as any
-          
-          taskSubTasks = regularTask.taskSubTasks || []
-          console.log('✅ Found Task with', taskSubTasks.length, 'subtasks')
-        }
+         // ... redundant query ...
       } catch (dbError) {
         console.log('Task query also failed:', dbError)
       }
     }
+    */
 
     // If actual task found, return it
     if (task) {
+      // transform task if necessary or just use it. 
+      // The frontend likely expects specific field names like 'subTasks' instead of 'SubTasks'.
+      // and 'submissions' instead of 'TaskSubmissions'.
+      
       const transformedTask = {
-        id: task.id,
-        name: task.name,
-        description: task.description,
-        banner: (task as any).banner ?? undefined,
-        platform: (task as any).platform ?? undefined,
-        platformLogo: (task as any).platformLogo ?? undefined,
-        campaign: (task as any).campaign ?? undefined,
-        instructions: task.instructions,
-        actionUrl: (task as any).actionUrl ?? task.instructions ?? undefined,
-        xp: task.xp,
-        frequency: task.frequency,
-        status: task.status,
-        rewardOverride: task.rewardOverride,
-        rewardToken: task.rewardToken,
-        rewardAmount: task.rewardAmount,
-        perUserCap: task.perUserCap,
-        globalCap: task.globalCap,
-        availableFrom: task.availableFrom,
-        availableTo: task.availableTo,
-        submissionCutoff: task.submissionCutoff,
-        evidenceMode: task.evidenceMode,
-        approvalWorkflow: task.approvalWorkflow,
-        verificationMethod: (task as any).verificationMethod,
-        verificationMode: (task as any).verificationMethod || (task.approvalWorkflow === 'auto' ? 'AUTO' : 'MANUAL'),
-        uniqueContent: task.uniqueContent,
-        minAccountAgeDays: task.minAccountAgeDays,
-        minFollowers: task.minFollowers,
-        createdAt: task.createdAt,
-        submissions: task.submissions,
-        taskType: (task as any).taskType ?? 'GENERAL',
-        steps: (task as any).steps || [],
-        referrals: (task as any).referrals || undefined,
-        contract: (task as any).contract || undefined,
-        contractAddress: (task as any).contractAddress || undefined,
-        subTasks: taskSubTasks.map((st: any) => ({
-          id: st.id,
-          title: st.title,
-          description: st.description || null,
-          link: st.link || null,
-          xpReward: st.xpReward || 0,
-          order: st.order || 0,
-          isCompleted: st.isCompleted || false,
-          type: st.type || 'X_TWEET'
-        }))
+        ...task,
+        subTasks: (task as any).SubTasks || [],
+        submissions: (task as any).TaskSubmissions || []
       }
 
-      console.log('✅ Returning task with', transformedTask.subTasks.length, 'subtasks')
       return NextResponse.json(transformedTask)
     }
 
-    // Fallback to mock data if no actual task found
+    // Fallback Mock Data as last resort/test
+    console.log('Task not found in DB, using mock data for ID:', taskId)
     const mockTask = {
       id: taskId,
       name: "Daily Social Engagement",

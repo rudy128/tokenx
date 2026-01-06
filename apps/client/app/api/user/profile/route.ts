@@ -1,49 +1,115 @@
-import { type NextRequest, NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
+import { prisma } from "@/lib/prisma"
+import { withAuth } from "@/lib/auth-helpers"
 
-export async function GET() {
-  try {
-    // Return mock user data
-    const mockUser = {
-      id: 'demo-user-1',
-      name: 'Demo User',
-      email: 'demo@example.com',
-      image: null,
-      role: 'AMBASSADOR',
-      tier: 'BRONZE',
-      xp: 1250,
-      tokenBalance: 150,
-      usdtBalance: 0,
-      walletAddress: null,
+// GET - Fetch user profile
+export async function GET(request: NextRequest) {
+  return withAuth(request, async (userId, dbUser) => {
+    try {
+      if (!dbUser) {
+        return NextResponse.json(
+          { error: "User not found" },
+          { status: 404 }
+        )
+      }
+
+      // Return user profile data
+      return NextResponse.json({
+        id: dbUser.id,
+        name: dbUser.name,
+        email: dbUser.email,
+        image: dbUser.image,
+        role: dbUser.role,
+        walletAddress: dbUser.walletAddress,
+        twitterUsername: dbUser.twitterUsername,
+        tier: dbUser.tier,
+        xp: dbUser.xp,
+        tokenBalance: dbUser.tokenBalance,
+        usdtBalance: dbUser.usdtBalance,
+        isBanned: dbUser.isBanned,
+        createdAt: dbUser.createdAt
+      })
+    } catch (error) {
+      console.error("❌ Error fetching profile:", error)
+      return NextResponse.json(
+        { error: "Failed to fetch profile" },
+        { status: 500 }
+      )
     }
-
-    return NextResponse.json({ user: mockUser })
-  } catch (error) {
-    console.error("Profile fetch error:", error)
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 })
-  }
+  })
 }
 
-export async function PUT(request: NextRequest) {
-  try {
-    const { name, walletAddress } = await request.json()
+// PATCH - Update user profile
+export async function PATCH(request: NextRequest) {
+  return withAuth(request, async (userId, dbUser) => {
+    try {
+      if (!dbUser) {
+        return NextResponse.json(
+          { error: "User not found" },
+          { status: 404 }
+        )
+      }
 
-    // Return updated mock data
-    const updatedUser = {
-      id: 'demo-user-1',
-      name: name || 'Demo User',
-      email: 'demo@example.com',
-      image: null,
-      role: 'AMBASSADOR',
-      tier: 'BRONZE',
-      xp: 1250,
-      tokenBalance: 150,
-      usdtBalance: 0,
-      walletAddress: walletAddress ? walletAddress.toLowerCase() : null,
+      const body = await request.json()
+      const { name, twitterUsername, walletAddress } = body
+
+      // Validate twitter username format if provided
+      if (twitterUsername) {
+        const cleanUsername = twitterUsername.replace('@', '').trim()
+        if (cleanUsername && !/^[A-Za-z0-9_]{1,15}$/.test(cleanUsername)) {
+          return NextResponse.json(
+            { error: "Invalid Twitter username format" },
+            { status: 400 }
+          )
+        }
+      }
+
+      // Validate wallet address format if provided
+      if (walletAddress) {
+        const cleanAddress = walletAddress.trim()
+        if (cleanAddress && !/^0x[a-fA-F0-9]{40}$/.test(cleanAddress)) {
+          return NextResponse.json(
+            { error: "Invalid wallet address format" },
+            { status: 400 }
+          )
+        }
+      }
+
+      // Update user profile
+      const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: {
+          name: name || dbUser.name,
+          twitterUsername: twitterUsername ? twitterUsername.replace('@', '').trim() : dbUser.twitterUsername,
+          walletAddress: walletAddress ? walletAddress.trim() : dbUser.walletAddress,
+          updatedAt: new Date()
+        }
+      })
+
+      console.log("✅ Profile updated successfully for user:", userId)
+
+      return NextResponse.json({
+        id: updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        image: updatedUser.image,
+        role: updatedUser.role,
+        walletAddress: updatedUser.walletAddress,
+        twitterUsername: updatedUser.twitterUsername,
+        tier: updatedUser.tier,
+        xp: updatedUser.xp,
+        tokenBalance: updatedUser.tokenBalance,
+        usdtBalance: updatedUser.usdtBalance,
+        isBanned: updatedUser.isBanned,
+        createdAt: updatedUser.createdAt
+      })
+    } catch (error) {
+      console.error("❌ Error updating profile:", error)
+      return NextResponse.json(
+        { error: "Failed to update profile" },
+        { status: 500 }
+      )
     }
-
-    return NextResponse.json({ message: "Profile updated successfully", user: updatedUser })
-  } catch (error) {
-    console.error("Profile update error:", error)
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 })
-  }
+  })
 }
+

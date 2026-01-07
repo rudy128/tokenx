@@ -7,9 +7,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@repo/ui/dialog";
-import { Button } from "@repo/ui/button";
-import { Separator } from "@repo/ui/separator";
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 
 interface Props {
   submissions: any[]; // Using any for now to match the complex prisma return type quickly, ideally should be defined type

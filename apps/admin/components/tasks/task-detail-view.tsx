@@ -12,7 +12,7 @@ interface TaskWithSubmissions {
   id: string
   campaignId: string
   name: string
-  description: string
+  description: string | null
   category: string
   xpReward: number
   verificationMethod: string
@@ -25,10 +25,10 @@ interface TaskWithSubmissions {
     name: string
     status: string
   }
-  TaskSubmission?: Array<{
+  TaskSubmissions?: Array<{
     id: string
     status: string
-    submittedAt: Date
+    submittedAt: Date | null
     verifiedAt?: Date | null
     description?: string | null
     proofUrl?: string | null
@@ -153,10 +153,12 @@ export default function TaskDetailView({ task }: TaskDetailViewProps) {
     )
   }
 
-  const submissions = task.TaskSubmission || []
-  const pendingSubmissions = submissions.filter(s => s.status === 'PENDING')
-  const approvedSubmissions = submissions.filter(s => s.status === 'APPROVED')
-  const rejectedSubmissions = submissions.filter(s => s.status === 'REJECTED')
+  type Submission = NonNullable<TaskWithSubmissions['TaskSubmissions']>[number]
+
+  const submissions = task.TaskSubmissions || []
+  const pendingSubmissions = submissions.filter((s: Submission) => s.status === 'PENDING')
+  const approvedSubmissions = submissions.filter((s: Submission) => s.status === 'APPROVED')
+  const rejectedSubmissions = submissions.filter((s: Submission) => s.status === 'REJECTED')
 
   return (
     <AdminLayout>
@@ -358,7 +360,7 @@ export default function TaskDetailView({ task }: TaskDetailViewProps) {
 
                       <div className="flex items-center gap-2 text-xs mb-3" style={{ color: 'var(--text-tertiary)' }}>
                         <Calendar size={12} />
-                        <span>Submitted: {new Date(submission.submittedAt).toLocaleString()}</span>
+                        <span>Submitted: {submission.submittedAt ? new Date(submission.submittedAt).toLocaleString() : 'N/A'}</span>
                       </div>
 
                       {submission.reviewNotes && (

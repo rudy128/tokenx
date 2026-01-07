@@ -8,11 +8,11 @@ import {
     DialogTitle,
     DialogDescription,
     DialogTrigger,
-} from "@repo/ui/dialog"
-import { Badge } from "@repo/ui/badge"
-import { Button } from "@repo/ui/button"
-import { ScrollArea } from "@repo/ui/scroll-area"
-import { Separator } from "@repo/ui/separator"
+} from "@/components/ui/dialog"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
 import { useRouter } from "next/navigation"
 
 interface SubmissionProps {

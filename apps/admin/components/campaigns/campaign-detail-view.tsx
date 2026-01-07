@@ -118,7 +118,7 @@ export default function CampaignDetailView({ campaign }: CampaignDetailViewProps
     )
   }
 
-  const totalSubmissions = campaign.Task.reduce((sum, task) => sum + task._count.TaskSubmission, 0)
+  const totalSubmissions = campaign.Tasks.reduce((sum, task) => sum + task._count.TaskSubmissions, 0)
 
   return (
     <AdminLayout>

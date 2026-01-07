@@ -28,6 +28,7 @@ export default function CreateTaskForm({ campaigns, organizationId }: CreateTask
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -80,13 +81,15 @@ export default function CreateTaskForm({ campaigns, organizationId }: CreateTask
   };
 
   const removeSubTask = (id: string) => {
-    setSubTasks(subTasks.filter(st => st.id !== id));
+    setSubTasks(prevSubTasks => prevSubTasks.filter(st => st.id !== id));
   };
 
   const updateSubTask = (id: string, field: keyof SubTask, value: string | boolean) => {
-    setSubTasks(subTasks.map(st => 
-      st.id === id ? { ...st, [field]: value } : st
-    ));
+    setSubTasks(prevSubTasks => 
+      prevSubTasks.map(st => 
+        st.id === id ? { ...st, [field]: value } : st
+      )
+    );
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -157,15 +160,24 @@ export default function CreateTaskForm({ campaigns, organizationId }: CreateTask
         throw new Error(data.error || "Failed to create task");
       }
 
-      await response.json();
+      const result = await response.json();
+      console.log("✅ Task created successfully:", result);
+      
+      // Show success state briefly before redirect
+      setIsLoading(false);
+      setSuccess(true);
+      
+      // Small delay to show success state
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Redirect to tasks list
       router.push("/dashboard/tasks");
       router.refresh();
     } catch (error: unknown) {
-      console.error("Create task error:", error);
+      console.error("❌ Create task error:", error);
       setError(error instanceof Error ? error.message : "An error occurred");
       setIsLoading(false);
+      setSuccess(false);
     }
   };
 
@@ -408,8 +420,7 @@ export default function CreateTaskForm({ campaigns, organizationId }: CreateTask
               disabled={isLoading}
             >
               <option value="draft">Draft</option>
-              <option value="published">Published</option>
-              <option value="archived">Archived</option>
+              <option value="active">Active</option>
             </select>
           </div>
 

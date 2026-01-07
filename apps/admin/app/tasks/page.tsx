@@ -22,7 +22,7 @@ export default async function TasksPage() {
       },
       _count: {
         select: {
-          TaskSubmission: true,
+          TaskSubmissions: true,
         },
       },
     },

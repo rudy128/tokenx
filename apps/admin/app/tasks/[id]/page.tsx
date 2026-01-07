@@ -23,7 +23,7 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
           status: true,
         },
       },
-      TaskSubmission: {
+      TaskSubmissions: {
         include: {
           User: {
             select: {
@@ -38,7 +38,7 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
           submittedAt: 'desc',
         },
       },
-      taskSubTasks: {
+      SubTasks: {
         orderBy: {
           order: 'asc',
         },
@@ -64,7 +64,7 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
     createdAt: task.createdAt,
     updatedAt: task.updatedAt,
     Campaign: task.Campaign,
-    TaskSubmission: task.TaskSubmission,
+    TaskSubmissions: task.TaskSubmissions,
   }
 
   return <TaskDetailView task={taskData} />

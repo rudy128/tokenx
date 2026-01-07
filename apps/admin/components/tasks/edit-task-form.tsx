@@ -33,7 +33,7 @@ interface Task {
   id: string
   campaignId: string
   name: string
-  description: string
+  description: string | null
   category: string
   xpReward: number
   verificationMethod: string
@@ -97,7 +97,7 @@ export default function EditTaskForm({ task, campaigns }: EditTaskFormProps) {
   // Form state
   const [formData, setFormData] = useState({
     name: task.name,
-    description: task.description,
+    description: task.description || "",
     campaignId: task.campaignId,
     category: task.category,
     xpReward: task.xpReward.toString(),
@@ -105,7 +105,7 @@ export default function EditTaskForm({ task, campaigns }: EditTaskFormProps) {
     status: task.status,
   })
 
-  const [subtasks, setSubtasks] = useState<TaskSubTask[]>(task.taskSubTasks)
+  const [subtasks, setSubtasks] = useState<TaskSubTask[]>(task.SubTasks)
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>

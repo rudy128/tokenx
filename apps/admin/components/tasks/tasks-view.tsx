@@ -20,21 +20,21 @@ type Task = {
   id: string
   campaignId: string
   name: string
-  description: string
+  description: string | null
   category: "SOCIAL_ENGAGEMENT" | "CONTENT_CREATION" | "COMMUNITY_BUILDING" | "REFERRAL" | "CUSTOM"
   xpReward: number
   verificationMethod: "AI_AUTO" | "MANUAL" | "HYBRID"
   requirements: unknown
   createdAt: Date
   updatedAt: Date
-  status: "draft" | "active" | "archived"
+  status: "draft" | "active" | "archived" | "completed" | "cancelled"
   Campaign: {
     id: string
     name: string
     status: string
   }
   _count: {
-    TaskSubmission: number
+    TaskSubmissions: number
   }
 }
 
@@ -52,7 +52,7 @@ export default function TasksView({ tasks }: TasksViewProps) {
     return tasks.filter(task => {
       const matchesSearch = 
         task.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        task.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (task.description || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
         task.Campaign.name.toLowerCase().includes(searchQuery.toLowerCase())
       
       const matchesStatus = statusFilter === "ALL" || task.status === statusFilter.toLowerCase()
@@ -69,7 +69,7 @@ export default function TasksView({ tasks }: TasksViewProps) {
       active: tasks.filter(t => t.status === "active").length,
       draft: tasks.filter(t => t.status === "draft").length,
       archived: tasks.filter(t => t.status === "archived").length,
-      totalSubmissions: tasks.reduce((acc, t) => acc + t._count.TaskSubmission, 0),
+      totalSubmissions: tasks.reduce((acc, t) => acc + t._count.TaskSubmissions, 0),
     }
   }, [tasks])
 
@@ -423,7 +423,7 @@ function TaskCard({ task }: TaskCardProps) {
         <div className="flex items-center gap-2">
           <Users size={16} style={{ color: 'var(--status-info)' }} />
           <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            {task._count.TaskSubmission} submissions
+            {task._count.TaskSubmissions} submissions
           </span>
         </div>
       </div>

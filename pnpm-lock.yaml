@@ -410,6 +410,9 @@ importers:
       '@radix-ui/react-slot':
         specifier: ^1.1.0
         version: 1.1.1(@types/react@19.1.0)(react@19.2.3)
+      '@repo/prisma':
+        specifier: workspace:*
+        version: link:../../packages/prisma
       better-auth:
         specifier: ^1.4.10
         version: 1.4.10(@prisma/client@6.19.1(prisma@6.19.1(typescript@5.9.2))(typescript@5.9.2))(better-sqlite3@12.5.0)(drizzle-orm@0.33.0(@prisma/client@5.22.0(prisma@6.19.1(typescript@5.9.2)))(@types/pg@8.16.0)(@types/react@19.1.0)(better-sqlite3@12.5.0)(kysely@0.28.9)(pg@8.16.3)(prisma@6.19.1(typescript@5.9.2))(react@19.2.3))(next@16.1.1(@babel/core@7.28.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(pg@8.16.3)(prisma@6.19.1(typescript@5.9.2))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)

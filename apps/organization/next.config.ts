@@ -1,5 +1,11 @@
-// Load environment variables before anything else
-require('./load-env');
+// Load environment variables only in development
+if (process.env.NODE_ENV !== 'production') {
+  try {
+    require('./load-env');
+  } catch (e) {
+    // Ignore if load-env doesn't exist (e.g., in Docker builds)
+  }
+}
 
 import type { NextConfig } from "next";
 

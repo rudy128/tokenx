@@ -40,6 +40,8 @@ interface SubmissionProps {
         SubTasks?: Array<{
             id: string
             title: string
+            description: string | null
+            link: string | null
             xpReward: number
             type: string
         }>
@@ -127,17 +129,73 @@ export function ReviewDialog({ submission }: { submission: SubmissionProps }) {
                     
                     <ScrollArea className="flex-1 p-6">
                         <div className="space-y-6">
+                            {/* Task Info - Show if NOT a subtask submission OR always show */}
+                            {!currentSubTask && (
+                                <div>
+                                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Task Details</h3>
+                                    <div className="bg-muted/50 p-4 rounded-lg space-y-3">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <div className="font-semibold text-base mb-1">{submission.Task.name}</div>
+                                                <div className="text-xs text-muted-foreground uppercase tracking-wide">
+                                                    Type: {submission.Task.taskType.replace(/_/g, ' ')}
+                                                </div>
+                                            </div>
+                                            <Badge variant="secondary" className="text-sm">{submission.Task.xpReward} XP</Badge>
+                                        </div>
+                                        
+                                        {submission.Task.Campaign && (
+                                            <div>
+                                                <span className="text-xs text-muted-foreground block mb-1">Campaign:</span>
+                                                <p className="text-sm font-medium">{submission.Task.Campaign.name}</p>
+                                                {submission.Task.Campaign.description && (
+                                                    <p className="text-sm text-muted-foreground mt-1">{submission.Task.Campaign.description}</p>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                            
                             {/* SubTask Info - Only show if this is a subtask submission */}
                             {currentSubTask && (
                                 <div>
                                     <h3 className="text-sm font-medium text-muted-foreground mb-2">Sub-Task Details</h3>
-                                    <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+                                    <div className="bg-muted/50 p-4 rounded-lg space-y-3">
                                         <div className="flex justify-between items-start">
-                                            <div className="font-semibold">{currentSubTask.title}</div>
-                                            <Badge variant="secondary">{currentSubTask.xpReward} XP</Badge>
+                                            <div>
+                                                <div className="font-semibold text-base mb-1">{currentSubTask.title}</div>
+                                                <div className="text-xs text-muted-foreground uppercase tracking-wide">
+                                                    Type: {currentSubTask.type.replace(/_/g, ' ')}
+                                                </div>
+                                            </div>
+                                            <Badge variant="secondary" className="text-sm">{currentSubTask.xpReward} XP</Badge>
                                         </div>
-                                        <div className="text-xs text-muted-foreground">
-                                            Type: {currentSubTask.type}
+                                        
+                                        {currentSubTask.description && (
+                                            <div>
+                                                <span className="text-xs text-muted-foreground block mb-1">Description:</span>
+                                                <p className="text-sm">{currentSubTask.description}</p>
+                                            </div>
+                                        )}
+                                        
+                                        {currentSubTask.link && (
+                                            <div>
+                                                <span className="text-xs text-muted-foreground block mb-1">Link:</span>
+                                                <a 
+                                                    href={currentSubTask.link} 
+                                                    target="_blank" 
+                                                    rel="noreferrer" 
+                                                    className="text-blue-600 hover:underline break-all text-sm"
+                                                >
+                                                    {currentSubTask.link}
+                                                </a>
+                                            </div>
+                                        )}
+                                        
+                                        <div className="pt-2 border-t">
+                                            <span className="text-xs text-muted-foreground block mb-1">Parent Task:</span>
+                                            <p className="text-sm font-medium">{submission.Task.name}</p>
                                         </div>
                                     </div>
                                 </div>

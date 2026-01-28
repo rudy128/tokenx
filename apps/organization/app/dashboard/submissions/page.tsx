@@ -53,6 +53,8 @@ export default async function SubmissionsPage() {
             select: {
               id: true,
               title: true,
+              description: true,
+              link: true,
               xpReward: true,
               type: true
             }
